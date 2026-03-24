@@ -770,7 +770,7 @@
                 if (data.success) {
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/pos';
+                    window.location.href = '/pos-system.html';
                 } else {
                     showToast(data.message, 'error');
                 }
@@ -847,7 +847,9 @@
 
 
     <script>
-        if (localStorage.getItem('isLoggedIn') !== 'true') window.location.href = 'login.html';
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = '/login';
+        }
         document.getElementById('userName').innerText = localStorage.getItem('userName') || 'Administrator';
 
         let products = [
@@ -874,9 +876,29 @@
             document.querySelectorAll('.payment-method').forEach(el => { el.addEventListener('click', function() { document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active')); this.classList.add('active'); selectedPaymentMethod = this.dataset.method; document.getElementById('cashInputDiv').style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none'; }); });
             document.getElementById('cashAmount').addEventListener('input', () => { const total = parseFloat(document.getElementById('total').innerText.replace('$','')); const cash = parseFloat(document.getElementById('cashAmount').value); if(!isNaN(cash) && cash >= total) document.getElementById('changeDue').innerHTML = `Change: $${(cash - total).toFixed(2)}`; else if(!isNaN(cash)) document.getElementById('changeDue').innerHTML = '<span class="text-danger">Insufficient</span>'; else document.getElementById('changeDue').innerHTML = ''; });
             document.querySelectorAll('.menu-item').forEach(item => { item.addEventListener('click', () => { const page = item.dataset.page; if(page) navigateTo(page); }); });
-            document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
             }
 
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/api/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        localStorage.clear();
+                        // Redirect to Flask login route, not static HTML file
+                        window.location.href = '/login';
+                    } else {
+                        console.error('Logout failed');
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    // Fallback redirect
+                    localStorage.clear();
+                    window.location.href = '/login';
+                }
+            });
             // Set sidebar collapsed by default on page load
             document.addEventListener('DOMContentLoaded', function() {
                 const sidebar = document.getElementById('sidebar');
