@@ -3,7 +3,6 @@ mysql-connector-python
 pandas
 matplotlib
 seaborn
-xhtml2pdf
 xlsxwriter
 gunicorn
 psycopg2-binary
