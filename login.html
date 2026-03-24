@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Connect Link Properties | Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: white;
+            overflow-x: hidden;
+        }
+
+        /* Diagonal Split Background - Responsive */
+        .split-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            flex-wrap: wrap;
+        }
+
+        /* Blue Diagonal Section - Responsive */
+        .blue-section {
+            flex: 1;
+            background: linear-gradient(135deg, #0a2b3e 0%, #1e4a6e 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        /* Responsive clip-path for different screen sizes */
+        @media (min-width: 1200px) {
+            .blue-section {
+                clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1199px) {
+            .blue-section {
+                clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+            }
+        }
+
+        @media (min-width: 577px) and (max-width: 768px) {
+            .blue-section {
+                clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%);
+                min-height: auto;
+                padding: 60px 30px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .blue-section {
+                clip-path: polygon(0 0, 100% 0, 100% 97%, 0 100%);
+                min-height: auto;
+                padding: 50px 25px;
+            }
+        }
+
+        /* White Section */
+        .white-section {
+            flex: 1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        /* Content Styling */
+        .blue-content {
+            color: white;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .blue-icon {
+            width: 90px;
+            height: 90px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .blue-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .blue-icon i {
+            font-size: 45px;
+            color: white;
+        }
+
+        .blue-content h2 {
+            font-size: clamp(24px, 5vw, 32px);
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .blue-content p {
+            font-size: clamp(14px, 3vw, 16px);
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin-top: 30px;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            list-style: none;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: clamp(13px, 2.5vw, 15px);
+        }
+
+        .feature-list li i {
+            width: 22px;
+            font-size: 14px;
+        }
+
+        /* Login Card - Fully Responsive */
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            animation: fadeInRight 0.6s ease;
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .login-card h3 {
+            font-size: clamp(24px, 5vw, 28px);
+            font-weight: 700;
+            color: #0a2b3e;
+            margin-bottom: 8px;
+        }
+
+        .login-card .subtitle {
+            color: #6c757d;
+            margin-bottom: 30px;
+            font-size: clamp(13px, 3vw, 15px);
+        }
+
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            font-size: clamp(14px, 2.5vw, 15px);
+        }
+
+        .form-control:focus {
+            border-color: #0a2b3e;
+            box-shadow: 0 0 0 3px rgba(10, 43, 62, 0.1);
+            outline: none;
+        }
+
+        .btn-login {
+            background: #0a2b3e;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-size: clamp(14px, 2.5vw, 16px);
+        }
+
+        .btn-login:hover {
+            background: #1e4a6e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(10, 43, 62, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .demo-text {
+            text-align: center;
+            margin-top: 25px;
+            font-size: clamp(12px, 2.5vw, 13px);
+            color: #6c757d;
+        }
+
+        .demo-text code {
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 8px;
+            color: #0a2b3e;
+            font-size: clamp(11px, 2vw, 13px);
+            display: inline-block;
+            margin: 3px;
+        }
+
+        /* Responsive Design - Tablet and Mobile */
+        @media (max-width: 992px) {
+            .split-container {
+                flex-direction: column;
+            }
+            
+            .blue-section {
+                width: 100%;
+                min-height: auto;
+                padding: 50px 30px;
+            }
+            
+            .white-section {
+                width: 100%;
+                min-height: auto;
+                padding: 50px 25px;
+            }
+            
+            .blue-content {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            
+            .login-card {
+                max-width: 450px;
+                margin: 0 auto;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .blue-section {
+                padding: 40px 20px;
+            }
+            
+            .white-section {
+                padding: 40px 20px;
+            }
+            
+            .blue-icon {
+                width: 70px;
+                height: 70px;
+                border-radius: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .blue-icon i {
+                font-size: 35px;
+            }
+            
+            .feature-list {
+                margin-top: 20px;
+            }
+            
+            .feature-list li {
+                margin-bottom: 10px;
+                gap: 8px;
+            }
+            
+            .login-card {
+                padding: 10px;
+            }
+            
+            .form-control {
+                padding: 10px 14px;
+            }
+            
+            .btn-login {
+                padding: 10px;
+            }
+            
+            .demo-text code {
+                display: inline-block;
+                margin: 3px 2px;
+            }
+        }
+
+        /* Small Mobile Devices */
+        @media (max-width: 380px) {
+            .blue-section {
+                padding: 30px 15px;
+            }
+            
+            .white-section {
+                padding: 30px 15px;
+            }
+            
+            .blue-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 18px;
+            }
+            
+            .blue-icon i {
+                font-size: 30px;
+            }
+            
+            .blue-content h2 {
+                font-size: 22px;
+            }
+            
+            .feature-list li {
+                font-size: 12px;
+            }
+            
+            .login-card h3 {
+                font-size: 24px;
+            }
+            
+            .demo-text code {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+        }
+
+        /* Landscape Mode Optimization */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .blue-section {
+                padding: 30px 25px;
+            }
+            
+            .white-section {
+                padding: 30px 25px;
+            }
+            
+            .blue-icon {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 15px;
+            }
+            
+            .blue-icon i {
+                font-size: 30px;
+            }
+            
+            .feature-list {
+                margin-top: 15px;
+            }
+            
+            .feature-list li {
+                margin-bottom: 6px;
+            }
+            
+            .login-card .subtitle {
+                margin-bottom: 20px;
+            }
+        }
+
+        /* Touch Device Optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .btn-login:hover {
+                transform: none;
+            }
+            
+            .blue-icon:hover {
+                transform: none;
+            }
+        }
+
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Prevent horizontal scroll on very small devices */
+        body {
+            overflow-x: hidden;
+            width: 100%;
+        }
+        
+        .container-fluid, .row {
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="split-container">
+        <!-- Blue Diagonal Section -->
+        <div class="blue-section">
+            <div class="blue-content">
+                <div class="blue-icon">
+                    <i class="fas fa-hard-hat"></i>
+                </div>
+                <h2>Connect Link Properties</h2>
+                <p>Complete Hardware Point of Sale (POS) System</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check-circle"></i> Real-time Inventory Management</li>
+                    <li><i class="fas fa-check-circle"></i> Multiple Payment Methods</li>
+                    <li><i class="fas fa-check-circle"></i> Sales Analytics & Reports</li>
+                    <li><i class="fas fa-check-circle"></i> Transaction History</li>
+                    <li><i class="fas fa-check-circle"></i> Printable Receipts</li>
+                    <li><i class="fas fa-check-circle"></i> Low Stock Alerts</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- White Section with Login Form -->
+        <div class="white-section">
+            <div class="login-card">
+                <h3>Welcome Back</h3>
+                <p class="subtitle">Sign in to your user account</p>
+                
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Username</label>
+                        <input type="text" class="form-control" id="username" placeholder="Enter username" required autocomplete="username">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Password</label>
+                        <input type="password" class="form-control" id="password" placeholder="Enter password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn-login">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login to System
+                    </button>
+                </form>
+                
+                <div class="demo-text">
+                    <i class="fas fa-info-circle me-1"></i> Demo Credentials:<br>
+                    <code>Username: admin</code> &nbsp;|&nbsp; 
+                    <code>Password: admin123</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if already logged in
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = 'pos-system.html';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin123') {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('user', username);
+                localStorage.setItem('userName', 'Administrator');
+                window.location.href = 'pos-system.html';
+            } else {
+                // Remove existing error message if any
+                const existingError = document.querySelector('.alert-danger');
+                if (existingError) existingError.remove();
+                
+                // Create new error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger mt-3';
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Invalid credentials! Use admin / admin123';
+                errorDiv.style.borderRadius = '12px';
+                errorDiv.style.fontSize = '14px';
+                errorDiv.style.animation = 'shake 0.5s ease';
+                
+                document.querySelector('.login-card').appendChild(errorDiv);
+                
+                // Add shake animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes shake {
+                        0%, 100% { transform: translateX(0); }
+                        25% { transform: translateX(-5px); }
+                        75% { transform: translateX(5px); }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                // Clear error after 3 seconds
+                setTimeout(() => {
+                    if (errorDiv) errorDiv.remove();
+                }, 3000);
+                
+                // Clear password field
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+            }
+        });
+        
+        // Add input validation for better UX
+        document.getElementById('username').addEventListener('input', function() {
+            if (this.value.trim() === '') {
+                this.style.borderColor = '#e2e8f0';
+            } else {
+                this.style.borderColor = '#0a2b3e';
+            }
+        });
+        
+        // Handle Enter key
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

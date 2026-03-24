@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Connect Link Properties | Hardware POS System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            overflow-x: hidden;
+            font-size: 13px;
+        }
+
+        /* Sidebar Styles - Compact */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 260px;
+            background: linear-gradient(180deg, #0a2b3e 0%, #0f3b5c 100%);
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .sidebar-text,
+        .sidebar.collapsed .menu-text {
+            display: none;
+        }
+
+        .sidebar.collapsed .logo-text {
+            display: none;
+        }
+
+        .sidebar.collapsed .logo-icon {
+            display: block !important;
+        }
+
+        .logo-icon {
+            display: none;
+        }
+
+        .sidebar-header {
+            padding: 18px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header i {
+            font-size: 1.5rem;
+        }
+
+        .sidebar-header h6 {
+            font-size: 0.85rem;
+        }
+
+        .sidebar-header small {
+            font-size: 0.65rem;
+        }
+
+        .sidebar-menu {
+            padding: 10px 0;
+        }
+
+        .menu-item {
+            padding: 8px 12px;
+            margin: 4px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.85);
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            transform: translateX(3px);
+        }
+
+        .menu-item.active {
+            background: #1e6f9f;
+            color: white;
+            box-shadow: 0 2px 8px rgba(30,111,159,0.3);
+        }
+
+        .menu-item i {
+            width: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 12px;
+            min-height: 100vh;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        /* Toggle Button - Compact */
+        .toggle-sidebar {
+            position: fixed;
+            left: 270px;
+            top: 12px;
+            z-index: 1001;
+            background: #0a2b3e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .toggle-sidebar i {
+            font-size: 0.8rem;
+        }
+
+        .toggle-sidebar.shifted {
+            left: 85px;
+        }
+
+        /* Top Bar with Logout - Compact */
+        .top-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 8px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .top-bar span {
+            font-size: 0.8rem;
+        }
+
+        .logout-top-btn {
+            background: #fee2e2;
+            border: none;
+            color: #dc2626;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .logout-top-btn i {
+            font-size: 0.7rem;
+        }
+
+        .logout-top-btn:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        /* Cards - Compact */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            border: 1px solid #eef2f6;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: #0a2b3e;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .stat-card small {
+            font-size: 0.7rem;
+        }
+
+        .stat-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0;
+        }
+
+        .stat-card i {
+            font-size: 1.5rem;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            border: 1px solid #eef2f6;
+        }
+
+        .section-card h5, .section-card h6 {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Category Buttons - Compact */
+        .category-chip {
+            background: #f8f9fc;
+            border: 1px solid #e5e9f0;
+            border-radius: 30px;
+            padding: 4px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.7rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Product Cards - Compact */
+        .product-card {
+            background: white;
+            border: 1px solid #eef2f6;
+            border-radius: 14px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .product-card:hover {
+            border-color: #0a2b3e;
+            box-shadow: 0 4px 12px rgba(10,43,62,0.1);
+            transform: translateY(-2px);
+        }
+
+        .product-card i {
+            font-size: 1.2rem !important;
+        }
+
+        .product-card h6 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .product-card .small {
+            font-size: 0.65rem;
+        }
+
+        .unit-badge {
+            background: #eef2ff;
+            color: #0a2b3e;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* Cart Items - Compact */
+        .cart-item {
+            background: #fafbfd;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-left: 3px solid #0a2b3e;
+            transition: all 0.2s;
+        }
+
+        .cart-item h6 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .cart-item .small {
+            font-size: 0.65rem;
+        }
+
+        /* Buttons - Compact */
+        .btn-primary-dark {
+            background: #0a2b3e;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: white !important;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary-dark i {
+            font-size: 0.7rem;
+        }
+
+        .btn-primary-dark:hover {
+            background: #1e4a6e;
+            transform: translateY(-1px);
+        }
+
+        .btn-sm {
+            font-size: 0.65rem;
+            padding: 3px 8px;
+        }
+
+        /* Payment Method - Compact */
+        .payment-method {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #4a5568;
+        }
+
+        .payment-method i {
+            font-size: 0.9rem;
+        }
+
+        .payment-method .small {
+            font-size: 0.6rem;
+        }
+
+        .payment-method.active {
+            border-color: #0a2b3e;
+            background: linear-gradient(135deg, #f0f7ff, #e8f0fe);
+            color: #0a2b3e;
+            font-weight: 500;
+        }
+
+        .badge-low-stock {
+            background: #fee2e2;
+            color: #dc2626;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        /* Form Controls - Compact */
+        .form-control, .form-select {
+            font-size: 0.75rem;
+            padding: 6px 10px;
+            border-radius: 10px;
+        }
+
+        .form-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        /* Table - Compact */
+        .table {
+            font-size: 0.7rem;
+        }
+
+        .table th, .table td {
+            padding: 8px;
+            vertical-align: middle;
+        }
+
+        .table .btn-sm {
+            padding: 2px 6px;
+            font-size: 0.6rem;
+        }
+
+        .table i {
+            font-size: 0.8rem;
+        }
+
+        /* Modal - Compact */
+        .modal-header h5, .modal-header h6 {
+            font-size: 0.9rem;
+        }
+
+        .modal-body {
+            font-size: 0.75rem;
+        }
+
+        .cart-scroll {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .products-scroll {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .toast-notify {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 9999;
+            background: white;
+            border-radius: 12px;
+            padding: 6px 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-left: 3px solid #0a2b3e;
+            animation: slideUp 0.3s ease;
+            font-weight: 500;
+            font-size: 0.7rem;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Qty Control - Compact */
+        .qty-control {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: white;
+            border-radius: 8px;
+            padding: 2px 6px;
+            border: 1px solid #e5e9f0;
+        }
+
+        .qty-btn {
+            background: none;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.7rem;
+        }
+
+        .qty-btn:hover {
+            background: #eef2f6;
+        }
+
+        .alert {
+            font-size: 0.7rem;
+            padding: 8px 12px;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .toggle-sidebar {
+                left: 12px;
+                top: 12px;
+            }
+            .stat-card h3 {
+                font-size: 1rem;
+            }
+            .stat-card i {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main POS System -->
+    <div id="posSystem">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="logo-text">
+                        <i class="fas fa-hard-hat fa-2x"></i>
+                        <h6 class="mb-0 fw-bold mt-2">ConnectLink Properties</h6>
+                        <small class="opacity-75">Hardware</small>
+                    </div>
+                    <div class="logo-icon">
+                        <i class="fas fa-hard-hat fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-page="pos">
+                    <i class="fas fa-cash-register"></i>
+                    <span class="menu-text">POS Terminal</span>
+                </div>
+                <div class="menu-item" data-page="inventory">
+                    <i class="fas fa-boxes"></i>
+                    <span class="menu-text">Inventory</span>
+                </div>
+                <div class="menu-item" data-page="sales">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="menu-text">Sales Report</span>
+                </div>
+                <div class="menu-item" data-page="transactions">
+                    <i class="fas fa-history"></i>
+                    <span class="menu-text">Transactions</span>
+                </div>
+                <div class="menu-item" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span class="menu-text">Analytics</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toggle Button -->
+        <button class="toggle-sidebar" id="toggleSidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Top Bar with Logout Button -->
+            <div class="top-bar">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <!-- Left side - Logo and Company Name (Centered) -->
+                    <div class="d-flex align-items-center gap-2 mx-auto">
+                        <i class="fas fa-hard-hat" style="color: #0a2b3e; font-size: 1.2rem;"></i>
+                        <span class="fw-semibold" style="color: #0a2b3e; font-size: 0.85rem;">ConnectLink Properties Hardware</span>
+                    </div>
+                    
+                    <!-- Right side - User Info and Logout -->
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small"><i class="fas fa-user-circle me-1"></i> <span id="userName">Administrator</span></span>
+                        <button class="logout-top-btn" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POS Page -->
+            <div id="posPage">
+                <div class="row g-3">
+                    <div class="col-lg-9">
+                        <div class="section-card mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                <h6 class="fw-bold mb-0"><i class="fas fa-tags me-1"></i>Categories</h6>
+                                <div class="d-flex gap-1 flex-wrap" id="categoriesContainer"></div>
+                            </div>
+                        </div>
+                        <div class="section-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                <h6 class="fw-bold mb-0"><i class="fas fa-box-open me-1"></i>Products</h6>
+                                <div class="position-relative" style="width: 200px;">
+                                    <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted" style="font-size: 0.7rem;"></i>
+                                    <input type="text" class="form-control ps-5" id="searchProduct" placeholder="Search..." style="border-radius: 30px; font-size: 0.7rem; padding: 5px 10px;">
+                                </div>
+                            </div>
+                            <div class="row g-2 products-scroll" id="productsContainer"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="section-card sticky-top" style="top: 20px;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0"><i class="fas fa-shopping-cart me-1"></i>Current Order</h6>
+                                <button class="btn btn-sm btn-outline-danger" onclick="clearCart()"><i class="fas fa-trash-alt"></i> Clear</button>
+                            </div>
+                            <div class="cart-scroll" id="cartItems">
+                                <div class="text-center py-4">
+                                    <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted small">Cart is empty</p>
+                                </div>
+                            </div>
+                            <div class="border-top pt-2 mt-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted small">Subtotal:</span>
+                                    <span class="fw-bold small" id="subtotal">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted small">Tax (10%):</span>
+                                    <span class="fw-bold small" id="tax">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 pb-1 border-bottom">
+                                    <span class="fw-bold small">Total:</span>
+                                    <span class="fw-bold small" style="color: #0a2b3e;" id="total">$0.00</span>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="small fw-bold mb-1">Payment Method</label>
+                                    <div class="row g-1">
+                                        <div class="col-4"><div class="payment-method active" data-method="cash"><i class="fas fa-money-bill-wave"></i><div class="small">Cash</div></div></div>
+                                        <div class="col-4"><div class="payment-method" data-method="card"><i class="fas fa-credit-card"></i><div class="small">Card</div></div></div>
+                                        <div class="col-4"><div class="payment-method" data-method="transfer"><i class="fas fa-university"></i><div class="small">Transfer</div></div></div>
+                                    </div>
+                                </div>
+
+                                <div id="cashInputDiv" style="display: none;">
+                                    <label class="small fw-bold">Cash Amount</label>
+                                    <input type="number" class="form-control mb-1" id="cashAmount" placeholder="Enter amount" style="font-size: 0.7rem;">
+                                    <small id="changeDue" class="text-success small"></small>
+                                </div>
+
+                                <button class="btn btn-primary-dark w-100 mt-2" onclick="showPaymentConfirmation()">
+                                    <i class="fas fa-check-circle me-1"></i>Confirm Payment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Page -->
+            <div id="inventoryPage" style="display: none;">
+                <div class="section-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-boxes me-1"></i>Inventory Management</h5>
+                        <button class="btn btn-primary-dark" onclick="showAddInventoryModal()">
+                            <i class="fas fa-plus me-1"></i>Add Product
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr><th>ID</th><th>Product</th><th>Category</th><th>Unit</th><th>Detail</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr>
+                            </thead>
+                            <tbody id="inventoryList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Report Page -->
+            <div id="salesPage" style="display: none;">
+               <!-- Stats Row - Compact -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Today's Sales</small>
+                                    <h3 class="mb-0 fw-bold" id="todaySales">$0.00</h3>
+                                </div>
+                                <i class="fas fa-dollar-sign text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Items Sold</small>
+                                    <h3 class="mb-0 fw-bold" id="itemsSold">0</h3>
+                                </div>
+                                <i class="fas fa-shopping-cart text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Low Stock</small>
+                                    <h3 class="mb-0 fw-bold" id="lowStockCount">0</h3>
+                                </div>
+                                <i class="fas fa-exclamation-triangle text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Products</small>
+                                    <h3 class="mb-0 fw-bold" id="totalProducts">0</h3>
+                                </div>
+                                <i class="fas fa-box text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+ 
+                <div class="section-card">
+                    <h5 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Sales Report</h5>
+                    <canvas id="salesChart" style="max-height: 350px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Transactions Page -->
+            <div id="transactionsPage" style="display: none;">
+                <div class="section-card">
+                    <h5 class="fw-bold mb-2"><i class="fas fa-history me-1"></i>Transaction History</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light"><tr><th>Date</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Payment</th></tr></thead>
+                            <tbody id="transactionsList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analyticsPage" style="display: none;">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Category Distribution</h6>
+                            <canvas id="categoryChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-trophy me-1"></i>Top Selling Products</h6>
+                            <div id="topProductsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-receipt me-1"></i>Order Confirmation</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="confirmationContent"></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="processPayment()">Confirm & Pay</button></div></div></div></div>
+
+    <div class="modal fade" id="addInventoryModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addProductForm"><div class="row g-2"><div class="col-md-6"><label class="form-label">Product Name *</label><input type="text" class="form-control" id="productName" required></div><div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" id="productCategory"><option value="hand tools">Hand Tools</option><option value="power tools">Power Tools</option><option value="fasteners">Fasteners</option><option value="paint">Paint</option><option value="lumber">Lumber</option><option value="electrical">Electrical</option><option value="plumbing">Plumbing</option><option value="safety">Safety</option></select></div><div class="col-md-4"><label class="form-label">Unit Type *</label><select class="form-select" id="unitType"><option value="piece">Piece</option><option value="length">Length</option><option value="weight">Weight</option><option value="volume">Volume</option><option value="pack">Pack</option></select></div><div class="col-md-4"><label class="form-label">Unit Detail *</label><input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required></div><div class="col-md-4"><label class="form-label">Price ($) *</label><input type="number" step="0.01" class="form-control" id="productPrice" required></div><div class="col-md-6"><label class="form-label">Initial Stock *</label><input type="number" class="form-control" id="productStock" required></div><div class="col-md-6"><label class="form-label">Icon</label><input type="text" class="form-control" id="productIcon" value="fa-tools"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="addNewProduct()">Add</button></div></div></div></div>
+
+    <div class="modal fade" id="receiptModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h6 class="modal-title"><i class="fas fa-receipt"></i> Receipt</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="receiptContent"></div><div class="modal-footer"><button class="btn btn-sm btn-primary-dark" onclick="printReceipt()">Print</button><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        if (localStorage.getItem('isLoggedIn') !== 'true') window.location.href = 'login.html';
+        document.getElementById('userName').innerText = localStorage.getItem('userName') || 'Administrator';
+
+        let products = [
+            { id: 1, name: "Ball Peen Hammer", category: "hand tools", unitType: "piece", unitDetails: "16oz", price: 24.99, stock: 45, icon: "fa-gavel" },
+            { id: 2, name: "Screwdriver Set", category: "hand tools", unitType: "pack", unitDetails: "8pcs", price: 19.99, stock: 32, icon: "fa-screwdriver-wrench" },
+            { id: 3, name: "Adjustable Wrench", category: "hand tools", unitType: "length", unitDetails: "12in", price: 22.99, stock: 28, icon: "fa-wrench" },
+            { id: 4, name: "Cordless Drill", category: "power tools", unitType: "piece", unitDetails: "20V", price: 129.99, stock: 12, icon: "fa-drill" },
+            { id: 5, name: "Circular Saw", category: "power tools", unitType: "piece", unitDetails: "7-1/4in", price: 149.99, stock: 8, icon: "fa-saw" },
+            { id: 6, name: "Galvanized Nails", category: "fasteners", unitType: "weight", unitDetails: "1lb", price: 5.99, stock: 150, icon: "fa-circle" },
+            { id: 7, name: "Wood Screws", category: "fasteners", unitType: "pack", unitDetails: "100pcs", price: 8.99, stock: 200, icon: "fa-circle-notch" },
+            { id: 8, name: "Exterior Paint", category: "paint", unitType: "volume", unitDetails: "1gal", price: 34.99, stock: 25, icon: "fa-paint-roller" },
+            { id: 9, name: "Paint Brush Set", category: "paint", unitType: "pack", unitDetails: "5pcs", price: 12.99, stock: 40, icon: "fa-paintbrush" },
+            { id: 10, name: "Lumber 2x4", category: "lumber", unitType: "length", unitDetails: "8ft", price: 7.99, stock: 85, icon: "fa-tree" },
+            { id: 11, name: "Plywood Sheet", category: "lumber", unitType: "area", unitDetails: "4x8ft", price: 45.99, stock: 30, icon: "fa-border-all" },
+            { id: 12, name: "PVC Pipe", category: "plumbing", unitType: "length", unitDetails: "10ft", price: 6.99, stock: 60, icon: "fa-water" }
+        ];
+
+        let nextId = 13, cart = [], selectedCategory = "all", searchTerm = "", selectedPaymentMethod = "cash", salesData = { todaySales: 0, itemsSold: 0, transactions: [] }, currentPage = "pos", salesChart = null, categoryChart = null;
+        const categories = ["all", "hand tools", "power tools", "fasteners", "paint", "lumber", "electrical", "plumbing", "safety"];
+
+        function init() { renderCategories(); renderProducts(); updateStats(); setupEventListeners(); }
+        function setupEventListeners() {
+            document.getElementById('searchProduct').addEventListener('input', (e) => { searchTerm = e.target.value.toLowerCase(); renderProducts(); });
+            document.querySelectorAll('.payment-method').forEach(el => { el.addEventListener('click', function() { document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active')); this.classList.add('active'); selectedPaymentMethod = this.dataset.method; document.getElementById('cashInputDiv').style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none'; }); });
+            document.getElementById('cashAmount').addEventListener('input', () => { const total = parseFloat(document.getElementById('total').innerText.replace('$','')); const cash = parseFloat(document.getElementById('cashAmount').value); if(!isNaN(cash) && cash >= total) document.getElementById('changeDue').innerHTML = `Change: $${(cash - total).toFixed(2)}`; else if(!isNaN(cash)) document.getElementById('changeDue').innerHTML = '<span class="text-danger">Insufficient</span>'; else document.getElementById('changeDue').innerHTML = ''; });
+            document.querySelectorAll('.menu-item').forEach(item => { item.addEventListener('click', () => { const page = item.dataset.page; if(page) navigateTo(page); }); });
+            document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
+            }
+
+            // Set sidebar collapsed by default on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('mainContent');
+                const toggleBtn = document.getElementById('toggleSidebar');
+                
+                // Add collapsed class by default
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                toggleBtn.classList.add('shifted');
+            });
+
+            // Toggle function (already in your code, but ensure it's there)
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('mainContent');
+                const toggleBtn = document.getElementById('toggleSidebar');
+                
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                toggleBtn.classList.toggle('shifted');
+            }
+
+            // Add event listener for toggle button
+            document.getElementById('toggleSidebar').addEventListener('click', toggleSidebar);
+
+
+        function navigateTo(page) {
+            currentPage = page;
+            document.querySelectorAll('.menu-item').forEach(item => { item.classList.remove('active'); if(item.dataset.page === page) item.classList.add('active'); });
+            document.getElementById('posPage').style.display = page === 'pos' ? 'block' : 'none';
+            document.getElementById('inventoryPage').style.display = page === 'inventory' ? 'block' : 'none';
+            document.getElementById('salesPage').style.display = page === 'sales' ? 'block' : 'none';
+            document.getElementById('transactionsPage').style.display = page === 'transactions' ? 'block' : 'none';
+            document.getElementById('analyticsPage').style.display = page === 'analytics' ? 'block' : 'none';
+            if (page === 'inventory') renderInventory();
+            if (page === 'sales') { renderSalesChart(); document.getElementById('todaySales2').innerText = document.getElementById('todaySales').innerText; document.getElementById('itemsSold2').innerText = document.getElementById('itemsSold').innerText; document.getElementById('lowStockCount2').innerText = document.getElementById('lowStockCount').innerText; document.getElementById('totalProducts2').innerText = document.getElementById('totalProducts').innerText; }
+            if (page === 'transactions') renderTransactions();
+            if (page === 'analytics') renderAnalytics();
+        }
+
+        function renderCategories() { document.getElementById('categoriesContainer').innerHTML = categories.map(cat => `<div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}</div>`).join(''); }
+        function selectCategory(category) { selectedCategory = category; renderCategories(); renderProducts(); }
+        
+        function renderProducts() {
+            let filtered = products.filter(p => (selectedCategory === "all" || p.category === selectedCategory) && (searchTerm === "" || p.name.toLowerCase().includes(searchTerm)));
+            document.getElementById('productsContainer').innerHTML = filtered.length ? filtered.map(p => `<div class="col-md-6 col-xl-4"><div class="product-card" onclick="addToCart(${p.id})"><div class="d-flex justify-content-between mb-1"><i class="fas ${p.icon}" style="color:#0a2b3e;"></i>${p.stock < 10 ? '<span class="badge-low-stock">Low</span>' : ''}</div><h6 class="fw-bold mb-0">${p.name}</h6><div class="small text-muted mb-1"><span class="unit-badge">${p.unitType}: ${p.unitDetails}</span></div><div class="d-flex justify-content-between align-items-end mt-1"><div><span class="fw-bold" style="color:#0a2b3e;">$${p.price.toFixed(2)}</span><div class="small text-muted">Stock: ${p.stock}</div></div><button class="btn btn-sm" style="background:#0a2b3e;color:white;border-radius:30px;padding:2px 8px;">Add</button></div></div></div>`).join('') : '<div class="col-12 text-center py-4"><i class="fas fa-box-open fa-2x text-muted"></i><p class="text-muted mt-1 small">No products found</p></div>';
+        }
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            if(!product) return;
+            const existing = cart.find(i => i.id === id);
+            if(existing) { if(existing.quantity + 1 > product.stock) return showToast('Not enough stock!','error'); existing.quantity++; }
+            else { if(product.stock < 1) return showToast('Out of stock!','error'); cart.push({...product, quantity:1}); }
+            updateCartDisplay(); showToast(`${product.name} added`,'success');
+        }
+
+        function updateCartDisplay() {
+            const container = document.getElementById('cartItems');
+            if(!cart.length) container.innerHTML = '<div class="text-center py-4"><i class="fas fa-shopping-cart fa-2x text-muted mb-1"></i><p class="text-muted small">Cart empty</p></div>';
+            else container.innerHTML = cart.map((item,idx) => `<div class="cart-item"><div class="d-flex justify-content-between"><div><h6 class="fw-bold mb-0">${item.name}</h6><div class="small text-muted">$${item.price.toFixed(2)} each</div><div class="mt-1"><div class="qty-control"><button class="qty-btn" onclick="updateQuantity(${idx},-1)">-</button><span class="fw-bold small">${item.quantity}</span><button class="qty-btn" onclick="updateQuantity(${idx},1)">+</button></div></div></div><div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${(item.price * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div></div></div>`).join('');
+            calculateTotals();
+        }
+
+        function updateQuantity(idx,delta) { const newQty = cart[idx].quantity + delta; const prod = products.find(p=>p.id===cart[idx].id); if(newQty<1) removeFromCart(idx); else if(newQty<=prod.stock) { cart[idx].quantity = newQty; updateCartDisplay(); } else showToast('Not enough stock!','error'); }
+        function removeFromCart(idx) { cart.splice(idx,1); updateCartDisplay(); }
+        function clearCart() { if(cart.length) { cart = []; updateCartDisplay(); showToast('Cart cleared','info'); } }
+        
+        function calculateTotals() { const sub = cart.reduce((s,i)=>s+(i.price*i.quantity),0); const tax = sub*0.1; const total = sub+tax; document.getElementById('subtotal').innerText = `$${sub.toFixed(2)}`; document.getElementById('tax').innerText = `$${tax.toFixed(2)}`; document.getElementById('total').innerText = `$${total.toFixed(2)}`; }
+
+        function showPaymentConfirmation() {
+            if(!cart.length) return showToast('Cart empty!','error');
+            const sub = parseFloat(document.getElementById('subtotal').innerText.replace('$','')); const tax = parseFloat(document.getElementById('tax').innerText.replace('$','')); const total = parseFloat(document.getElementById('total').innerText.replace('$',''));
+            document.getElementById('confirmationContent').innerHTML = `<div><div class="mb-2 p-2 bg-light rounded"><h6 class="fw-bold mb-1 small">Order Summary</h6>${cart.map(i=>`<div class="d-flex justify-content-between py-1 border-bottom small"><div><strong>${i.name}</strong><br><span class="text-muted">$${i.price.toFixed(2)} x ${i.quantity}</span></div><span class="fw-bold">$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('')}</div><div class="mb-2"><div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${sub.toFixed(2)}</span></div><div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div><div class="d-flex justify-content-between fw-bold pt-1 border-top small"><span>Total:</span><span style="color:#0a2b3e;">$${total.toFixed(2)}</span></div></div><div class="alert alert-info small py-1 mb-0"><i class="fas fa-credit-card me-1"></i>Payment: ${selectedPaymentMethod.toUpperCase()}</div></div>`;
+            new bootstrap.Modal(document.getElementById('confirmationModal')).show();
+        }
+
+        function processPayment() { const total = parseFloat(document.getElementById('total').innerText.replace('$','')); if(selectedPaymentMethod === 'cash') { const cash = parseFloat(document.getElementById('cashAmount').value); if(isNaN(cash) || cash < total) return showToast('Insufficient cash!','error'); processOrder(selectedPaymentMethod, cash, cash-total); } else processOrder(selectedPaymentMethod, total, 0); }
+
+        function processOrder(method, paid, change) {
+            const sub = parseFloat(document.getElementById('subtotal').innerText.replace('$','')); const tax = parseFloat(document.getElementById('tax').innerText.replace('$','')); const total = parseFloat(document.getElementById('total').innerText.replace('$',''));
+            cart.forEach(cartItem => { const p = products.find(p=>p.id===cartItem.id); if(p) p.stock -= cartItem.quantity; });
+            const transaction = { id:Date.now(), date:new Date().toLocaleString(), items:[...cart], subtotal:sub, tax:tax, total:total, paymentMethod:method, amountPaid:paid, change:change };
+            salesData.transactions.unshift(transaction);
+            salesData.todaySales += total;
+            salesData.itemsSold += cart.reduce((s,i)=>s+i.quantity,0);
+            updateStats();
+            generateReceipt(transaction);
+            bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
+            cart = []; updateCartDisplay(); renderProducts();
+            if(currentPage === 'inventory') renderInventory();
+            if(currentPage === 'transactions') renderTransactions();
+            if(currentPage === 'analytics') renderAnalytics();
+            showToast('Payment successful!','success');
+        }
+
+        function generateReceipt(t) { document.getElementById('receiptContent').innerHTML = `<div class="text-center"><i class="fas fa-hard-hat" style="color:#0a2b3e;"></i><h6 class="fw-bold mt-1">Connect Link Properties</h6><small>Hardware Supply</small><hr class="my-1">${t.date}<hr class="my-1">${t.items.map(i=>`<div class="d-flex justify-content-between small"><span>${i.name} x${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('')}<hr class="my-1"><div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${t.total.toFixed(2)}</strong></div><hr class="my-1"><div class="small">Payment: ${t.paymentMethod.toUpperCase()}</div>${t.change>0?`<div class="small">Change: $${t.change.toFixed(2)}</div>`:''}<hr class="my-1"><small>Thank you!</small></div>`; new bootstrap.Modal(document.getElementById('receiptModal')).show(); }
+        function printReceipt() { const w=window.open('','_blank'); w.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;padding:10px;text-align:center;}</style></head><body>${document.getElementById('receiptContent').innerHTML}</body></html>`); w.print(); }
+
+        function renderInventory() { document.getElementById('inventoryList').innerHTML = products.map(p => `<tr><td>${p.id}</td><td><i class="fas ${p.icon} me-1"></i>${p.name}</td><td>${p.category}</td><td><span class="unit-badge">${p.unitType}</span></td><td><small>${p.unitDetails}</small></td><td class="fw-bold">$${p.price.toFixed(2)}</td><td class="${p.stock<10?'text-danger fw-bold':''}">${p.stock}</td><td>${p.stock<10?'<span class="badge bg-danger">Low</span>':'<span class="badge bg-success">OK</span>'}</td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
+        function showAddInventoryModal() { document.getElementById('productName').value = ''; document.getElementById('productPrice').value = ''; document.getElementById('productStock').value = ''; document.getElementById('productIcon').value = 'fa-tools'; document.getElementById('unitDetails').value = ''; new bootstrap.Modal(document.getElementById('addInventoryModal')).show(); }
+        function addNewProduct() { const name = document.getElementById('productName').value; const category = document.getElementById('productCategory').value; const unitType = document.getElementById('unitType').value; const unitDetails = document.getElementById('unitDetails').value; const price = parseFloat(document.getElementById('productPrice').value); const stock = parseInt(document.getElementById('productStock').value); const icon = document.getElementById('productIcon').value; if(!name || isNaN(price) || isNaN(stock)) return showToast('Fill all fields','error'); products.push({ id:nextId++, name, category, unitType, unitDetails, price, stock, icon }); bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide(); renderInventory(); renderProducts(); updateStats(); showToast(`${name} added`,'success'); }
+        function deleteProduct(id) { if(confirm('Delete product?')) { products = products.filter(p=>p.id!==id); renderInventory(); renderProducts(); updateStats(); showToast('Product deleted','info'); } }
+
+        function renderSalesChart() { const ctx = document.getElementById('salesChart').getContext('2d'); if(salesChart) salesChart.destroy(); salesChart = new Chart(ctx, { type:'line', data:{ labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets:[{ label:'Sales ($)', data:[1250,1450,1320,1680,1890,2100,1750], borderColor:'#0a2b3e', backgroundColor:'rgba(10,43,62,0.1)', tension:0.3, fill:true }] }, options:{ responsive:true, maintainAspectRatio:true } }); }
+        function renderTransactions() { document.getElementById('transactionsList').innerHTML = salesData.transactions.length ? salesData.transactions.map(t=>`<tr><td>${t.date}</td><td>${t.items.reduce((s,i)=>s+i.quantity,0)} items</td><td>$${t.subtotal.toFixed(2)}</td><td>$${t.tax.toFixed(2)}</td><td class="fw-bold">$${t.total.toFixed(2)}</td><td><span class="badge bg-info">${t.paymentMethod}</span></td></tr>`).join('') : '<tr><td colspan="6" class="text-center">No transactions yet</td></tr>'; }
+        function renderAnalytics() { const categoryCount = {}; products.forEach(p => { if(!categoryCount[p.category]) categoryCount[p.category] = 0; categoryCount[p.category] += p.stock * p.price; }); const ctx = document.getElementById('categoryChart').getContext('2d'); if(categoryChart) categoryChart.destroy(); categoryChart = new Chart(ctx, { type:'pie', data:{ labels:Object.keys(categoryCount), datasets:[{ data:Object.values(categoryCount), backgroundColor:['#0a2b3e','#1e4a6e','#2c6e9e','#3c8ebe','#4caede','#6cbeef','#8cceff','#acdeff'] }] }, options:{ responsive:true } }); const topProducts = [...products].sort((a,b)=>b.stock*a.price - a.stock*b.price).slice(0,5); document.getElementById('topProductsList').innerHTML = topProducts.map((p,idx)=>`<div class="d-flex justify-content-between align-items-center p-1 border-bottom small"><span><span class="fw-bold">${idx+1}.</span> ${p.name}</span><span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span></div>`).join(''); }
+        function updateStats() { document.getElementById('todaySales').innerText = `$${salesData.todaySales.toFixed(2)}`; document.getElementById('itemsSold').innerText = salesData.itemsSold; document.getElementById('lowStockCount').innerText = products.filter(p=>p.stock<10).length; document.getElementById('totalProducts').innerText = products.length; if(document.getElementById('todaySales2')) document.getElementById('todaySales2').innerText = `$${salesData.todaySales.toFixed(2)}`; if(document.getElementById('itemsSold2')) document.getElementById('itemsSold2').innerText = salesData.itemsSold; if(document.getElementById('lowStockCount2')) document.getElementById('lowStockCount2').innerText = products.filter(p=>p.stock<10).length; if(document.getElementById('totalProducts2')) document.getElementById('totalProducts2').innerText = products.length; }
+        function showToast(msg,type) { const t=document.createElement('div'); t.className='toast-notify'; t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle text-success':'exclamation-circle text-warning'} me-1"></i>${msg}`; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+        init();
+    </script>
+</body>
+</html>
