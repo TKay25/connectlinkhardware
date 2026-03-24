@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from flask_cors import CORS
 from datetime import datetime, timedelta
 import secrets
@@ -586,15 +586,15 @@ def get_dashboard_stats():
 
 @app.route('/')
 def index():
-    return render_template('login.html')
+    return send_from_directory('templates','login.html')
 
 @app.route('/login')
 def login_page():
-    return render_template('login.html')
+    return send_from_directory('templates', 'login.html')
 
-@app.route('/pos')
-def pos_page():
-    return render_template('pos-system.html')
+@app.route('/pos-system.html')
+def pos_static():
+    return send_from_directory('templates', 'pos-system.html')
 
 # ==================== INITIALIZE DATABASE ====================
 
