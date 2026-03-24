@@ -1,4 +1,5 @@
 Flask
+Flask-CORS
 mysql-connector-python
 pandas
 matplotlib
@@ -8,6 +9,4 @@ gunicorn
 psycopg2-binary
 openpyxl
 requests
-pdfkit
-weasyprint
 bleach
