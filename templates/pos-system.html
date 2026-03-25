@@ -611,6 +611,33 @@
                 </div>
             </div>
 
+                        <!-- Edit Stock Modal -->
+            <div class="modal fade" id="editStockModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background:#0a2b3e;color:white;">
+                            <h5 class="modal-title"><i class="fas fa-edit me-1"></i>Edit Stock</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info mb-3" style="font-size: 0.75rem;">
+                                <i class="fas fa-info-circle me-1"></i> 
+                                <strong>Product:</strong> <span id="editStockProductName">Loading...</span>
+                            </div>
+                            <p class="mb-2">Enter admin passcode to edit stock:</p>
+                            <input type="password" class="form-control mb-2" id="editStockPasscode" placeholder="Enter passcode">
+                            <div id="editPasscodeError" class="text-danger small mb-2"></div>
+                            <label class="form-label">New Stock Quantity *</label>
+                            <input type="number" class="form-control" id="newStockQuantity" placeholder="Enter new stock amount" min="0">
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-primary-dark btn-sm" onclick="confirmEditStock()">Update Stock</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- POS Page -->
             <div id="posPage">
                 <div class="row g-3">
@@ -702,10 +729,22 @@
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-light">
-                                <tr><th>ID</th><th>Product</th><th>Category</th><th>Unit</th><th>Detail</th><th>Price</th><th>Stock</th><th>Status</th><th></th> </thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Unit</th>
+                                    <th>Detail</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
                             <tbody id="inventoryList">
-                                <td><td colspan="9" class="text-center">Loading products... </tbody>
-                             </table>
+                                <td><td colspan="9" class="text-center">Loading products... 
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -823,6 +862,70 @@
         // API Base URL
         const API_BASE = window.location.origin;
         
+
+        // Variables for stock editing
+        let productToEdit = null;
+        const EDIT_PASSCODE = "conlinkhardwareadmin01"; // Same passcode as delete
+
+        // Show edit stock modal
+        function showEditStockModal(productId) {
+            productToEdit = products.find(p => p.id === productId);
+            if (!productToEdit) return;
+            
+            document.getElementById('editStockProductName').innerText = productToEdit.name;
+            document.getElementById('editStockPasscode').value = '';
+            document.getElementById('newStockQuantity').value = productToEdit.stock;
+            document.getElementById('editPasscodeError').innerHTML = '';
+            new bootstrap.Modal(document.getElementById('editStockModal')).show();
+        }
+
+        // Confirm and update stock
+        async function confirmEditStock() {
+            const passcode = document.getElementById('editStockPasscode').value;
+            const newStock = parseInt(document.getElementById('newStockQuantity').value);
+            
+            if (passcode !== EDIT_PASSCODE) {
+                document.getElementById('editPasscodeError').innerHTML = 'Invalid passcode!';
+                return;
+            }
+            
+            if (isNaN(newStock) || newStock < 0) {
+                document.getElementById('editPasscodeError').innerHTML = 'Please enter a valid stock quantity!';
+                return;
+            }
+            
+            if (!productToEdit) return;
+            
+            showLoader(`Updating stock for "${productToEdit.name}"...`);
+            
+            try {
+                const updateResponse = await fetch(`${API_BASE}/api/products/${productToEdit.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        ...productToEdit,
+                        stock: newStock
+                    })
+                });
+                const updateData = await updateResponse.json();
+                
+                if (updateData.success) {
+                    await fetchProductsFromAPI();
+                    bootstrap.Modal.getInstance(document.getElementById('editStockModal')).hide();
+                    showToast(`${productToEdit.name} stock updated to ${newStock}`, 'success');
+                } else {
+                    showToast('Failed to update stock', 'error');
+                }
+            } catch (error) {
+                showToast('Connection error', 'error');
+            }
+            
+            hideLoader();
+            productToEdit = null;
+        }
+
+
         // Global variables
         let products = [];
         let cart = [];
@@ -1156,7 +1259,12 @@
         function renderInventory() {
             const tbody = document.getElementById('inventoryList');
             if (!tbody) return;
-            if (!products.length) { tbody.innerHTML = '=<td colspan="9" class="text-center">No products found</td>'; return; }
+            
+            if (!products.length) {
+                tbody.innerHTML = '=<td colspan="10" class="text-center">No products found</td>';
+                return;
+            }
+            
             tbody.innerHTML = products.map(p => `
                 <tr>
                     <td>${p.id}</td>
@@ -1167,7 +1275,14 @@
                     <td class="fw-bold">$${p.price.toFixed(2)}</td>
                     <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
                     <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
-                    <td><button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})"><i class="fas fa-trash"></i></button></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="showEditStockModal(${p.id})" title="Edit Stock">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
                 </tr>
             `).join('');
         }
