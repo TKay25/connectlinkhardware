@@ -716,7 +716,7 @@
                             <input type="password" class="form-control mb-2" id="editStockPasscode" placeholder="Enter passcode">
                             <div id="editPasscodeError" class="text-danger small mb-2"></div>
                             <label class="form-label">Quantity to ADD *</label>
-                            <input type="number" class="form-control" id="newStockQuantity" placeholder="Enter quantity to add" min="1" value="1">
+                            <input type="number" class="form-control" id="newStockQuantity" placeholder="Enter quantity to add" min="1" value="">
                             <small class="text-muted">This will be added to the current stock</small>
                         </div>
                         <div class="modal-footer">
@@ -1467,7 +1467,7 @@
             const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
             
             const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
-                                        selectedPaymentMethod === 'card' ? 'Card' : 'Bank Transfer';
+                                        selectedPaymentMethod === 'card' ? 'Card' : 'Bank/Mobile Money Transfer';
             
             const confirmationHTML = `
                 <div>
