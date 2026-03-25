@@ -606,6 +606,16 @@
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
         }
+
+        /* Payment Loader Modal */
+        #paymentLoaderModal .modal-content {
+            border-radius: 16px;
+        }
+        #paymentLoaderModal .spinner-border {
+            width: 40px;
+            height: 40px;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -636,11 +646,20 @@
 </head>
 <body>
 
-    <!-- Loader Overlay -->
-    <div id="paymentLoader" class="loader-overlay">
-        <div class="loader-spinner"></div>
-        <div id="loaderMessage" style="font-size: 14px;">Processing payment...</div>
-    </div>    
+    <!-- Payment Loader - Separate from the other loader -->
+    <div id="paymentLoaderModal" class="modal fade" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p id="paymentLoaderMessage" class="mb-0">Processing payment...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main POS System -->
     <div id="posSystem">
         <!-- Sidebar -->
@@ -1519,6 +1538,25 @@
                 };
             }
         }
+
+        // Payment loader functions
+        function showPaymentLoader(message = 'Processing payment...') {
+            const loaderModal = new bootstrap.Modal(document.getElementById('paymentLoaderModal'));
+            const messageEl = document.getElementById('paymentLoaderMessage');
+            if (messageEl) messageEl.innerHTML = message;
+            loaderModal.show();
+        }
+
+        function hidePaymentLoader() {
+            const modalElement = document.getElementById('paymentLoaderModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+        }
+
+        function updatePaymentLoaderMessage(message) {
+            const messageEl = document.getElementById('paymentLoaderMessage');
+            if (messageEl) messageEl.innerHTML = message;
+        }
         
         async function processPayment() {
             // Check if payment method is selected
@@ -1529,37 +1567,72 @@
             
             const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
             
-            if (selectedPaymentMethod === 'cash') {
-                const cash = parseFloat(document.getElementById('cashAmount').value);
-                if (isNaN(cash) || cash < total) {
-                    showToast('Insufficient cash!', 'error');
-                    return;
+            // Show payment loader
+            showPaymentLoader('Processing payment...');
+            
+            try {
+                if (selectedPaymentMethod === 'cash') {
+                    const cash = parseFloat(document.getElementById('cashAmount').value);
+                    if (isNaN(cash) || cash < total) {
+                        hidePaymentLoader();
+                        showToast('Insufficient cash!', 'error');
+                        return;
+                    }
+                    await processOrder(selectedPaymentMethod, cash, cash - total);
+                } else {
+                    await processOrder(selectedPaymentMethod, total, 0);
                 }
-                await processOrder(selectedPaymentMethod, cash, cash - total);
-            } else {
-                await processOrder(selectedPaymentMethod, total, 0);
+            } catch (error) {
+                hidePaymentLoader();
+                showToast('Payment failed', 'error');
             }
         }
-        
+
         async function processOrder(method, paid, change) {
+            updatePaymentLoaderMessage('Verifying payment...');
+            
             const success = await createTransactionAPI(cart, method, paid, change);
+            
             if (success) {
-                cart.forEach(cartItem => { const product = products.find(p => p.id === cartItem.id); if (product) product.stock -= cartItem.quantity; });
+                updatePaymentLoaderMessage('Updating inventory...');
+                
+                // Small delay to show the message
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                cart.forEach(cartItem => {
+                    const product = products.find(p => p.id === cartItem.id);
+                    if (product) product.stock -= cartItem.quantity;
+                });
+                
                 const transactionTotal = parseFloat(document.getElementById('total').innerText.replace('$', ''));
                 salesData.todaySales += transactionTotal;
                 salesData.itemsSold += cart.reduce((sum, i) => sum + i.quantity, 0);
+                
                 updateStats();
+                
                 bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
+                
+                // Hide payment loader
+                hidePaymentLoader();
+                
+                // Generate and show receipt
                 const receiptHTML = generateReceiptHTML(cart, method, paid, change);
                 document.getElementById('receiptContent').innerHTML = receiptHTML;
                 new bootstrap.Modal(document.getElementById('receiptModal')).show();
+                
                 cart = [];
                 updateCartDisplay();
                 fetchProductsFromAPI();
                 fetchTransactions();
                 fetchDashboardStats();
+                
                 if (currentPage === 'inventory') renderInventory();
                 if (currentPage === 'analytics') renderAnalytics();
+                
+                showToast('Payment successful!', 'success');
+            } else {
+                hidePaymentLoader();
+                showToast('Payment failed', 'error');
             }
         }
         
