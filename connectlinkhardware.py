@@ -74,6 +74,7 @@ def init_database():
         )
     """, commit=True)
     
+    # Products table (without barcode and icon)
     execute_query("""
         CREATE TABLE IF NOT EXISTS products (
             id SERIAL PRIMARY KEY,
@@ -90,8 +91,9 @@ def init_database():
         )
     """, commit=True)
 
+    # Remove old columns if they exist
     execute_query("""
-        ALTER TABLE Products 
+        ALTER TABLE products 
             DROP COLUMN IF EXISTS barcode,
             DROP COLUMN IF EXISTS icon
     """, commit=True)
@@ -132,7 +134,6 @@ def init_database():
         CREATE TABLE IF NOT EXISTS categories (
             id SERIAL PRIMARY KEY,
             name VARCHAR(50) UNIQUE NOT NULL,
-            icon VARCHAR(50) DEFAULT 'fa-folder',
             display_order INTEGER DEFAULT 0
         )
     """, commit=True)
@@ -149,23 +150,55 @@ def init_database():
     
     # Create default categories
     default_categories = [
-        ('Hand Tools', 'fa-tools', 1),
-        ('Power Tools', 'fa-bolt', 2),
-        ('Fasteners', 'fa-link', 3),
-        ('Paint', 'fa-palette', 4),
-        ('Lumber', 'fa-tree', 5),
-        ('Electrical', 'fa-plug', 6),
-        ('Plumbing', 'fa-water', 7),
-        ('Safety', 'fa-shield-alt', 8)
+        ('Hand Tools', 1),
+        ('Power Tools', 2),
+        ('Fasteners', 3),
+        ('Paint', 4),
+        ('Lumber', 5),
+        ('Electrical', 6),
+        ('Plumbing', 7),
+        ('Safety', 8)
     ]
     
-    for cat_name, cat_icon, order in default_categories:
+    for cat_name, order in default_categories:
         cat_check = execute_query("SELECT id FROM categories WHERE name = %s", (cat_name,), fetch_one=True)
         if not cat_check:
             execute_query("""
-                INSERT INTO categories (name, icon, display_order)
-                VALUES (%s, %s, %s)
-            """, (cat_name, cat_icon, order), commit=True)
+                INSERT INTO categories (name, display_order)
+                VALUES (%s, %s)
+            """, (cat_name, order), commit=True)
+
+# ==================== PRODUCT FETCH FUNCTION (run1) ====================
+
+def run1():
+    """Fetch all products from the Products table"""
+    query = """
+        SELECT id, name, category, unit_type, unit_details, price, stock, 
+               min_stock_level, description, created_at, updated_at
+        FROM products
+        ORDER BY name
+    """
+    result = execute_query(query, fetch_all=True)
+    
+    products = []
+    if result:
+        for row in result:
+            products.append({
+                'id': row[0],
+                'name': row[1],
+                'category': row[2],
+                'unit_type': row[3],
+                'unit_details': row[4],
+                'price': float(row[5]),
+                'stock': row[6],
+                'min_stock_level': row[7],
+                'description': row[8],
+                'created_at': row[9].isoformat() if row[9] else None,
+                'updated_at': row[10].isoformat() if row[10] else None,
+                'low_stock': row[6] < row[7] if row[7] else False
+            })
+    
+    return products
 
 # ==================== USER AUTHENTICATION ====================
 
@@ -228,57 +261,31 @@ def check_auth():
 
 @app.route('/api/products', methods=['GET'])
 @login_required
-def get_products():
-    """Get all products with optional filtering"""
+def get_products_api():
+    """API endpoint to fetch products using run1()"""
     category = request.args.get('category')
     search = request.args.get('search')
     
-    query = "SELECT id, name, category, unit_type, unit_details, price, stock, min_stock_level, icon, barcode, description FROM products"
-    params = []
-    conditions = []
+    # Get all products using run1
+    all_products = run1()
     
+    # Apply filters
+    filtered_products = all_products
     if category and category != 'all':
-        conditions.append("category = %s")
-        params.append(category)
-    
+        filtered_products = [p for p in filtered_products if p['category'] == category]
     if search:
-        conditions.append("name ILIKE %s")
-        params.append(f"%{search}%")
-    
-    if conditions:
-        query += " WHERE " + " AND ".join(conditions)
-    
-    query += " ORDER BY name"
-    
-    products = execute_query(query, tuple(params) if params else None, fetch_all=True)
-    
-    product_list = []
-    for p in products:
-        product_list.append({
-            'id': p[0],
-            'name': p[1],
-            'category': p[2],
-            'unit_type': p[3],
-            'unit_details': p[4],
-            'price': float(p[5]),
-            'stock': p[6],
-            'min_stock_level': p[7],
-            'icon': p[8],
-            'barcode': p[9],
-            'description': p[10],
-            'low_stock': p[6] < p[7]
-        })
+        filtered_products = [p for p in filtered_products if search.lower() in p['name'].lower()]
     
     return jsonify({
         'success': True,
-        'products': product_list,
-        'total': len(product_list)
+        'products': filtered_products,
+        'total': len(filtered_products)
     })
 
 @app.route('/api/products/<int:product_id>', methods=['GET'])
 @login_required
 def get_product(product_id):
-    query = "SELECT id, name, category, unit_type, unit_details, price, stock, min_stock_level, icon, barcode, description FROM products WHERE id = %s"
+    query = "SELECT id, name, category, unit_type, unit_details, price, stock, min_stock_level, description FROM products WHERE id = %s"
     product = execute_query(query, (product_id,), fetch_one=True)
     
     if not product:
@@ -295,9 +302,7 @@ def get_product(product_id):
             'price': float(product[5]),
             'stock': product[6],
             'min_stock_level': product[7],
-            'icon': product[8],
-            'barcode': product[9],
-            'description': product[10]
+            'description': product[8]
         }
     })
 
@@ -308,8 +313,8 @@ def create_product():
     data = request.json
     
     query = """
-        INSERT INTO products (name, category, unit_type, unit_details, price, stock, min_stock_level, icon, barcode, description)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO products (name, category, unit_type, unit_details, price, stock, min_stock_level, description)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
     """
     
@@ -321,8 +326,6 @@ def create_product():
         data['price'],
         data.get('stock', 0),
         data.get('min_stock_level', 10),
-        data.get('icon', 'fa-tools'),
-        data.get('barcode'),
         data.get('description', '')
     )
     
@@ -343,7 +346,7 @@ def update_product(product_id):
     update_fields = []
     params = []
     
-    updatable_fields = ['name', 'category', 'unit_type', 'unit_details', 'price', 'stock', 'min_stock_level', 'icon', 'barcode', 'description']
+    updatable_fields = ['name', 'category', 'unit_type', 'unit_details', 'price', 'stock', 'min_stock_level', 'description']
     
     for field in updatable_fields:
         if field in data:
@@ -531,14 +534,13 @@ def get_daily_summary():
 @app.route('/api/categories', methods=['GET'])
 @login_required
 def get_categories():
-    query = "SELECT name, icon FROM categories ORDER BY display_order"
+    query = "SELECT name FROM categories ORDER BY display_order"
     categories = execute_query(query, fetch_all=True)
     
-    category_list = [{'name': 'all', 'icon': 'fa-th-large'}]  # Add 'All' category
+    category_list = [{'name': 'all'}]  # Add 'All' category
     for cat in categories:
         category_list.append({
-            'name': cat[0],
-            'icon': cat[1]
+            'name': cat[0]
         })
     
     return jsonify({
@@ -589,7 +591,7 @@ def get_dashboard_stats():
 
 @app.route('/')
 def index():
-    return send_from_directory('templates','login.html')
+    return send_from_directory('templates', 'login.html')
 
 @app.route('/login')
 def login_page():
@@ -597,6 +599,7 @@ def login_page():
 
 @app.route('/pos-system.html')
 def pos_static():
+    """Serve the POS HTML"""
     return send_from_directory('templates', 'pos-system.html')
 
 # ==================== INITIALIZE DATABASE ====================

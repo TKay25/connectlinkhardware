@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
+        /* Your existing CSS remains the same */
         * {
             margin: 0;
             padding: 0;
@@ -648,17 +649,15 @@
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-light">
-                                <tr><th>ID</th><th>Product</th><th>Category</th><th>Unit</th><th>Detail</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr>
-                            </thead>
+                                <tr><th>ID</th><th>Product</th><th>Category</th><th>Unit</th><th>Detail</th><th>Price</th><th>Stock</th><th>Status</th><th></th>               </thead>
                             <tbody id="inventoryList"></tbody>
-                        </table>
+                         </table>
                     </div>
                 </div>
             </div>
 
             <!-- Sales Report Page -->
             <div id="salesPage" style="display: none;">
-               <!-- Stats Row - Compact -->
                 <div class="row g-2 mb-3">
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
@@ -705,8 +704,6 @@
                         </div>
                     </div>
                 </div>
-
- 
                 <div class="section-card">
                     <h5 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Sales Report</h5>
                     <canvas id="salesChart" style="max-height: 350px;"></canvas>
@@ -719,7 +716,7 @@
                     <h5 class="fw-bold mb-2"><i class="fas fa-history me-1"></i>Transaction History</h5>
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead class="table-light"><tr><th>Date</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Payment</th></tr></thead>
+                            <thead class="table-light"> <tr><th>Date</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Payment</th></tr> </thead>
                             <tbody id="transactionsList"></tbody>
                         </table>
                     </div>
@@ -749,7 +746,7 @@
     <!-- Modals -->
     <div class="modal fade" id="confirmationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-receipt me-1"></i>Order Confirmation</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="confirmationContent"></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="processPayment()">Confirm & Pay</button></div></div></div></div>
 
-    <div class="modal fade" id="addInventoryModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addProductForm"><div class="row g-2"><div class="col-md-6"><label class="form-label">Product Name *</label><input type="text" class="form-control" id="productName" required></div><div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" id="productCategory"><option value="hand tools">Hand Tools</option><option value="power tools">Power Tools</option><option value="fasteners">Fasteners</option><option value="paint">Paint</option><option value="lumber">Lumber</option><option value="electrical">Electrical</option><option value="plumbing">Plumbing</option><option value="safety">Safety</option></select></div><div class="col-md-4"><label class="form-label">Unit Type *</label><select class="form-select" id="unitType"><option value="piece">Piece</option><option value="length">Length</option><option value="weight">Weight</option><option value="volume">Volume</option><option value="pack">Pack</option></select></div><div class="col-md-4"><label class="form-label">Unit Detail *</label><input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required></div><div class="col-md-4"><label class="form-label">Price ($) *</label><input type="number" step="0.01" class="form-control" id="productPrice" required></div><div class="col-md-6"><label class="form-label">Initial Stock *</label><input type="number" class="form-control" id="productStock" required></div><div class="col-md-6"><label class="form-label">Icon</label><input type="text" class="form-control" id="productIcon" value="fa-tools"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="addNewProduct()">Add</button></div></div></div></div>
+    <div class="modal fade" id="addInventoryModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addProductForm"><div class="row g-2"><div class="col-md-6"><label class="form-label">Product Name *</label><input type="text" class="form-control" id="productName" required></div><div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" id="productCategory"><option value="hand tools">Hand Tools</option><option value="power tools">Power Tools</option><option value="fasteners">Fasteners</option><option value="paint">Paint</option><option value="lumber">Lumber</option><option value="electrical">Electrical</option><option value="plumbing">Plumbing</option><option value="safety">Safety</option></select></div><div class="col-md-4"><label class="form-label">Unit Type *</label><select class="form-select" id="unitType"><option value="piece">Piece</option><option value="length">Length</option><option value="weight">Weight</option><option value="volume">Volume</option><option value="pack">Pack</option></select></div><div class="col-md-4"><label class="form-label">Unit Detail *</label><input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required></div><div class="col-md-4"><label class="form-label">Price ($) *</label><input type="number" step="0.01" class="form-control" id="productPrice" required></div><div class="col-md-6"><label class="form-label">Initial Stock *</label><input type="number" class="form-control" id="productStock" required></div><div class="col-md-6"><label class="form-label">Description</label><input type="text" class="form-control" id="productDescription" placeholder="Optional description"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="addNewProduct()">Add</button></div></div></div></div>
 
     <div class="modal fade" id="receiptModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h6 class="modal-title"><i class="fas fa-receipt"></i> Receipt</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="receiptContent"></div><div class="modal-footer"><button class="btn btn-sm btn-primary-dark" onclick="printReceipt()">Print</button><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>
 
@@ -758,36 +755,36 @@
         // API Base URL
         const API_BASE = window.location.origin;
 
-        // Modified login function for Flask backend
-        async function loginUser(username, password) {
-            try {
-                const response = await fetch(`${API_BASE}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/pos-system.html';
-                } else {
-                    showToast(data.message, 'error');
-                }
-            } catch (error) {
-                showToast('Connection error', 'error');
-            }
-        }
+        // Global variables
+        let products = [];
+        let cart = [];
+        let selectedCategory = "all";
+        let searchTerm = "";
+        let selectedPaymentMethod = "cash";
+        let salesData = { todaySales: 0, itemsSold: 0, transactions: [] };
+        let currentPage = "pos";
+        let salesChart = null;
+        let categoryChart = null;
+        let categories = ["all"];
 
-        // Modified fetch products
-        async function fetchProductsFromDB() {
+        // Check authentication
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = '/login';
+        }
+        
+        document.getElementById('userName').innerText = JSON.parse(localStorage.getItem('user') || '{"full_name":"Administrator"}').full_name || 'Administrator';
+
+        // ==================== API FUNCTIONS ====================
+        
+        // Fetch products from Flask API using run1()
+        async function fetchProductsFromAPI() {
             try {
                 let url = `${API_BASE}/api/products`;
                 if (selectedCategory !== 'all') {
-                    url += `?category=${selectedCategory}`;
+                    url += `?category=${encodeURIComponent(selectedCategory)}`;
                 }
                 if (searchTerm) {
-                    url += `${selectedCategory !== 'all' ? '&' : '?'}search=${searchTerm}`;
+                    url += `${selectedCategory !== 'all' ? '&' : '?'}search=${encodeURIComponent(searchTerm)}`;
                 }
                 
                 const response = await fetch(url);
@@ -799,20 +796,53 @@
                 if (data.success) {
                     products = data.products;
                     renderProducts();
+                    updateStats();
+                } else {
+                    showToast('Failed to load products', 'error');
                 }
             } catch (error) {
                 console.error('Error fetching products:', error);
+                showToast('Connection error loading products', 'error');
             }
         }
 
-        // Modified transaction processing
-        async function processTransaction(cart, paymentMethod, amountPaid, change) {
+        // Fetch categories from API
+        async function fetchCategories() {
+            try {
+                const response = await fetch(`${API_BASE}/api/categories`);
+                const data = await response.json();
+                if (data.success) {
+                    categories = data.categories.map(c => c.name);
+                    renderCategories();
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        }
+
+        // Fetch dashboard stats
+        async function fetchDashboardStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/dashboard/stats`);
+                const data = await response.json();
+                if (data.success) {
+                    salesData.todaySales = data.stats.today_sales;
+                    salesData.itemsSold = data.stats.items_sold;
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Create transaction via API
+        async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
             try {
                 const response = await fetch(`${API_BASE}/api/transactions`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        items: cart.map(item => ({
+                        items: items.map(item => ({
                             id: item.id,
                             name: item.name,
                             price: item.price,
@@ -843,172 +873,583 @@
             }
         }
 
-    </script>
-
-
-    <script>
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = '/login';
+        // ==================== UI RENDER FUNCTIONS ====================
+        
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = categories.map(cat => `
+                <div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">
+                    ${cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </div>
+            `).join('');
         }
-        document.getElementById('userName').innerText = localStorage.getItem('userName') || 'Administrator';
 
-        let products = [
-            { id: 1, name: "Ball Peen Hammer", category: "hand tools", unitType: "piece", unitDetails: "16oz", price: 24.99, stock: 45, icon: "fa-gavel" },
-            { id: 2, name: "Screwdriver Set", category: "hand tools", unitType: "pack", unitDetails: "8pcs", price: 19.99, stock: 32, icon: "fa-screwdriver-wrench" },
-            { id: 3, name: "Adjustable Wrench", category: "hand tools", unitType: "length", unitDetails: "12in", price: 22.99, stock: 28, icon: "fa-wrench" },
-            { id: 4, name: "Cordless Drill", category: "power tools", unitType: "piece", unitDetails: "20V", price: 129.99, stock: 12, icon: "fa-drill" },
-            { id: 5, name: "Circular Saw", category: "power tools", unitType: "piece", unitDetails: "7-1/4in", price: 149.99, stock: 8, icon: "fa-saw" },
-            { id: 6, name: "Galvanized Nails", category: "fasteners", unitType: "weight", unitDetails: "1lb", price: 5.99, stock: 150, icon: "fa-circle" },
-            { id: 7, name: "Wood Screws", category: "fasteners", unitType: "pack", unitDetails: "100pcs", price: 8.99, stock: 200, icon: "fa-circle-notch" },
-            { id: 8, name: "Exterior Paint", category: "paint", unitType: "volume", unitDetails: "1gal", price: 34.99, stock: 25, icon: "fa-paint-roller" },
-            { id: 9, name: "Paint Brush Set", category: "paint", unitType: "pack", unitDetails: "5pcs", price: 12.99, stock: 40, icon: "fa-paintbrush" },
-            { id: 10, name: "Lumber 2x4", category: "lumber", unitType: "length", unitDetails: "8ft", price: 7.99, stock: 85, icon: "fa-tree" },
-            { id: 11, name: "Plywood Sheet", category: "lumber", unitType: "area", unitDetails: "4x8ft", price: 45.99, stock: 30, icon: "fa-border-all" },
-            { id: 12, name: "PVC Pipe", category: "plumbing", unitType: "length", unitDetails: "10ft", price: 6.99, stock: 60, icon: "fa-water" }
-        ];
+        function selectCategory(category) {
+            selectedCategory = category;
+            renderCategories();
+            fetchProductsFromAPI();
+        }
 
-        let nextId = 13, cart = [], selectedCategory = "all", searchTerm = "", selectedPaymentMethod = "cash", salesData = { todaySales: 0, itemsSold: 0, transactions: [] }, currentPage = "pos", salesChart = null, categoryChart = null;
-        const categories = ["all", "hand tools", "power tools", "fasteners", "paint", "lumber", "electrical", "plumbing", "safety"];
+        function getCategoryIcon(category) {
+            const icons = {
+                'hand tools': 'fa-tools',
+                'power tools': 'fa-bolt',
+                'fasteners': 'fa-link',
+                'paint': 'fa-palette',
+                'lumber': 'fa-tree',
+                'electrical': 'fa-plug',
+                'plumbing': 'fa-water',
+                'safety': 'fa-shield-alt'
+            };
+            return icons[category] || 'fa-box';
+        }
 
-        function init() { renderCategories(); renderProducts(); updateStats(); setupEventListeners(); }
-        function setupEventListeners() {
-            document.getElementById('searchProduct').addEventListener('input', (e) => { searchTerm = e.target.value.toLowerCase(); renderProducts(); });
-            document.querySelectorAll('.payment-method').forEach(el => { el.addEventListener('click', function() { document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active')); this.classList.add('active'); selectedPaymentMethod = this.dataset.method; document.getElementById('cashInputDiv').style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none'; }); });
-            document.getElementById('cashAmount').addEventListener('input', () => { const total = parseFloat(document.getElementById('total').innerText.replace('$','')); const cash = parseFloat(document.getElementById('cashAmount').value); if(!isNaN(cash) && cash >= total) document.getElementById('changeDue').innerHTML = `Change: $${(cash - total).toFixed(2)}`; else if(!isNaN(cash)) document.getElementById('changeDue').innerHTML = '<span class="text-danger">Insufficient</span>'; else document.getElementById('changeDue').innerHTML = ''; });
-            document.querySelectorAll('.menu-item').forEach(item => { item.addEventListener('click', () => { const page = item.dataset.page; if(page) navigateTo(page); }); });
+        function renderProducts() {
+            const container = document.getElementById('productsContainer');
+            if (!products.length) {
+                container.innerHTML = '<div class="col-12 text-center py-4"><i class="fas fa-box-open fa-2x text-muted"></i><p class="text-muted mt-1 small">No products found</p></div>';
+                return;
             }
+            
+            container.innerHTML = products.map(product => `
+                <div class="col-md-6 col-xl-4">
+                    <div class="product-card" onclick="addToCart(${product.id})">
+                        <div class="d-flex justify-content-between mb-1">
+                            <i class="fas ${getCategoryIcon(product.category)}" style="color:#0a2b3e;"></i>
+                            ${product.stock < 10 ? '<span class="badge-low-stock">Low</span>' : ''}
+                        </div>
+                        <h6 class="fw-bold mb-0">${escapeHtml(product.name)}</h6>
+                        <div class="small text-muted mb-1">
+                            <span class="unit-badge">${product.unit_type}: ${product.unit_details || 'N/A'}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-end mt-1">
+                            <div>
+                                <span class="fw-bold" style="color:#0a2b3e;">$${product.price.toFixed(2)}</span>
+                                <div class="small text-muted">Stock: ${product.stock}</div>
+                            </div>
+                            <button class="btn btn-sm" style="background:#0a2b3e;color:white;border-radius:30px;padding:2px 8px;">Add</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-            document.getElementById('logoutBtn').addEventListener('click', async () => {
-                try {
-                    const response = await fetch('/api/logout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    
-                    if (response.ok) {
-                        localStorage.clear();
-                        // Redirect to Flask login route, not static HTML file
-                        window.location.href = '/login';
-                    } else {
-                        console.error('Logout failed');
-                    }
-                } catch (error) {
-                    console.error('Logout error:', error);
-                    // Fallback redirect
-                    localStorage.clear();
-                    window.location.href = '/login';
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== CART FUNCTIONS ====================
+        
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            const existing = cart.find(i => i.id === productId);
+            if (existing) {
+                if (existing.quantity + 1 > product.stock) {
+                    showToast('Not enough stock!', 'error');
+                    return;
                 }
-            });
-            // Set sidebar collapsed by default on page load
-            document.addEventListener('DOMContentLoaded', function() {
-                const sidebar = document.getElementById('sidebar');
-                const mainContent = document.getElementById('mainContent');
-                const toggleBtn = document.getElementById('toggleSidebar');
-                
-                // Add collapsed class by default
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('expanded');
-                toggleBtn.classList.add('shifted');
-            });
-
-            // Toggle function (already in your code, but ensure it's there)
-            function toggleSidebar() {
-                const sidebar = document.getElementById('sidebar');
-                const mainContent = document.getElementById('mainContent');
-                const toggleBtn = document.getElementById('toggleSidebar');
-                
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-                toggleBtn.classList.toggle('shifted');
+                existing.quantity++;
+            } else {
+                if (product.stock < 1) {
+                    showToast('Out of stock!', 'error');
+                    return;
+                }
+                cart.push({ ...product, quantity: 1 });
             }
+            updateCartDisplay();
+            showToast(`${product.name} added`, 'success');
+        }
 
-            // Add event listener for toggle button
-            document.getElementById('toggleSidebar').addEventListener('click', toggleSidebar);
+        function updateCartDisplay() {
+            const container = document.getElementById('cartItems');
+            if (!cart.length) {
+                container.innerHTML = '<div class="text-center py-4"><i class="fas fa-shopping-cart fa-2x text-muted mb-1"></i><p class="text-muted small">Cart empty</p></div>';
+            } else {
+                container.innerHTML = cart.map((item, idx) => `
+                    <div class="cart-item">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="fw-bold mb-0">${escapeHtml(item.name)}</h6>
+                                <div class="small text-muted">$${item.price.toFixed(2)} each</div>
+                                <div class="mt-1">
+                                    <div class="qty-control">
+                                        <button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button>
+                                        <span class="fw-bold small">${item.quantity}</span>
+                                        <button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold small" style="color:#0a2b3e;">$${(item.price * item.quantity).toFixed(2)}</div>
+                                <button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})">
+                                    <i class="fas fa-trash-alt fa-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            calculateTotals();
+        }
 
+        function updateQuantity(idx, delta) {
+            const newQty = cart[idx].quantity + delta;
+            const product = products.find(p => p.id === cart[idx].id);
+            if (newQty < 1) {
+                removeFromCart(idx);
+            } else if (newQty <= product.stock) {
+                cart[idx].quantity = newQty;
+                updateCartDisplay();
+            } else {
+                showToast('Not enough stock!', 'error');
+            }
+        }
 
+        function removeFromCart(idx) {
+            cart.splice(idx, 1);
+            updateCartDisplay();
+        }
+
+        function clearCart() {
+            if (cart.length) {
+                cart = [];
+                updateCartDisplay();
+                showToast('Cart cleared', 'info');
+            }
+        }
+
+        function calculateTotals() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const tax = subtotal * 0.10;
+            const total = subtotal + tax;
+            document.getElementById('subtotal').innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById('tax').innerText = `$${tax.toFixed(2)}`;
+            document.getElementById('total').innerText = `$${total.toFixed(2)}`;
+        }
+
+        // ==================== PAYMENT FUNCTIONS ====================
+        
+        function showPaymentConfirmation() {
+            if (!cart.length) {
+                showToast('Cart is empty!', 'error');
+                return;
+            }
+            
+            const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('$', ''));
+            const tax = parseFloat(document.getElementById('tax').innerText.replace('$', ''));
+            const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+            
+            const confirmationHTML = `
+                <div>
+                    <div class="mb-2 p-2 bg-light rounded">
+                        <h6 class="fw-bold mb-1 small">Order Summary</h6>
+                        ${cart.map(item => `
+                            <div class="d-flex justify-content-between py-1 border-bottom small">
+                                <div>
+                                    <strong>${escapeHtml(item.name)}</strong><br>
+                                    <span class="text-muted">$${item.price.toFixed(2)} x ${item.quantity}</span>
+                                </div>
+                                <span class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span></div>
+                        <div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div>
+                        <div class="d-flex justify-content-between fw-bold pt-1 border-top small">
+                            <span>Total:</span>
+                            <span style="color:#0a2b3e;">$${total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="alert alert-info small py-1 mb-0">
+                        <i class="fas fa-credit-card me-1"></i>Payment: ${selectedPaymentMethod.toUpperCase()}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('confirmationContent').innerHTML = confirmationHTML;
+            new bootstrap.Modal(document.getElementById('confirmationModal')).show();
+        }
+
+        async function processPayment() {
+            const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+            
+            if (selectedPaymentMethod === 'cash') {
+                const cash = parseFloat(document.getElementById('cashAmount').value);
+                if (isNaN(cash) || cash < total) {
+                    showToast('Insufficient cash!', 'error');
+                    return;
+                }
+                await processOrder(selectedPaymentMethod, cash, cash - total);
+            } else {
+                await processOrder(selectedPaymentMethod, total, 0);
+            }
+        }
+
+        async function processOrder(method, paid, change) {
+            const success = await createTransactionAPI(cart, method, paid, change);
+            
+            if (success) {
+                // Update local stock
+                cart.forEach(cartItem => {
+                    const product = products.find(p => p.id === cartItem.id);
+                    if (product) product.stock -= cartItem.quantity;
+                });
+                
+                // Add to transaction history
+                const transaction = {
+                    id: Date.now(),
+                    date: new Date().toLocaleString(),
+                    items: [...cart],
+                    subtotal: parseFloat(document.getElementById('subtotal').innerText.replace('$', '')),
+                    tax: parseFloat(document.getElementById('tax').innerText.replace('$', '')),
+                    total: parseFloat(document.getElementById('total').innerText.replace('$', '')),
+                    paymentMethod: method,
+                    amountPaid: paid,
+                    change: change
+                };
+                salesData.transactions.unshift(transaction);
+                salesData.todaySales += transaction.total;
+                salesData.itemsSold += cart.reduce((sum, i) => sum + i.quantity, 0);
+                
+                updateStats();
+                generateReceipt(transaction);
+                bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
+                
+                cart = [];
+                updateCartDisplay();
+                fetchProductsFromAPI();
+                
+                if (currentPage === 'inventory') renderInventory();
+                if (currentPage === 'transactions') renderTransactions();
+                if (currentPage === 'analytics') renderAnalytics();
+            }
+        }
+
+        function generateReceipt(transaction) {
+            const receiptHTML = `
+                <div class="text-center">
+                    <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
+                    <h6 class="fw-bold mt-1">Connect Link Properties</h6>
+                    <small>Hardware Supply</small>
+                    <hr class="my-1">
+                    <small>${transaction.date}</small>
+                    <hr class="my-1">
+                    ${transaction.items.map(item => `
+                        <div class="d-flex justify-content-between small">
+                            <span>${escapeHtml(item.name)} x${item.quantity}</span>
+                            <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                    <hr class="my-1">
+                    <div class="d-flex justify-content-between small">
+                        <strong>Total:</strong>
+                        <strong>$${transaction.total.toFixed(2)}</strong>
+                    </div>
+                    <hr class="my-1">
+                    <div class="small">Payment: ${transaction.paymentMethod.toUpperCase()}</div>
+                    ${transaction.change > 0 ? `<div class="small">Change: $${transaction.change.toFixed(2)}</div>` : ''}
+                    <hr class="my-1">
+                    <small>Thank you!</small>
+                </div>
+            `;
+            document.getElementById('receiptContent').innerHTML = receiptHTML;
+            new bootstrap.Modal(document.getElementById('receiptModal')).show();
+        }
+
+        function printReceipt() {
+            const content = document.getElementById('receiptContent').innerHTML;
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html>
+                <head><title>Receipt</title>
+                <style>body{font-family:monospace;padding:10px;text-align:center;}</style>
+                </head>
+                <body>${content}</body>
+                </html>
+            `);
+            win.print();
+        }
+
+        // ==================== INVENTORY FUNCTIONS ====================
+        
+        function renderInventory() {
+            const tbody = document.getElementById('inventoryList');
+            tbody.innerHTML = products.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td><i class="fas ${getCategoryIcon(p.category)} me-1"></i>${escapeHtml(p.name)}</td>
+                    <td>${p.category}</td>
+                    <td><span class="unit-badge">${p.unit_type}</span></td>
+                    <td><small>${p.unit_details || 'N/A'}</small></td>
+                    <td class="fw-bold">$${p.price.toFixed(2)}</td>
+                    <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
+                    <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
+                    <td><button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddInventoryModal() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productStock').value = '';
+            document.getElementById('unitDetails').value = '';
+            document.getElementById('productDescription').value = '';
+            new bootstrap.Modal(document.getElementById('addInventoryModal')).show();
+        }
+
+        async function addNewProduct() {
+            const name = document.getElementById('productName').value;
+            const category = document.getElementById('productCategory').value;
+            const unitType = document.getElementById('unitType').value;
+            const unitDetails = document.getElementById('unitDetails').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const stock = parseInt(document.getElementById('productStock').value);
+            const description = document.getElementById('productDescription').value;
+            
+            if (!name || isNaN(price) || isNaN(stock)) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name, category, unit_type: unitType, unit_details: unitDetails,
+                        price, stock, description
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide();
+                    fetchProductsFromAPI();
+                    showToast(`${name} added successfully`, 'success');
+                } else {
+                    showToast('Failed to add product', 'error');
+                }
+            } catch (error) {
+                showToast('Connection error', 'error');
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Delete product?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/products/${id}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    fetchProductsFromAPI();
+                    showToast('Product deleted', 'info');
+                } else {
+                    showToast(data.error || 'Cannot delete product', 'error');
+                }
+            } catch (error) {
+                showToast('Connection error', 'error');
+            }
+        }
+
+        // ==================== PAGE NAVIGATION ====================
+        
         function navigateTo(page) {
             currentPage = page;
-            document.querySelectorAll('.menu-item').forEach(item => { item.classList.remove('active'); if(item.dataset.page === page) item.classList.add('active'); });
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === page) item.classList.add('active');
+            });
+            
             document.getElementById('posPage').style.display = page === 'pos' ? 'block' : 'none';
             document.getElementById('inventoryPage').style.display = page === 'inventory' ? 'block' : 'none';
             document.getElementById('salesPage').style.display = page === 'sales' ? 'block' : 'none';
             document.getElementById('transactionsPage').style.display = page === 'transactions' ? 'block' : 'none';
             document.getElementById('analyticsPage').style.display = page === 'analytics' ? 'block' : 'none';
+            
             if (page === 'inventory') renderInventory();
-            if (page === 'sales') { renderSalesChart(); document.getElementById('todaySales2').innerText = document.getElementById('todaySales').innerText; document.getElementById('itemsSold2').innerText = document.getElementById('itemsSold').innerText; document.getElementById('lowStockCount2').innerText = document.getElementById('lowStockCount').innerText; document.getElementById('totalProducts2').innerText = document.getElementById('totalProducts').innerText; }
+            if (page === 'sales') renderSalesChart();
             if (page === 'transactions') renderTransactions();
             if (page === 'analytics') renderAnalytics();
         }
 
-        function renderCategories() { document.getElementById('categoriesContainer').innerHTML = categories.map(cat => `<div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}</div>`).join(''); }
-        function selectCategory(category) { selectedCategory = category; renderCategories(); renderProducts(); }
+        // ==================== REPORT FUNCTIONS ====================
         
-        function renderProducts() {
-            let filtered = products.filter(p => (selectedCategory === "all" || p.category === selectedCategory) && (searchTerm === "" || p.name.toLowerCase().includes(searchTerm)));
-            document.getElementById('productsContainer').innerHTML = filtered.length ? filtered.map(p => `<div class="col-md-6 col-xl-4"><div class="product-card" onclick="addToCart(${p.id})"><div class="d-flex justify-content-between mb-1"><i class="fas ${p.icon}" style="color:#0a2b3e;"></i>${p.stock < 10 ? '<span class="badge-low-stock">Low</span>' : ''}</div><h6 class="fw-bold mb-0">${p.name}</h6><div class="small text-muted mb-1"><span class="unit-badge">${p.unitType}: ${p.unitDetails}</span></div><div class="d-flex justify-content-between align-items-end mt-1"><div><span class="fw-bold" style="color:#0a2b3e;">$${p.price.toFixed(2)}</span><div class="small text-muted">Stock: ${p.stock}</div></div><button class="btn btn-sm" style="background:#0a2b3e;color:white;border-radius:30px;padding:2px 8px;">Add</button></div></div></div>`).join('') : '<div class="col-12 text-center py-4"><i class="fas fa-box-open fa-2x text-muted"></i><p class="text-muted mt-1 small">No products found</p></div>';
+        function renderSalesChart() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            if (salesChart) salesChart.destroy();
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Sales ($)',
+                        data: [1250, 1450, 1320, 1680, 1890, 2100, 1750],
+                        borderColor: '#0a2b3e',
+                        backgroundColor: 'rgba(10,43,62,0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: true }
+            });
         }
 
-        function addToCart(id) {
-            const product = products.find(p => p.id === id);
-            if(!product) return;
-            const existing = cart.find(i => i.id === id);
-            if(existing) { if(existing.quantity + 1 > product.stock) return showToast('Not enough stock!','error'); existing.quantity++; }
-            else { if(product.stock < 1) return showToast('Out of stock!','error'); cart.push({...product, quantity:1}); }
-            updateCartDisplay(); showToast(`${product.name} added`,'success');
+        function renderTransactions() {
+            const tbody = document.getElementById('transactionsList');
+            if (!salesData.transactions.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No transactions yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = salesData.transactions.map(t => `
+                <tr>
+                    <td>${t.date}</td>
+                    <td>${t.items.reduce((s, i) => s + i.quantity, 0)} items</td>
+                    <td>$${t.subtotal.toFixed(2)}</td>
+                    <td>$${t.tax.toFixed(2)}</td>
+                    <td class="fw-bold">$${t.total.toFixed(2)}</td>
+                    <td><span class="badge bg-info">${t.paymentMethod}</span></td>
+                </tr>
+            `).join('');
         }
 
-        function updateCartDisplay() {
-            const container = document.getElementById('cartItems');
-            if(!cart.length) container.innerHTML = '<div class="text-center py-4"><i class="fas fa-shopping-cart fa-2x text-muted mb-1"></i><p class="text-muted small">Cart empty</p></div>';
-            else container.innerHTML = cart.map((item,idx) => `<div class="cart-item"><div class="d-flex justify-content-between"><div><h6 class="fw-bold mb-0">${item.name}</h6><div class="small text-muted">$${item.price.toFixed(2)} each</div><div class="mt-1"><div class="qty-control"><button class="qty-btn" onclick="updateQuantity(${idx},-1)">-</button><span class="fw-bold small">${item.quantity}</span><button class="qty-btn" onclick="updateQuantity(${idx},1)">+</button></div></div></div><div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${(item.price * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div></div></div>`).join('');
-            calculateTotals();
+        function renderAnalytics() {
+            const categoryCount = {};
+            products.forEach(p => {
+                if (!categoryCount[p.category]) categoryCount[p.category] = 0;
+                categoryCount[p.category] += p.stock * p.price;
+            });
+            
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(categoryCount),
+                    datasets: [{
+                        data: Object.values(categoryCount),
+                        backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff']
+                    }]
+                },
+                options: { responsive: true }
+            });
+            
+            const topProducts = [...products].sort((a, b) => b.stock * b.price - a.stock * a.price).slice(0, 5);
+            document.getElementById('topProductsList').innerHTML = topProducts.map((p, idx) => `
+                <div class="d-flex justify-content-between align-items-center p-1 border-bottom small">
+                    <span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span>
+                    <span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span>
+                </div>
+            `).join('');
         }
 
-        function updateQuantity(idx,delta) { const newQty = cart[idx].quantity + delta; const prod = products.find(p=>p.id===cart[idx].id); if(newQty<1) removeFromCart(idx); else if(newQty<=prod.stock) { cart[idx].quantity = newQty; updateCartDisplay(); } else showToast('Not enough stock!','error'); }
-        function removeFromCart(idx) { cart.splice(idx,1); updateCartDisplay(); }
-        function clearCart() { if(cart.length) { cart = []; updateCartDisplay(); showToast('Cart cleared','info'); } }
+        // ==================== UI UPDATE FUNCTIONS ====================
         
-        function calculateTotals() { const sub = cart.reduce((s,i)=>s+(i.price*i.quantity),0); const tax = sub*0.1; const total = sub+tax; document.getElementById('subtotal').innerText = `$${sub.toFixed(2)}`; document.getElementById('tax').innerText = `$${tax.toFixed(2)}`; document.getElementById('total').innerText = `$${total.toFixed(2)}`; }
-
-        function showPaymentConfirmation() {
-            if(!cart.length) return showToast('Cart empty!','error');
-            const sub = parseFloat(document.getElementById('subtotal').innerText.replace('$','')); const tax = parseFloat(document.getElementById('tax').innerText.replace('$','')); const total = parseFloat(document.getElementById('total').innerText.replace('$',''));
-            document.getElementById('confirmationContent').innerHTML = `<div><div class="mb-2 p-2 bg-light rounded"><h6 class="fw-bold mb-1 small">Order Summary</h6>${cart.map(i=>`<div class="d-flex justify-content-between py-1 border-bottom small"><div><strong>${i.name}</strong><br><span class="text-muted">$${i.price.toFixed(2)} x ${i.quantity}</span></div><span class="fw-bold">$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('')}</div><div class="mb-2"><div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${sub.toFixed(2)}</span></div><div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div><div class="d-flex justify-content-between fw-bold pt-1 border-top small"><span>Total:</span><span style="color:#0a2b3e;">$${total.toFixed(2)}</span></div></div><div class="alert alert-info small py-1 mb-0"><i class="fas fa-credit-card me-1"></i>Payment: ${selectedPaymentMethod.toUpperCase()}</div></div>`;
-            new bootstrap.Modal(document.getElementById('confirmationModal')).show();
+        function updateStats() {
+            document.getElementById('todaySales').innerText = `$${salesData.todaySales.toFixed(2)}`;
+            document.getElementById('itemsSold').innerText = salesData.itemsSold;
+            document.getElementById('lowStockCount').innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
+            document.getElementById('totalProducts').innerText = products.length;
+            
+            // Update stats on sales page if visible
+            if (document.getElementById('todaySales2')) {
+                document.getElementById('todaySales2').innerText = `$${salesData.todaySales.toFixed(2)}`;
+                document.getElementById('itemsSold2').innerText = salesData.itemsSold;
+                document.getElementById('lowStockCount2').innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
+                document.getElementById('totalProducts2').innerText = products.length;
+            }
         }
 
-        function processPayment() { const total = parseFloat(document.getElementById('total').innerText.replace('$','')); if(selectedPaymentMethod === 'cash') { const cash = parseFloat(document.getElementById('cashAmount').value); if(isNaN(cash) || cash < total) return showToast('Insufficient cash!','error'); processOrder(selectedPaymentMethod, cash, cash-total); } else processOrder(selectedPaymentMethod, total, 0); }
-
-        function processOrder(method, paid, change) {
-            const sub = parseFloat(document.getElementById('subtotal').innerText.replace('$','')); const tax = parseFloat(document.getElementById('tax').innerText.replace('$','')); const total = parseFloat(document.getElementById('total').innerText.replace('$',''));
-            cart.forEach(cartItem => { const p = products.find(p=>p.id===cartItem.id); if(p) p.stock -= cartItem.quantity; });
-            const transaction = { id:Date.now(), date:new Date().toLocaleString(), items:[...cart], subtotal:sub, tax:tax, total:total, paymentMethod:method, amountPaid:paid, change:change };
-            salesData.transactions.unshift(transaction);
-            salesData.todaySales += total;
-            salesData.itemsSold += cart.reduce((s,i)=>s+i.quantity,0);
-            updateStats();
-            generateReceipt(transaction);
-            bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
-            cart = []; updateCartDisplay(); renderProducts();
-            if(currentPage === 'inventory') renderInventory();
-            if(currentPage === 'transactions') renderTransactions();
-            if(currentPage === 'analytics') renderAnalytics();
-            showToast('Payment successful!','success');
+        function showToast(msg, type) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notify';
+            const icon = type === 'success' ? 'check-circle text-success' : 
+                        type === 'error' ? 'exclamation-circle text-danger' : 'info-circle text-info';
+            toast.innerHTML = `<i class="fas fa-${icon} me-1"></i>${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
         }
 
-        function generateReceipt(t) { document.getElementById('receiptContent').innerHTML = `<div class="text-center"><i class="fas fa-hard-hat" style="color:#0a2b3e;"></i><h6 class="fw-bold mt-1">Connect Link Properties</h6><small>Hardware Supply</small><hr class="my-1">${t.date}<hr class="my-1">${t.items.map(i=>`<div class="d-flex justify-content-between small"><span>${i.name} x${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('')}<hr class="my-1"><div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${t.total.toFixed(2)}</strong></div><hr class="my-1"><div class="small">Payment: ${t.paymentMethod.toUpperCase()}</div>${t.change>0?`<div class="small">Change: $${t.change.toFixed(2)}</div>`:''}<hr class="my-1"><small>Thank you!</small></div>`; new bootstrap.Modal(document.getElementById('receiptModal')).show(); }
-        function printReceipt() { const w=window.open('','_blank'); w.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;padding:10px;text-align:center;}</style></head><body>${document.getElementById('receiptContent').innerHTML}</body></html>`); w.print(); }
+        // ==================== EVENT LISTENERS ====================
+        
+        function setupEventListeners() {
+            document.getElementById('searchProduct').addEventListener('input', (e) => {
+                searchTerm = e.target.value.toLowerCase();
+                fetchProductsFromAPI();
+            });
+            
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.addEventListener('click', function() {
+                    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedPaymentMethod = this.dataset.method;
+                    document.getElementById('cashInputDiv').style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
+                });
+            });
+            
+            document.getElementById('cashAmount').addEventListener('input', () => {
+                const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+                const cash = parseFloat(document.getElementById('cashAmount').value);
+                if (!isNaN(cash) && cash >= total) {
+                    document.getElementById('changeDue').innerHTML = `Change: $${(cash - total).toFixed(2)}`;
+                } else if (!isNaN(cash)) {
+                    document.getElementById('changeDue').innerHTML = '<span class="text-danger">Insufficient</span>';
+                } else {
+                    document.getElementById('changeDue').innerHTML = '';
+                }
+            });
+            
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const page = item.dataset.page;
+                    if (page) navigateTo(page);
+                });
+            });
+        }
 
-        function renderInventory() { document.getElementById('inventoryList').innerHTML = products.map(p => `<tr><td>${p.id}</td><td><i class="fas ${p.icon} me-1"></i>${p.name}</td><td>${p.category}</td><td><span class="unit-badge">${p.unitType}</span></td><td><small>${p.unitDetails}</small></td><td class="fw-bold">$${p.price.toFixed(2)}</td><td class="${p.stock<10?'text-danger fw-bold':''}">${p.stock}</td><td>${p.stock<10?'<span class="badge bg-danger">Low</span>':'<span class="badge bg-success">OK</span>'}</td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
-        function showAddInventoryModal() { document.getElementById('productName').value = ''; document.getElementById('productPrice').value = ''; document.getElementById('productStock').value = ''; document.getElementById('productIcon').value = 'fa-tools'; document.getElementById('unitDetails').value = ''; new bootstrap.Modal(document.getElementById('addInventoryModal')).show(); }
-        function addNewProduct() { const name = document.getElementById('productName').value; const category = document.getElementById('productCategory').value; const unitType = document.getElementById('unitType').value; const unitDetails = document.getElementById('unitDetails').value; const price = parseFloat(document.getElementById('productPrice').value); const stock = parseInt(document.getElementById('productStock').value); const icon = document.getElementById('productIcon').value; if(!name || isNaN(price) || isNaN(stock)) return showToast('Fill all fields','error'); products.push({ id:nextId++, name, category, unitType, unitDetails, price, stock, icon }); bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide(); renderInventory(); renderProducts(); updateStats(); showToast(`${name} added`,'success'); }
-        function deleteProduct(id) { if(confirm('Delete product?')) { products = products.filter(p=>p.id!==id); renderInventory(); renderProducts(); updateStats(); showToast('Product deleted','info'); } }
-
-        function renderSalesChart() { const ctx = document.getElementById('salesChart').getContext('2d'); if(salesChart) salesChart.destroy(); salesChart = new Chart(ctx, { type:'line', data:{ labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets:[{ label:'Sales ($)', data:[1250,1450,1320,1680,1890,2100,1750], borderColor:'#0a2b3e', backgroundColor:'rgba(10,43,62,0.1)', tension:0.3, fill:true }] }, options:{ responsive:true, maintainAspectRatio:true } }); }
-        function renderTransactions() { document.getElementById('transactionsList').innerHTML = salesData.transactions.length ? salesData.transactions.map(t=>`<tr><td>${t.date}</td><td>${t.items.reduce((s,i)=>s+i.quantity,0)} items</td><td>$${t.subtotal.toFixed(2)}</td><td>$${t.tax.toFixed(2)}</td><td class="fw-bold">$${t.total.toFixed(2)}</td><td><span class="badge bg-info">${t.paymentMethod}</span></td></tr>`).join('') : '<tr><td colspan="6" class="text-center">No transactions yet</td></tr>'; }
-        function renderAnalytics() { const categoryCount = {}; products.forEach(p => { if(!categoryCount[p.category]) categoryCount[p.category] = 0; categoryCount[p.category] += p.stock * p.price; }); const ctx = document.getElementById('categoryChart').getContext('2d'); if(categoryChart) categoryChart.destroy(); categoryChart = new Chart(ctx, { type:'pie', data:{ labels:Object.keys(categoryCount), datasets:[{ data:Object.values(categoryCount), backgroundColor:['#0a2b3e','#1e4a6e','#2c6e9e','#3c8ebe','#4caede','#6cbeef','#8cceff','#acdeff'] }] }, options:{ responsive:true } }); const topProducts = [...products].sort((a,b)=>b.stock*a.price - a.stock*b.price).slice(0,5); document.getElementById('topProductsList').innerHTML = topProducts.map((p,idx)=>`<div class="d-flex justify-content-between align-items-center p-1 border-bottom small"><span><span class="fw-bold">${idx+1}.</span> ${p.name}</span><span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span></div>`).join(''); }
-        function updateStats() { document.getElementById('todaySales').innerText = `$${salesData.todaySales.toFixed(2)}`; document.getElementById('itemsSold').innerText = salesData.itemsSold; document.getElementById('lowStockCount').innerText = products.filter(p=>p.stock<10).length; document.getElementById('totalProducts').innerText = products.length; if(document.getElementById('todaySales2')) document.getElementById('todaySales2').innerText = `$${salesData.todaySales.toFixed(2)}`; if(document.getElementById('itemsSold2')) document.getElementById('itemsSold2').innerText = salesData.itemsSold; if(document.getElementById('lowStockCount2')) document.getElementById('lowStockCount2').innerText = products.filter(p=>p.stock<10).length; if(document.getElementById('totalProducts2')) document.getElementById('totalProducts2').innerText = products.length; }
-        function showToast(msg,type) { const t=document.createElement('div'); t.className='toast-notify'; t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle text-success':'exclamation-circle text-warning'} me-1"></i>${msg}`; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+        // ==================== INITIALIZATION ====================
+        
+        async function init() {
+            setupEventListeners();
+            
+            // Set sidebar collapsed by default
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('toggleSidebar');
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('expanded');
+            toggleBtn.classList.add('shifted');
+            
+            // Toggle button event
+            document.getElementById('toggleSidebar').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+                document.getElementById('mainContent').classList.toggle('expanded');
+                document.getElementById('toggleSidebar').classList.toggle('shifted');
+            });
+            
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                try {
+                    await fetch('/api/logout', { method: 'POST' });
+                } catch (e) {}
+                localStorage.clear();
+                window.location.href = '/login';
+            });
+            
+            // Load data
+            await fetchCategories();
+            await fetchProductsFromAPI();
+            await fetchDashboardStats();
+        }
+        
+        // Start the application
         init();
     </script>
 </body>
