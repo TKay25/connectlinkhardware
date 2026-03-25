@@ -74,7 +74,6 @@ def init_database():
         )
     """, commit=True)
     
-    # Products table
     execute_query("""
         CREATE TABLE IF NOT EXISTS products (
             id SERIAL PRIMARY KEY,
@@ -91,7 +90,6 @@ def init_database():
         )
     """, commit=True)
 
-    # Delete both columns in one query
     execute_query("""
         ALTER TABLE Products 
             DROP COLUMN IF EXISTS barcode,
