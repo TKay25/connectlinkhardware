@@ -109,10 +109,27 @@ def init_database():
             DROP COLUMN IF EXISTS icon
     """, commit=True)
 
-    execute_query("""
-        ALTER TABLE products 
-        RENAME COLUMN IF EXISTS price TO sell_price
-    """, commit=True)
+    # Check if column exists first, then rename
+    try:
+        # First check if price column exists
+        check_query = """
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'products' AND column_name = 'price'
+        """
+        result = execute_query(check_query, fetch_one=True)
+        
+        if result:
+            # If price column exists, rename it
+            execute_query("""
+                ALTER TABLE products 
+                RENAME COLUMN price TO sell_price
+            """, commit=True)
+            print("Renamed price column to sell_price")
+    except Exception as e:
+        print(f"Note: Could not rename column: {e}")
+
+
 
     # Add buy_price column if it doesn't exist
     execute_query("""
