@@ -590,7 +590,6 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.7);
-            z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -818,15 +817,11 @@
                                     <span class="text-muted small">Subtotal:</span>
                                     <span class="fw-bold small" id="subtotal">$0.00</span>
                                 </div>
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span class="text-muted small">VAT (15%):</span>
-                                    <span class="fw-bold small" id="tax">$0.00</span>
-                                </div>
                                 <div class="d-flex justify-content-between mb-2 pb-1 border-bottom">
                                     <span class="fw-bold small">Total:</span>
                                     <span class="fw-bold small" style="color: #0a2b3e;" id="total">$0.00</span>
                                 </div>
-
+                                <!-- REST OF CART CODE CONTINUES -->
                                 <div class="mb-2">
                                     <label class="small fw-bold mb-1">Payment Method</label>
                                     <div class="row g-1">
@@ -1083,22 +1078,24 @@
         const messageEl = document.getElementById('paymentLoaderMessage');
         if (messageEl) messageEl.innerHTML = message || 'Processing payment...';
         
-        // Remove ALL existing backdrops first
-        const existingBackdrops = document.querySelectorAll('.modal-backdrop');
-        existingBackdrops.forEach(backdrop => backdrop.remove());
+        // Force remove all backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
         
-        // Small delay to ensure DOM is clean
+        // Show loader
+        paymentLoaderModal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        paymentLoaderModal.show();
+        
+        // Force z-index to ensure it's on top
         setTimeout(() => {
-            // Create and show new modal
-            paymentLoaderModal = new bootstrap.Modal(modalElement, {
-                backdrop: 'static',
-                keyboard: false
-            });
-            paymentLoaderModal.show();
-        }, 50);
+            const modalBackdrop = document.querySelector('.modal-backdrop');
+            if (modalBackdrop) modalBackdrop.style.zIndex = '10000';
+            modalElement.style.zIndex = '10001';
+        }, 10);
     }
     
     function hidePaymentLoader() {
@@ -1106,13 +1103,10 @@
             paymentLoaderModal.hide();
             paymentLoaderModal = null;
         }
-        // Clean up backdrops
         setTimeout(() => {
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => backdrop.remove());
+            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
         }, 100);
     }
     
@@ -1175,8 +1169,7 @@
     async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
         try {
             const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const vat = subtotal * 0.15; // 15% VAT
-            const total = subtotal + vat;
+            const total = subtotal; // NO VAT - price is final selling price
             
             const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
                 method: 'POST', 
@@ -1185,9 +1178,9 @@
                 body: JSON.stringify({
                     items: items.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
                     subtotal: subtotal,
-                    tax: vat,
+                    tax: 0,
                     total: total,
-                    tax_rate: 15,
+                    tax_rate: 0,
                     payment_method: paymentMethod, 
                     amount_paid: amountPaid, 
                     change_amount: change
@@ -1292,7 +1285,7 @@
         if (!tbody) return;
         
         if (!products.length) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No products found</td></tr>';
+            tbody.innerHTML = '=<td colspan="9" class="text-center">No products found</td>';
             return;
         }
         
@@ -1532,12 +1525,11 @@
     
     function removeFromCart(idx) { cart.splice(idx, 1); updateCartDisplay(); }
     function clearCart() { if (cart.length) { cart = []; updateCartDisplay(); showToast('Cart cleared', 'info'); } }
+    
     function calculateTotals() {
-        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const vat = subtotal * 0.15; // 15% VAT
-        const total = subtotal + vat;
-        document.getElementById('subtotal').innerText = `$${subtotal.toFixed(2)}`;
-        document.getElementById('tax').innerText = `$${vat.toFixed(2)}`;
+        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        document.getElementById('subtotal').innerText = `$${total.toFixed(2)}`;
+        document.getElementById('tax').innerText = `$0.00`;
         document.getElementById('total').innerText = `$${total.toFixed(2)}`;
     }
     
@@ -1554,7 +1546,6 @@
             return;
         }
         
-        const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('$', ''));
         const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
         
         const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
@@ -1575,9 +1566,8 @@
                     `).join('')}
                 </div>
                 <div class="mb-2">
-                    <div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span></div>
                     <div class="d-flex justify-content-between fw-bold pt-1 border-top small">
-                        <span>Total (incl. VAT):</span>
+                        <span>Total:</span>
                         <span style="color:#0a2b3e;">$${total.toFixed(2)}</span>
                     </div>
                 </div>
@@ -1605,25 +1595,21 @@
         
         const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
         
-        // Hide confirmation modal properly
-        const confirmationModalElement = document.getElementById('confirmationModal');
-        const confirmationModal = bootstrap.Modal.getInstance(confirmationModalElement);
+        // Hide confirmation modal
+        const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
         if (confirmationModal) {
             confirmationModal.hide();
         }
         
-        // Wait for modal to close and remove all backdrops
+        // Clean up backdrops
         setTimeout(() => {
-            // Remove any lingering backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => backdrop.remove());
+            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-            
-            // Now show payment loader
-            showPaymentLoader('Processing payment...');
-        }, 200);
+        }, 100);
+        
+        // Show payment loader
+        showPaymentLoader('Processing payment...');
         
         try {
             if (selectedPaymentMethod === 'cash') {
@@ -1686,9 +1672,7 @@
     }
     
     function generateReceiptHTML(items, method, paid, change) {
-        const subtotal = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-        const vat = subtotal * 0.15; // 15% VAT calculated but not shown
-        const total = subtotal + vat;
+        const total = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
         return `<div class="text-center">
             <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
             <h6 class="fw-bold mt-1">Connect Link Properties</h6>
@@ -1698,7 +1682,6 @@
             <hr class="my-1">
             ${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${(item.price * item.quantity).toFixed(2)}</span></div>`).join('')}
             <hr class="my-1">
-            <div class="d-flex justify-content-between small"><strong>Subtotal:</strong><span>$${subtotal.toFixed(2)}</span></div>
             <div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div>
             <hr class="my-1">
             <div class="small">Payment: ${method.toUpperCase()}</div>
