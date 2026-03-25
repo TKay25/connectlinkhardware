@@ -1312,7 +1312,7 @@
     
     async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
         try {
-            const subtotal = items.reduce((sum, item) => sum + (item.sell_price * item.quantity), 0);
+            const subtotal = items.reduce((sum, item) => sum + ((item.sell_price || item.price || 0) * item.quantity), 0);
             const total = subtotal; // NO VAT - price is final selling price
             
             const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
@@ -1320,7 +1320,12 @@
                 headers: { 'Content-Type': 'application/json' }, 
                 credentials: 'include',
                 body: JSON.stringify({
-                    items: items.map(item => ({ id: item.id, name: item.name, price: item.sell_price, quantity: item.quantity })),
+                    items: items.map(item => ({ 
+                        id: item.id, 
+                        name: item.name, 
+                        price: item.sell_price || item.price || 0, 
+                        quantity: item.quantity 
+                    })),
                     subtotal: subtotal,
                     tax: 0,
                     total: total,
@@ -1376,7 +1381,7 @@
                         </div>
                     </div>
                     <div class="price-add-wrapper">
-                        <div class="price-above">$${product.sell_price.toFixed(2)}</div>
+                        <div class="price-above">$${(product.sell_price || product.price || 0).toFixed(2)}</div>
                         <button class="add-btn-compact" onclick="event.stopPropagation(); addToCart(${product.id})">
                             <i class="fas fa-plus"></i> Add
                         </button>
@@ -1423,13 +1428,13 @@
         renderCategories();
         renderProducts();
     }
-    
+
     function renderInventory() {
         const tbody = document.getElementById('inventoryList');
         if (!tbody) return;
         
         if (!products.length) {
-            tbody.innerHTML = '=<td colspan="10" class="text-center">No products found</td>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center">No products found</td></tr>';
             return;
         }
         
@@ -1440,8 +1445,8 @@
                 <td>${p.category}</td>
                 <td><span class="unit-badge">${p.unit_type}</span></td>
                 <td><small>${p.unit_details || 'N/A'}</small></td>
-                <td class="text-danger">$${p.buy_price ? p.buy_price.toFixed(2) : '0.00'}</td>
-                <td class="fw-bold text-success">$${p.price.toFixed(2)}</td>
+                <td class="text-danger">$${(p.buy_price || 0).toFixed(2)}</td>
+                <td class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)}</td>
                 <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
                 <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
                 <td>
