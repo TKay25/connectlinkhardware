@@ -495,6 +495,35 @@
             position: relative;
         }
 
+        /* Loader overlay */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0a2b3e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -675,8 +704,8 @@
                             <thead class="table-light">
                                 <tr><th>ID</th><th>Product</th><th>Category</th><th>Unit</th><th>Detail</th><th>Price</th><th>Stock</th><th>Status</th><th></th> </thead>
                             <tbody id="inventoryList">
-                                <td><td colspan="9" class="text-center">Loading products...<td> </tbody>
-                            </table>
+                                <td><td colspan="9" class="text-center">Loading products... </tbody>
+                             </table>
                     </div>
                 </div>
             </div>
@@ -729,7 +758,7 @@
                     <h5 class="fw-bold mb-2"><i class="fas fa-history me-1"></i>Transaction History</h5>
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead class="table-light"> <tr><th>Date</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Payment</th> </tr></thead>
+                            <thead class="table-light">  <tr><th>Date</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Payment</th> </tr></thead>
                             <tbody id="transactionsList"><tr><td colspan="6" class="text-center">No transactions yet</td></tr></tbody>
                         </table>
                     </div>
@@ -759,7 +788,7 @@
     <!-- Modals -->
     <div class="modal fade" id="confirmationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-receipt me-1"></i>Order Confirmation</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="confirmationContent"></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="processPayment()">Confirm & Pay</button></div></div></div></div>
 
-    <div class="modal fade" id="addInventoryModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addProductForm"><div class="row g-2"><div class="col-md-6 position-relative"><label class="form-label">Product Name *</label><input type="text" class="form-control" id="productName" autocomplete="off" required><div id="productNameSuggestions" class="autocomplete-items"></div></div><div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" id="productCategory"><option value="Hand Tools">Hand Tools</option><option value="Power Tools">Power Tools</option><option value="fasteners">Fasteners</option><option value="paint">Paint</option><option value="lumber">Lumber</option><option value="electrical">Electrical</option><option value="plumbing">Plumbing</option><option value="safety">Safety</option></select></div><div class="col-md-4"><label class="form-label">Unit Type *</label><select class="form-select" id="unitType"><option value="piece">Piece</option><option value="length">Length</option><option value="weight">Weight</option><option value="volume">Volume</option><option value="pack">Pack</option></select></div><div class="col-md-4"><label class="form-label">Unit Detail *</label><input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required></div><div class="col-md-4"><label class="form-label">Price ($) *</label><input type="number" step="0.01" class="form-control" id="productPrice" required></div><div class="col-md-6"><label class="form-label">Initial Stock *</label><input type="number" class="form-control" id="productStock" required></div><div class="col-md-6"><label class="form-label">Description</label><input type="text" class="form-control" id="productDescription" placeholder="Optional description"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="addNewProduct()">Add</button></div></div></div></div>
+    <div class="modal fade" id="addInventoryModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addProductForm"><div class="row g-2"><div class="col-md-6 position-relative"><label class="form-label">Product Name *</label><input type="text" class="form-control" id="productName" autocomplete="off" required><div id="productNameSuggestions" class="autocomplete-items"></div></div><div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" id="productCategory"><option value="Hand Tools">Hand Tools</option><option value="Power Tools">Power Tools</option><option value="Fasteners">Fasteners</option><option value="Paint">Paint</option><option value="Lumber">Lumber</option><option value="Electrical">Electrical</option><option value="Plumbing">Plumbing</option><option value="Safety">Safety</option></select></div><div class="col-md-4"><label class="form-label">Unit Type *</label><select class="form-select" id="unitType"><option value="piece">Piece</option><option value="length">Length</option><option value="weight">Weight</option><option value="volume">Volume</option><option value="pack">Pack</option></select></div><div class="col-md-4"><label class="form-label">Unit Detail *</label><input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required></div><div class="col-md-4"><label class="form-label">Price ($) *</label><input type="number" step="0.01" class="form-control" id="productPrice" required></div><div class="col-md-6"><label class="form-label">Initial Stock *</label><input type="number" class="form-control" id="productStock" required></div><div class="col-md-6"><label class="form-label">Description</label><input type="text" class="form-control" id="productDescription" placeholder="Optional description"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="addNewProduct()">Add</button></div></div></div></div>
 
     <div class="modal fade" id="deletePasscodeModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -804,7 +833,7 @@
         let currentPage = "pos";
         let salesChart = null;
         let categoryChart = null;
-        let categories = ["all"];
+        let categoriesList = [];
         let productToDelete = null;
         const DELETE_PASSCODE = "conlinkhardwareadmin01";
         
@@ -812,16 +841,11 @@
         
         async function checkAuthentication() {
             try {
-                const authResponse = await fetch(`${API_BASE}/api/check-auth`, {
-                    credentials: 'include'
-                });
+                const authResponse = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
                 const authData = await authResponse.json();
-                
                 if (authData.authenticated) {
                     localStorage.setItem('isLoggedIn', 'true');
-                    if (authData.user) {
-                        localStorage.setItem('user', JSON.stringify(authData.user));
-                    }
+                    if (authData.user) localStorage.setItem('user', JSON.stringify(authData.user));
                     return true;
                 } else {
                     localStorage.removeItem('isLoggedIn');
@@ -830,13 +854,8 @@
                     return false;
                 }
             } catch (error) {
-                console.error('Auth check error:', error);
-                if (localStorage.getItem('isLoggedIn') === 'true') {
-                    return true;
-                } else {
-                    window.location.href = '/login';
-                    return false;
-                }
+                if (localStorage.getItem('isLoggedIn') === 'true') return true;
+                else { window.location.href = '/login'; return false; }
             }
         }
         
@@ -847,12 +866,32 @@
                 try {
                     const userObj = JSON.parse(userData);
                     userName = userObj.full_name || userObj.username || "Administrator";
-                } catch (e) {
-                    userName = userData === "admin" ? "Administrator" : userData;
-                }
+                } catch (e) { userName = userData === "admin" ? "Administrator" : userData; }
             }
             const userNameSpan = document.getElementById('userName');
             if (userNameSpan) userNameSpan.innerText = userName;
+        }
+        
+        // ==================== LOADER FUNCTIONS ====================
+        
+        function showLoader(message) {
+            let loader = document.getElementById('globalLoader');
+            if (!loader) {
+                loader = document.createElement('div');
+                loader.id = 'globalLoader';
+                loader.className = 'loader-overlay';
+                loader.innerHTML = `<div class="loader-spinner"></div><div id="loaderMessage" style="font-size: 14px;">${message}</div>`;
+                document.body.appendChild(loader);
+            } else {
+                loader.style.display = 'flex';
+                const msgDiv = document.getElementById('loaderMessage');
+                if (msgDiv) msgDiv.innerHTML = message;
+            }
+        }
+        
+        function hideLoader() {
+            const loader = document.getElementById('globalLoader');
+            if (loader) loader.style.display = 'none';
         }
         
         // ==================== API FUNCTIONS ====================
@@ -860,31 +899,16 @@
         async function fetchProductsFromAPI() {
             try {
                 let url = `${API_BASE}/api/products`;
-                if (selectedCategory !== 'all') {
-                    url += `?category=${encodeURIComponent(selectedCategory)}`;
-                }
-                if (searchTerm) {
-                    url += `${selectedCategory !== 'all' ? '&' : '?'}search=${encodeURIComponent(searchTerm)}`;
-                }
-                
                 const productsResponse = await fetch(url, { credentials: 'include' });
-                if (productsResponse.status === 401) {
-                    window.location.href = '/login';
-                    return;
-                }
+                if (productsResponse.status === 401) { window.location.href = '/login'; return; }
                 const productsData = await productsResponse.json();
                 if (productsData.success) {
                     products = productsData.products;
                     renderProducts();
                     renderInventory();
                     updateStats();
-                } else {
-                    showToast('Failed to load products', 'error');
                 }
-            } catch (error) {
-                console.error('Error fetching products:', error);
-                showToast('Connection error loading products', 'error');
-            }
+            } catch (error) { console.error('Error fetching products:', error); showToast('Connection error', 'error'); }
         }
         
         async function fetchCategories() {
@@ -892,12 +916,10 @@
                 const categoriesResponse = await fetch(`${API_BASE}/api/categories`, { credentials: 'include' });
                 const categoriesData = await categoriesResponse.json();
                 if (categoriesData.success) {
-                    categories = ['all', ...categoriesData.categories.map(c => c.name)];
+                    categoriesList = categoriesData.categories.map(c => c.name);
                     renderCategories();
                 }
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            }
+            } catch (error) { console.error('Error fetching categories:', error); }
         }
         
         async function fetchDashboardStats() {
@@ -909,9 +931,7 @@
                     salesData.itemsSold = statsData.stats.items_sold;
                     updateStats();
                 }
-            } catch (error) {
-                console.error('Error fetching stats:', error);
-            }
+            } catch (error) { console.error('Error fetching stats:', error); }
         }
         
         async function fetchTransactions() {
@@ -922,82 +942,45 @@
                     salesData.transactions = transactionsData.transactions;
                     renderTransactions();
                 }
-            } catch (error) {
-                console.error('Error fetching transactions:', error);
-            }
+            } catch (error) { console.error('Error fetching transactions:', error); }
         }
         
         async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
             try {
                 const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
                     body: JSON.stringify({
-                        items: items.map(item => ({
-                            id: item.id,
-                            name: item.name,
-                            price: item.price,
-                            quantity: item.quantity
-                        })),
-                        payment_method: paymentMethod,
-                        amount_paid: amountPaid,
-                        change_amount: change
+                        items: items.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
+                        payment_method: paymentMethod, amount_paid: amountPaid, change_amount: change
                     })
                 });
-                
-                if (transactionResponse.status === 401) {
-                    window.location.href = '/login';
-                    return false;
-                }
-                
+                if (transactionResponse.status === 401) { window.location.href = '/login'; return false; }
                 const transactionData = await transactionResponse.json();
-                if (transactionData.success) {
-                    showToast('Payment successful!', 'success');
-                    return true;
-                } else {
-                    showToast(transactionData.error || 'Payment failed', 'error');
-                    return false;
-                }
-            } catch (error) {
-                showToast('Connection error', 'error');
-                return false;
-            }
+                if (transactionData.success) { showToast('Payment successful!', 'success'); return true; }
+                else { showToast(transactionData.error || 'Payment failed', 'error'); return false; }
+            } catch (error) { showToast('Connection error', 'error'); return false; }
         }
         
-        // ==================== SEARCH FUNCTION (name + details) ====================
+        // ==================== SEARCH & FILTER ====================
         
         function filterProducts() {
             let filtered = products;
-            
-            // Category filter
-            if (selectedCategory !== 'all') {
-                filtered = filtered.filter(p => p.category === selectedCategory);
-            }
-            
-            // Search filter - searches on name AND unit_details
+            if (selectedCategory !== 'all') filtered = filtered.filter(p => p.category === selectedCategory);
             if (searchTerm) {
                 const term = searchTerm.toLowerCase();
-                filtered = filtered.filter(p => 
-                    p.name.toLowerCase().includes(term) || 
-                    (p.unit_details && p.unit_details.toLowerCase().includes(term))
-                );
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(term) || (p.unit_details && p.unit_details.toLowerCase().includes(term)));
             }
-            
             return filtered;
         }
         
         function renderProducts() {
             const container = document.getElementById('productsContainer');
             if (!container) return;
-            
             const filtered = filterProducts();
-            
             if (!filtered.length) {
                 container.innerHTML = '<div class="col-12 text-center py-4"><i class="fas fa-box-open fa-2x text-muted"></i><p class="text-muted mt-1 small">No products found</p></div>';
                 return;
             }
-            
             container.innerHTML = filtered.map(product => `
                 <div class="col-md-6 col-xl-4">
                     <div class="product-card" onclick="addToCart(${product.id})">
@@ -1010,10 +993,7 @@
                             <span class="unit-badge">${product.unit_type}: ${product.unit_details || 'N/A'}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-end mt-1">
-                            <div>
-                                <span class="fw-bold" style="color:#0a2b3e;">$${product.price.toFixed(2)}</span>
-                                <div class="small text-muted">Stock: ${product.stock}</div>
-                            </div>
+                            <div><span class="fw-bold" style="color:#0a2b3e;">$${product.price.toFixed(2)}</span><div class="small text-muted">Stock: ${product.stock}</div></div>
                             <button class="btn btn-sm" style="background:#0a2b3e;color:white;border-radius:30px;padding:2px 8px;">Add</button>
                         </div>
                     </div>
@@ -1021,31 +1001,25 @@
             `).join('');
         }
         
-        // ==================== AUTOCOMPLETE SUGGESTIONS ====================
+        // ==================== AUTOCOMPLETE ====================
         
         function setupAutocomplete() {
             const productNameInput = document.getElementById('productName');
             const suggestionsDiv = document.getElementById('productNameSuggestions');
-            
+            if (!productNameInput) return;
             productNameInput.addEventListener('input', function() {
                 const inputValue = this.value.toLowerCase();
                 suggestionsDiv.innerHTML = '';
-                
                 if (inputValue.length < 2) return;
-                
-                // Get existing product names for suggestions
                 const existingNames = [...new Set(products.map(p => p.name))];
                 const matches = existingNames.filter(name => name.toLowerCase().includes(inputValue));
-                
                 if (matches.length === 0) return;
-                
                 matches.forEach(match => {
                     const div = document.createElement('div');
                     div.innerHTML = match;
                     div.addEventListener('click', function() {
                         productNameInput.value = match;
                         suggestionsDiv.innerHTML = '';
-                        // Auto-fill other fields from existing product
                         const existingProduct = products.find(p => p.name === match);
                         if (existingProduct) {
                             document.getElementById('productCategory').value = existingProduct.category;
@@ -1057,26 +1031,18 @@
                     suggestionsDiv.appendChild(div);
                 });
             });
-            
-            // Close suggestions when clicking outside
-            document.addEventListener('click', function(e) {
-                if (e.target !== productNameInput) {
-                    suggestionsDiv.innerHTML = '';
-                }
-            });
+            document.addEventListener('click', function(e) { if (e.target !== productNameInput) suggestionsDiv.innerHTML = ''; });
         }
         
-        // ==================== DELETE WITH PASSCODE ====================
+        // ==================== DELETE FUNCTIONS ====================
         
         function showDeleteConfirmation(productId) {
             productToDelete = productId;
             const product = products.find(p => p.id === productId);
-            
             if (product) {
                 document.getElementById('deleteProductName').innerText = product.name;
                 document.getElementById('deleteProductCategory').innerText = product.category;
             }
-            
             document.getElementById('deletePasscode').value = '';
             document.getElementById('passcodeError').innerHTML = '';
             new bootstrap.Modal(document.getElementById('deletePasscodeModal')).show();
@@ -1084,48 +1050,71 @@
         
         async function confirmDelete() {
             const passcode = document.getElementById('deletePasscode').value;
-            
             if (passcode !== DELETE_PASSCODE) {
                 document.getElementById('passcodeError').innerHTML = 'Invalid passcode!';
                 return;
             }
-            
             if (!productToDelete) return;
-            
             const product = products.find(p => p.id === productToDelete);
             const productName = product ? product.name : 'Unknown';
-            
+            showLoader(`Deleting "${productName}" from inventory...`);
             try {
-                const deleteResponse = await fetch(`${API_BASE}/api/products/${productToDelete}`, {
-                    method: 'DELETE',
-                    credentials: 'include'
-                });
+                const deleteResponse = await fetch(`${API_BASE}/api/products/${productToDelete}`, { method: 'DELETE', credentials: 'include' });
                 const deleteData = await deleteResponse.json();
                 if (deleteData.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('deletePasscodeModal')).hide();
-                    fetchProductsFromAPI();
+                    await fetchProductsFromAPI();
                     showToast(`${productName} deleted successfully`, 'success');
-                } else {
-                    showToast(deleteData.error || 'Cannot delete product', 'error');
-                }
-            } catch (error) {
-                showToast('Connection error', 'error');
-            }
+                } else { showToast(deleteData.error || 'Cannot delete product', 'error'); }
+            } catch (error) { showToast('Connection error', 'error'); }
+            hideLoader();
+            bootstrap.Modal.getInstance(document.getElementById('deletePasscodeModal')).hide();
             productToDelete = null;
+        }
+        
+        // ==================== ADD PRODUCT ====================
+        
+        function showAddInventoryModal() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productStock').value = '';
+            document.getElementById('unitDetails').value = '';
+            document.getElementById('productDescription').value = '';
+            document.getElementById('productNameSuggestions').innerHTML = '';
+            new bootstrap.Modal(document.getElementById('addInventoryModal')).show();
+        }
+        
+        async function addNewProduct() {
+            const name = document.getElementById('productName').value;
+            const category = document.getElementById('productCategory').value;
+            const unitType = document.getElementById('unitType').value;
+            const unitDetails = document.getElementById('unitDetails').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const stock = parseInt(document.getElementById('productStock').value);
+            const description = document.getElementById('productDescription').value;
+            if (!name || isNaN(price) || isNaN(stock)) { showToast('Please fill all required fields', 'error'); return; }
+            showLoader(`Adding "${name}" (${category}) to inventory, please wait...`);
+            try {
+                const addResponse = await fetch(`${API_BASE}/api/products`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                    body: JSON.stringify({ name, category, unit_type: unitType, unit_details: unitDetails, price, stock, description })
+                });
+                const addData = await addResponse.json();
+                if (addData.success) {
+                    await fetchProductsFromAPI();
+                    bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide();
+                    showToast(`${name} added successfully!`, 'success');
+                } else { showToast('Failed to add product', 'error'); }
+            } catch (error) { showToast('Connection error', 'error'); }
+            hideLoader();
         }
         
         // ==================== UI RENDER FUNCTIONS ====================
         
         function getCategoryIcon(category) {
             const icons = {
-                'Hand Tools': 'fa-tools',
-                'Power Tools': 'fa-bolt',
-                'Fasteners': 'fa-link',
-                'Paint': 'fa-palette',
-                'Lumber': 'fa-tree',
-                'Electrical': 'fa-plug',
-                'Plumbing': 'fa-water',
-                'Safety': 'fa-shield-alt'
+                'Hand Tools': 'fa-tools', 'Power Tools': 'fa-bolt', 'Fasteners': 'fa-link',
+                'Paint': 'fa-palette', 'Lumber': 'fa-tree', 'Electrical': 'fa-plug',
+                'Plumbing': 'fa-water', 'Safety': 'fa-shield-alt'
             };
             return icons[category] || 'fa-box';
         }
@@ -1140,11 +1129,8 @@
         function renderCategories() {
             const container = document.getElementById('categoriesContainer');
             if (!container) return;
-            container.innerHTML = categories.map(cat => `
-                <div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">
-                    ${cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </div>
-            `).join('');
+            container.innerHTML = `<div class="category-chip ${selectedCategory === 'all' ? 'active' : ''}" onclick="selectCategory('all')">All</div>` + 
+                categoriesList.map(cat => `<div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</div>`).join('');
         }
         
         function selectCategory(category) {
@@ -1156,12 +1142,7 @@
         function renderInventory() {
             const tbody = document.getElementById('inventoryList');
             if (!tbody) return;
-            
-            if (!products.length) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No products found</td></tr>';
-                return;
-            }
-            
+            if (!products.length) { tbody.innerHTML = '=<td colspan="9" class="text-center">No products found</td>'; return; }
             tbody.innerHTML = products.map(p => `
                 <tr>
                     <td>${p.id}</td>
@@ -1182,19 +1163,12 @@
         function addToCart(productId) {
             const product = products.find(p => p.id === productId);
             if (!product) return;
-            
             const existing = cart.find(i => i.id === productId);
             if (existing) {
-                if (existing.quantity + 1 > product.stock) {
-                    showToast('Not enough stock!', 'error');
-                    return;
-                }
+                if (existing.quantity + 1 > product.stock) { showToast('Not enough stock!', 'error'); return; }
                 existing.quantity++;
             } else {
-                if (product.stock < 1) {
-                    showToast('Out of stock!', 'error');
-                    return;
-                }
+                if (product.stock < 1) { showToast('Out of stock!', 'error'); return; }
                 cart.push({ ...product, quantity: 1 });
             }
             updateCartDisplay();
@@ -1204,7 +1178,6 @@
         function updateCartDisplay() {
             const container = document.getElementById('cartItems');
             if (!container) return;
-            
             if (!cart.length) {
                 container.innerHTML = '<div class="text-center py-4"><i class="fas fa-shopping-cart fa-2x text-muted mb-1"></i><p class="text-muted small">Cart empty</p></div>';
             } else {
@@ -1214,20 +1187,9 @@
                             <div>
                                 <h6 class="fw-bold mb-0">${escapeHtml(item.name)}</h6>
                                 <div class="small text-muted">$${item.price.toFixed(2)} each</div>
-                                <div class="mt-1">
-                                    <div class="qty-control">
-                                        <button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button>
-                                        <span class="fw-bold small">${item.quantity}</span>
-                                        <button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button>
-                                    </div>
-                                </div>
+                                <div class="mt-1"><div class="qty-control"><button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button><span class="fw-bold small">${item.quantity}</span><button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button></div></div>
                             </div>
-                            <div class="text-end">
-                                <div class="fw-bold small" style="color:#0a2b3e;">$${(item.price * item.quantity).toFixed(2)}</div>
-                                <button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})">
-                                    <i class="fas fa-trash-alt fa-xs"></i>
-                                </button>
-                            </div>
+                            <div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${(item.price * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div>
                         </div>
                     </div>
                 `).join('');
@@ -1238,29 +1200,13 @@
         function updateQuantity(idx, delta) {
             const newQty = cart[idx].quantity + delta;
             const product = products.find(p => p.id === cart[idx].id);
-            if (newQty < 1) {
-                removeFromCart(idx);
-            } else if (newQty <= product.stock) {
-                cart[idx].quantity = newQty;
-                updateCartDisplay();
-            } else {
-                showToast('Not enough stock!', 'error');
-            }
+            if (newQty < 1) removeFromCart(idx);
+            else if (newQty <= product.stock) { cart[idx].quantity = newQty; updateCartDisplay(); }
+            else showToast('Not enough stock!', 'error');
         }
         
-        function removeFromCart(idx) {
-            cart.splice(idx, 1);
-            updateCartDisplay();
-        }
-        
-        function clearCart() {
-            if (cart.length) {
-                cart = [];
-                updateCartDisplay();
-                showToast('Cart cleared', 'info');
-            }
-        }
-        
+        function removeFromCart(idx) { cart.splice(idx, 1); updateCartDisplay(); }
+        function clearCart() { if (cart.length) { cart = []; updateCartDisplay(); showToast('Cart cleared', 'info'); } }
         function calculateTotals() {
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const tax = subtotal * 0.10;
@@ -1273,89 +1219,40 @@
         // ==================== PAYMENT FUNCTIONS ====================
         
         function showPaymentConfirmation() {
-            if (!cart.length) {
-                showToast('Cart is empty!', 'error');
-                return;
-            }
-            
+            if (!cart.length) { showToast('Cart is empty!', 'error'); return; }
             const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('$', ''));
             const tax = parseFloat(document.getElementById('tax').innerText.replace('$', ''));
             const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-            
-            const confirmationHTML = `
-                <div>
-                    <div class="mb-2 p-2 bg-light rounded">
-                        <h6 class="fw-bold mb-1 small">Order Summary</h6>
-                        ${cart.map(item => `
-                            <div class="d-flex justify-content-between py-1 border-bottom small">
-                                <div>
-                                    <strong>${escapeHtml(item.name)}</strong><br>
-                                    <span class="text-muted">$${item.price.toFixed(2)} x ${item.quantity}</span>
-                                </div>
-                                <span class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span></div>
-                        <div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div>
-                        <div class="d-flex justify-content-between fw-bold pt-1 border-top small">
-                            <span>Total:</span>
-                            <span style="color:#0a2b3e;">$${total.toFixed(2)}</span>
-                        </div>
-                    </div>
-                    <div class="alert alert-info small py-1 mb-0">
-                        <i class="fas fa-credit-card me-1"></i>Payment: ${selectedPaymentMethod.toUpperCase()}
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('confirmationContent').innerHTML = confirmationHTML;
+            document.getElementById('confirmationContent').innerHTML = `<div><div class="mb-2 p-2 bg-light rounded"><h6 class="fw-bold mb-1 small">Order Summary</h6>${cart.map(item => `<div class="d-flex justify-content-between py-1 border-bottom small"><div><strong>${escapeHtml(item.name)}</strong><br><span class="text-muted">$${item.price.toFixed(2)} x ${item.quantity}</span></div><span class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</span></div>`).join('')}</div><div class="mb-2"><div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span></div><div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div><div class="d-flex justify-content-between fw-bold pt-1 border-top small"><span>Total:</span><span style="color:#0a2b3e;">$${total.toFixed(2)}</span></div></div><div class="alert alert-info small py-1 mb-0"><i class="fas fa-credit-card me-1"></i>Payment: ${selectedPaymentMethod.toUpperCase()}</div></div>`;
             new bootstrap.Modal(document.getElementById('confirmationModal')).show();
         }
         
         async function processPayment() {
             const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-            
             if (selectedPaymentMethod === 'cash') {
                 const cash = parseFloat(document.getElementById('cashAmount').value);
-                if (isNaN(cash) || cash < total) {
-                    showToast('Insufficient cash!', 'error');
-                    return;
-                }
+                if (isNaN(cash) || cash < total) { showToast('Insufficient cash!', 'error'); return; }
                 await processOrder(selectedPaymentMethod, cash, cash - total);
-            } else {
-                await processOrder(selectedPaymentMethod, total, 0);
-            }
+            } else { await processOrder(selectedPaymentMethod, total, 0); }
         }
         
         async function processOrder(method, paid, change) {
             const success = await createTransactionAPI(cart, method, paid, change);
-            
             if (success) {
-                cart.forEach(cartItem => {
-                    const product = products.find(p => p.id === cartItem.id);
-                    if (product) product.stock -= cartItem.quantity;
-                });
-                
+                cart.forEach(cartItem => { const product = products.find(p => p.id === cartItem.id); if (product) product.stock -= cartItem.quantity; });
                 const transactionTotal = parseFloat(document.getElementById('total').innerText.replace('$', ''));
                 salesData.todaySales += transactionTotal;
                 salesData.itemsSold += cart.reduce((sum, i) => sum + i.quantity, 0);
-                
                 updateStats();
-                
                 bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
-                
                 const receiptHTML = generateReceiptHTML(cart, method, paid, change);
                 document.getElementById('receiptContent').innerHTML = receiptHTML;
                 new bootstrap.Modal(document.getElementById('receiptModal')).show();
-                
                 cart = [];
                 updateCartDisplay();
                 fetchProductsFromAPI();
                 fetchTransactions();
                 fetchDashboardStats();
-                
                 if (currentPage === 'inventory') renderInventory();
                 if (currentPage === 'analytics') renderAnalytics();
             }
@@ -1365,116 +1262,23 @@
             const subtotal = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
             const tax = subtotal * 0.10;
             const total = subtotal + tax;
-            
-            return `
-                <div class="text-center">
-                    <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
-                    <h6 class="fw-bold mt-1">Connect Link Properties</h6>
-                    <small>Hardware Supply</small>
-                    <hr class="my-1">
-                    <small>${new Date().toLocaleString()}</small>
-                    <hr class="my-1">
-                    ${items.map(item => `
-                        <div class="d-flex justify-content-between small">
-                            <span>${escapeHtml(item.name)} x${item.quantity}</span>
-                            <span>$${(item.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                    `).join('')}
-                    <hr class="my-1">
-                    <div class="d-flex justify-content-between small">
-                        <strong>Total:</strong>
-                        <strong>$${total.toFixed(2)}</strong>
-                    </div>
-                    <hr class="my-1">
-                    <div class="small">Payment: ${method.toUpperCase()}</div>
-                    ${change > 0 ? `<div class="small">Change: $${change.toFixed(2)}</div>` : ''}
-                    <hr class="my-1">
-                    <small>Thank you!</small>
-                </div>
-            `;
+            return `<div class="text-center"><i class="fas fa-hard-hat" style="color:#0a2b3e;"></i><h6 class="fw-bold mt-1">Connect Link Properties</h6><small>Hardware Supply</small><hr class="my-1"><small>${new Date().toLocaleString()}</small><hr class="my-1">${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${(item.price * item.quantity).toFixed(2)}</span></div>`).join('')}<hr class="my-1"><div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div><hr class="my-1"><div class="small">Payment: ${method.toUpperCase()}</div>${change > 0 ? `<div class="small">Change: $${change.toFixed(2)}</div>` : ''}<hr class="my-1"><small>Thank you!</small></div>`;
         }
         
         function printReceipt() {
             const content = document.getElementById('receiptContent').innerHTML;
             const win = window.open('', '_blank');
-            win.document.write(`
-                <html><head><title>Receipt</title>
-                <style>body{font-family:monospace;padding:10px;text-align:center;}</style>
-                </head><body>${content}</body></html>
-            `);
+            win.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;padding:10px;text-align:center;}</style></head><body>${content}</body></html>`);
             win.print();
-        }
-        
-        // ==================== INVENTORY MANAGEMENT ====================
-        
-        function showAddInventoryModal() {
-            document.getElementById('productName').value = '';
-            document.getElementById('productPrice').value = '';
-            document.getElementById('productStock').value = '';
-            document.getElementById('unitDetails').value = '';
-            document.getElementById('productDescription').value = '';
-            document.getElementById('productNameSuggestions').innerHTML = '';
-            new bootstrap.Modal(document.getElementById('addInventoryModal')).show();
-        }
-        
-        async function addNewProduct() {
-            const name = document.getElementById('productName').value;
-            const category = document.getElementById('productCategory').value;
-            const unitType = document.getElementById('unitType').value;
-            const unitDetails = document.getElementById('unitDetails').value;
-            const price = parseFloat(document.getElementById('productPrice').value);
-            const stock = parseInt(document.getElementById('productStock').value);
-            const description = document.getElementById('productDescription').value;
-            
-            if (!name || isNaN(price) || isNaN(stock)) {
-                showToast('Please fill all required fields', 'error');
-                return;
-            }
-            
-            try {
-                const addResponse = await fetch(`${API_BASE}/api/products`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        name, category, unit_type: unitType, unit_details: unitDetails,
-                        price, stock, description
-                    })
-                });
-                const addData = await addResponse.json();
-                if (addData.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide();
-                    fetchProductsFromAPI();
-                    showToast(`${name} added successfully`, 'success');
-                } else {
-                    showToast('Failed to add product', 'error');
-                }
-            } catch (error) {
-                showToast('Connection error', 'error');
-            }
         }
         
         // ==================== PAGE NAVIGATION ====================
         
         function navigateTo(page) {
             currentPage = page;
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.dataset.page === page) item.classList.add('active');
-            });
-            
-            const pages = {
-                'pos': document.getElementById('posPage'),
-                'inventory': document.getElementById('inventoryPage'),
-                'sales': document.getElementById('salesPage'),
-                'transactions': document.getElementById('transactionsPage'),
-                'analytics': document.getElementById('analyticsPage')
-            };
-            
-            Object.keys(pages).forEach(p => {
-                if (pages[p]) pages[p].style.display = p === page ? 'block' : 'none';
-            });
-            
+            document.querySelectorAll('.menu-item').forEach(item => { item.classList.remove('active'); if (item.dataset.page === page) item.classList.add('active'); });
+            const pages = { 'pos': document.getElementById('posPage'), 'inventory': document.getElementById('inventoryPage'), 'sales': document.getElementById('salesPage'), 'transactions': document.getElementById('transactionsPage'), 'analytics': document.getElementById('analyticsPage') };
+            Object.keys(pages).forEach(p => { if (pages[p]) pages[p].style.display = p === page ? 'block' : 'none'; });
             if (page === 'inventory') renderInventory();
             if (page === 'sales') renderSalesChart();
             if (page === 'transactions') renderTransactions();
@@ -1488,98 +1292,41 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             if (salesChart) salesChart.destroy();
-            salesChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Sales ($)',
-                        data: [1250, 1450, 1320, 1680, 1890, 2100, 1750],
-                        borderColor: '#0a2b3e',
-                        backgroundColor: 'rgba(10,43,62,0.1)',
-                        tension: 0.3,
-                        fill: true
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: true }
-            });
+            salesChart = new Chart(ctx, { type: 'line', data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Sales ($)', data: [1250, 1450, 1320, 1680, 1890, 2100, 1750], borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)', tension: 0.3, fill: true }] }, options: { responsive: true, maintainAspectRatio: true } });
         }
         
         function renderTransactions() {
             const tbody = document.getElementById('transactionsList');
             if (!tbody) return;
-            
-            if (!salesData.transactions.length) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No transactions yet</td></tr>';
-                return;
-            }
-            tbody.innerHTML = salesData.transactions.map(t => `
-                <tr>
-                    <td>${t.date || t.created_at || ''}</td>
-                    <td>${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0} items</td>
-                    <td>$${t.subtotal.toFixed(2)}</td>
-                    <td>$${t.tax.toFixed(2)}</td>
-                    <td class="fw-bold">$${t.total.toFixed(2)}</td>
-                    <td><span class="badge bg-info">${t.payment_method || t.paymentMethod}</span></td>
-                </tr>
-            `).join('');
+            if (!salesData.transactions.length) { tbody.innerHTML = '=<td colspan="6" class="text-center">No transactions yet</td>'; return; }
+            tbody.innerHTML = salesData.transactions.map(t => `<tr><td>${t.date || t.created_at || ''}</td><td>${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0} items</td><td>$${t.subtotal.toFixed(2)}</td><td>$${t.tax.toFixed(2)}</td><td class="fw-bold">$${t.total.toFixed(2)}</td><td><span class="badge bg-info">${t.payment_method || t.paymentMethod}</span></td></tr>`).join('');
         }
         
         function renderAnalytics() {
             const categoryCount = {};
-            products.forEach(p => {
-                if (!categoryCount[p.category]) categoryCount[p.category] = 0;
-                categoryCount[p.category] += p.stock * p.price;
-            });
-            
+            products.forEach(p => { if (!categoryCount[p.category]) categoryCount[p.category] = 0; categoryCount[p.category] += p.stock * p.price; });
             const canvas = document.getElementById('categoryChart');
             if (canvas) {
                 const ctx = canvas.getContext('2d');
                 if (categoryChart) categoryChart.destroy();
-                categoryChart = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: Object.keys(categoryCount),
-                        datasets: [{
-                            data: Object.values(categoryCount),
-                            backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff']
-                        }]
-                    },
-                    options: { responsive: true }
-                });
+                categoryChart = new Chart(ctx, { type: 'pie', data: { labels: Object.keys(categoryCount), datasets: [{ data: Object.values(categoryCount), backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'] }] }, options: { responsive: true } });
             }
-            
             const topProducts = [...products].sort((a, b) => b.stock * b.price - a.stock * a.price).slice(0, 5);
             const topList = document.getElementById('topProductsList');
-            if (topList) {
-                topList.innerHTML = topProducts.map((p, idx) => `
-                    <div class="d-flex justify-content-between align-items-center p-1 border-bottom small">
-                        <span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span>
-                        <span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span>
-                    </div>
-                `).join('');
-            }
+            if (topList) topList.innerHTML = topProducts.map((p, idx) => `<div class="d-flex justify-content-between align-items-center p-1 border-bottom small"><span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span><span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span></div>`).join('');
         }
         
-        // ==================== UI UPDATE ====================
-        
         function updateStats() {
-            const todaySalesEl = document.getElementById('todaySales');
-            const itemsSoldEl = document.getElementById('itemsSold');
-            const lowStockCountEl = document.getElementById('lowStockCount');
-            const totalProductsEl = document.getElementById('totalProducts');
-            
-            if (todaySalesEl) todaySalesEl.innerText = `$${salesData.todaySales.toFixed(2)}`;
-            if (itemsSoldEl) itemsSoldEl.innerText = salesData.itemsSold;
-            if (lowStockCountEl) lowStockCountEl.innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
-            if (totalProductsEl) totalProductsEl.innerText = products.length;
+            document.getElementById('todaySales').innerText = `$${salesData.todaySales.toFixed(2)}`;
+            document.getElementById('itemsSold').innerText = salesData.itemsSold;
+            document.getElementById('lowStockCount').innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
+            document.getElementById('totalProducts').innerText = products.length;
         }
         
         function showToast(msg, type) {
             const toast = document.createElement('div');
             toast.className = 'toast-notify';
-            const icon = type === 'success' ? 'check-circle text-success' : 
-                        type === 'error' ? 'exclamation-circle text-danger' : 'info-circle text-info';
+            const icon = type === 'success' ? 'check-circle text-success' : type === 'error' ? 'exclamation-circle text-danger' : 'info-circle text-info';
             toast.innerHTML = `<i class="fas fa-${icon} me-1"></i>${msg}`;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2500);
@@ -1589,64 +1336,20 @@
         
         function setupEventListeners() {
             const searchInput = document.getElementById('searchProduct');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    searchTerm = e.target.value.toLowerCase();
-                    renderProducts();
-                });
-            }
-            
-            document.querySelectorAll('.payment-method').forEach(el => {
-                el.addEventListener('click', function() {
-                    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
-                    this.classList.add('active');
-                    selectedPaymentMethod = this.dataset.method;
-                    const cashDiv = document.getElementById('cashInputDiv');
-                    if (cashDiv) cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
-                });
-            });
-            
+            if (searchInput) searchInput.addEventListener('input', (e) => { searchTerm = e.target.value.toLowerCase(); renderProducts(); });
+            document.querySelectorAll('.payment-method').forEach(el => { el.addEventListener('click', function() { document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active')); this.classList.add('active'); selectedPaymentMethod = this.dataset.method; const cashDiv = document.getElementById('cashInputDiv'); if (cashDiv) cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none'; }); });
             const cashAmount = document.getElementById('cashAmount');
-            if (cashAmount) {
-                cashAmount.addEventListener('input', () => {
-                    const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-                    const cash = parseFloat(cashAmount.value);
-                    const changeDue = document.getElementById('changeDue');
-                    if (!isNaN(cash) && cash >= total) {
-                        if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`;
-                    } else if (!isNaN(cash)) {
-                        if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>';
-                    } else {
-                        if (changeDue) changeDue.innerHTML = '';
-                    }
-                });
-            }
-            
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const page = item.dataset.page;
-                    if (page) navigateTo(page);
-                });
-            });
+            if (cashAmount) cashAmount.addEventListener('input', () => { const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); const cash = parseFloat(cashAmount.value); const changeDue = document.getElementById('changeDue'); if (!isNaN(cash) && cash >= total) { if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; } else if (!isNaN(cash)) { if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; } else { if (changeDue) changeDue.innerHTML = ''; } });
+            document.querySelectorAll('.menu-item').forEach(item => { item.addEventListener('click', () => { const page = item.dataset.page; if (page) navigateTo(page); }); });
         }
         
         // ==================== SIDEBAR TOGGLE ====================
         
         function setupSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const toggleBtn = document.getElementById('toggleSidebar');
-            
+            const sidebar = document.getElementById('sidebar'), mainContent = document.getElementById('mainContent'), toggleBtn = document.getElementById('toggleSidebar');
             if (sidebar && mainContent && toggleBtn) {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('expanded');
-                toggleBtn.classList.add('shifted');
-                
-                toggleBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('collapsed');
-                    mainContent.classList.toggle('expanded');
-                    toggleBtn.classList.toggle('shifted');
-                });
+                sidebar.classList.add('collapsed'); mainContent.classList.add('expanded'); toggleBtn.classList.add('shifted');
+                toggleBtn.addEventListener('click', () => { sidebar.classList.toggle('collapsed'); mainContent.classList.toggle('expanded'); toggleBtn.classList.toggle('shifted'); });
             }
         }
         
@@ -1654,15 +1357,7 @@
         
         function setupLogout() {
             const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', async () => {
-                    try {
-                        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-                    } catch (e) {}
-                    localStorage.clear();
-                    window.location.href = '/login';
-                });
-            }
+            if (logoutBtn) logoutBtn.addEventListener('click', async () => { try { await fetch('/api/logout', { method: 'POST', credentials: 'include' }); } catch (e) {} localStorage.clear(); window.location.href = '/login'; });
         }
         
         // ==================== INITIALIZATION ====================
@@ -1670,22 +1365,18 @@
         async function init() {
             const isAuthenticated = await checkAuthentication();
             if (!isAuthenticated) return;
-            
             setUserName();
             setupSidebar();
             setupEventListeners();
             setupLogout();
             setupAutocomplete();
-            
             await fetchCategories();
             await fetchProductsFromAPI();
             await fetchDashboardStats();
             await fetchTransactions();
-            
             navigateTo('pos');
         }
         
-        // Start the application
         init();
     </script>
 </body>
