@@ -1267,13 +1267,24 @@
             const productsResponse = await fetch(url, { credentials: 'include' });
             if (productsResponse.status === 401) { window.location.href = '/login'; return; }
             const productsData = await productsResponse.json();
+            
+            // DEBUG: Log the first product to see what fields are available
+            if (productsData.products && productsData.products.length > 0) {
+                console.log('First product data:', productsData.products[0]);
+                console.log('sell_price exists?', productsData.products[0].hasOwnProperty('sell_price'));
+                console.log('price exists?', productsData.products[0].hasOwnProperty('price'));
+            }
+            
             if (productsData.success) {
                 products = productsData.products;
                 renderProducts();
                 renderInventory();
                 updateStats();
             }
-        } catch (error) { console.error('Error fetching products:', error); showToast('Connection error', 'error'); }
+        } catch (error) { 
+            console.error('Error fetching products:', error); 
+            showToast('Connection error', 'error'); 
+        }
     }
     
     async function fetchCategories() {
