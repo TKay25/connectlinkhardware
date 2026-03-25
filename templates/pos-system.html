@@ -607,10 +607,30 @@
             margin-bottom: 15px;
         }
 
-        /* Payment Loader Modal */
+        /* Payment Loader Modal - Higher z-index to appear on top */
+        #paymentLoaderModal {
+            z-index: 9999 !important;
+        }
+
+        #paymentLoaderModal .modal {
+            z-index: 9999 !important;
+        }
+
+        #paymentLoaderModal .modal-backdrop {
+            z-index: 9998 !important;
+        }
+
+        /* Ensure the loader modal backdrop covers everything */
+        .modal-backdrop.show {
+            z-index: 9998 !important;
+        }
+
+        /* Payment loader modal content */
         #paymentLoaderModal .modal-content {
             border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
+
         #paymentLoaderModal .spinner-border {
             width: 40px;
             height: 40px;
@@ -646,8 +666,8 @@
 </head>
 <body>
 
-    <!-- Payment Loader - Separate from the other loader -->
-    <div id="paymentLoaderModal" class="modal fade" tabindex="-1" data-bs-backdrop="static" style="z-index: 1000;">
+    <!-- Payment Loader - High z-index to appear on top of confirmation modal -->
+    <div id="paymentLoaderModal" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" style="z-index: 9999;">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-body text-center py-4">
@@ -1540,17 +1560,54 @@
         }
 
         // Payment loader functions
-        function showPaymentLoader(message = 'Processing payment...') {
-            const loaderModal = new bootstrap.Modal(document.getElementById('paymentLoaderModal'));
+        let paymentLoaderModal = null;
+
+        function showPaymentLoader(message = 'Processing payment, Please Wait...') {
+            // Get or create modal instance
+            const modalElement = document.getElementById('paymentLoaderModal');
+            if (!modalElement) return;
+            
+            // Update message
             const messageEl = document.getElementById('paymentLoaderMessage');
             if (messageEl) messageEl.innerHTML = message;
-            loaderModal.show();
+            
+            // Hide any existing backdrop issues
+            const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+            existingBackdrops.forEach(backdrop => backdrop.remove());
+            
+            // Create new modal instance
+            paymentLoaderModal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            
+            // Show the loader
+            paymentLoaderModal.show();
+            
+            // Force z-index to be high
+            setTimeout(() => {
+                const modalBackdrop = document.querySelector('.modal-backdrop.show');
+                if (modalBackdrop) {
+                    modalBackdrop.style.zIndex = '9998';
+                }
+            }, 10);
         }
 
         function hidePaymentLoader() {
-            const modalElement = document.getElementById('paymentLoaderModal');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
+            if (paymentLoaderModal) {
+                paymentLoaderModal.hide();
+                paymentLoaderModal = null;
+            }
+            
+            // Clean up any leftover backdrops after a short delay
+            setTimeout(() => {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    if (backdrop.parentNode) backdrop.remove();
+                });
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+            }, 300);
         }
 
         function updatePaymentLoaderMessage(message) {
