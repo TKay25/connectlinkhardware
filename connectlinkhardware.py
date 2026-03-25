@@ -85,12 +85,17 @@ def init_database():
             price DECIMAL(10,2) NOT NULL,
             stock INTEGER DEFAULT 0,
             min_stock_level INTEGER DEFAULT 10,
-            icon VARCHAR(50) DEFAULT 'fa-tools',
-            barcode VARCHAR(50) UNIQUE,
             description TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
+    """, commit=True)
+
+    # Delete both columns in one query
+    execute_query("""
+        ALTER TABLE Products 
+            DROP COLUMN IF EXISTS barcode,
+            DROP COLUMN IF EXISTS icon
     """, commit=True)
     
     # Transactions table
