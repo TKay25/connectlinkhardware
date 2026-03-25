@@ -248,33 +248,104 @@
             border-color: #0a2b3e;
         }
 
-        .product-card {
+        /* Compact Product Card - Space Saving Layout */
+        .product-card-compact {
             background: white;
             border: 1px solid #eef2f6;
-            border-radius: 14px;
-            padding: 8px;
+            border-radius: 12px;
+            padding: 8px 10px;
             cursor: pointer;
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .product-card:hover {
+        .product-card-compact:hover {
             border-color: #0a2b3e;
             box-shadow: 0 4px 12px rgba(10,43,62,0.1);
             transform: translateY(-2px);
         }
 
-        .product-card i {
-            font-size: 1.2rem !important;
+        .product-icon-compact {
+            width: 32px;
+            height: 32px;
+            background: #eef2ff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
-        .product-card h6 {
-            font-size: 0.8rem;
+        .product-icon-compact i {
+            font-size: 1rem !important;
+            color: #0a2b3e;
+        }
+
+        .product-info-compact {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .product-name-compact {
+            font-size: 0.75rem;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .product-card .small {
+        .product-details-compact {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 2px;
+        }
+
+        .product-unit-compact {
+            font-size: 0.6rem;
+            color: #6c757d;
+            background: #f8f9fa;
+            padding: 1px 5px;
+            border-radius: 10px;
+        }
+
+        .product-price-compact {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #0a2b3e;
+        }
+
+        .product-stock-compact {
+            font-size: 0.6rem;
+            color: #6c757d;
+            font-weight: normal;
+        }
+
+        .product-stock-compact.low-stock {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .add-btn-compact {
+            background: #0a2b3e;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 4px 10px;
             font-size: 0.65rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .add-btn-compact:hover {
+            background: #1e4a6e;
+            transform: scale(1.02);
         }
 
         .unit-badge {
@@ -1084,26 +1155,33 @@
         function renderProducts() {
             const container = document.getElementById('productsContainer');
             if (!container) return;
+            
             const filtered = filterProducts();
+            
             if (!filtered.length) {
                 container.innerHTML = '<div class="col-12 text-center py-4"><i class="fas fa-box-open fa-2x text-muted"></i><p class="text-muted mt-1 small">No products found</p></div>';
                 return;
             }
+            
             container.innerHTML = filtered.map(product => `
-                <div class="col-md-6 col-xl-4">
-                    <div class="product-card" onclick="addToCart(${product.id})">
-                        <div class="d-flex justify-content-between mb-1">
-                            <i class="fas ${getCategoryIcon(product.category)}" style="color:#0a2b3e;"></i>
-                            ${product.stock < 10 ? '<span class="badge-low-stock">Low</span>' : ''}
+                <div class="col-md-6 col-xl-4 col-xxl-3">
+                    <div class="product-card-compact" onclick="addToCart(${product.id})">
+                        <div class="product-icon-compact">
+                            <i class="fas ${getCategoryIcon(product.category)}"></i>
                         </div>
-                        <h6 class="fw-bold mb-0">${escapeHtml(product.name)}</h6>
-                        <div class="small text-muted mb-1">
-                            <span class="unit-badge">${product.unit_type}: ${product.unit_details || 'N/A'}</span>
+                        <div class="product-info-compact">
+                            <div class="product-name-compact">${escapeHtml(product.name)}</div>
+                            <div class="product-details-compact">
+                                <span class="product-unit-compact">${product.unit_type}: ${product.unit_details || 'N/A'}</span>
+                                <span class="product-price-compact">$${product.price.toFixed(2)}</span>
+                            </div>
+                            <div class="product-stock-compact ${product.stock < 10 ? 'low-stock' : ''}">
+                                Stock: ${product.stock}
+                            </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-end mt-1">
-                            <div><span class="fw-bold" style="color:#0a2b3e;">$${product.price.toFixed(2)}</span><div class="small text-muted">Stock: ${product.stock}</div></div>
-                            <button class="btn btn-sm" style="background:#0a2b3e;color:white;border-radius:30px;padding:2px 8px;">Add</button>
-                        </div>
+                        <button class="add-btn-compact" onclick="event.stopPropagation(); addToCart(${product.id})">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
                     </div>
                 </div>
             `).join('');
