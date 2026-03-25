@@ -7,15 +7,26 @@ import json
 from functools import wraps
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import os
 
 from db_helper import get_db, execute_query
 
 app = Flask(__name__)
-app.secret_key = '011235'
-app.permanent_session_lifetime = timedelta(minutes=360)
-user_sessions = {}
 
-CORS(app)
+# IMPORTANT: Use a fixed secret key - don't change on each restart
+app.secret_key = '011235'  # Keep this consistent
+app.config['SECRET_KEY'] = '011235'
+app.config['SESSION_COOKIE_NAME'] = 'pos_session'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
+app.config['SESSION_PERMANENT'] = True
+
+# Configure CORS properly for credentials
+CORS(app, supports_credentials=True, origins=['http://localhost:5000', 'https://connectlinkhardware.onrender.com'])
+
+user_sessions = {}
 
 # ==================== HELPER FUNCTIONS ====================
 
@@ -74,7 +85,7 @@ def init_database():
         )
     """, commit=True)
     
-    # Products table (without barcode and icon)
+    # Products table
     execute_query("""
         CREATE TABLE IF NOT EXISTS products (
             id SERIAL PRIMARY KEY,
@@ -141,12 +152,12 @@ def init_database():
     # Create default admin user if not exists
     admin_check = execute_query("SELECT id FROM users WHERE username = 'admin'", fetch_one=True)
     if not admin_check:
-        admin_password = hash_password('conlinkhardware')
+        admin_password = hash_password('admin123')
         execute_query("""
             INSERT INTO users (username, email, password_hash, full_name, role)
             VALUES (%s, %s, %s, %s, %s)
         """, ('admin', 'admin@connectlink.com', admin_password, 'System Administrator', 'admin'), commit=True)
-        print("Default admin user created - username: admin, password: conlinkhardware")
+        print("Default admin user created - username: admin, password: admin123")
     
     # Create default categories
     default_categories = [
@@ -168,7 +179,7 @@ def init_database():
                 VALUES (%s, %s)
             """, (cat_name, order), commit=True)
 
-# ==================== PRODUCT FETCH FUNCTION (run1) ====================
+# ==================== PRODUCT FETCH FUNCTION ====================
 
 def run1():
     """Fetch all products from the Products table"""
@@ -215,11 +226,12 @@ def api_login():
     user = execute_query(query, (username, password_hash), fetch_one=True)
     
     if user:
+        # Set session as permanent
+        session.permanent = True
         session['user_id'] = user[0]
         session['username'] = user[1]
         session['full_name'] = user[3]
         session['role'] = user[4]
-        session.permanent = True
         
         # Update last login
         execute_query("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = %s", (user[0],), commit=True)
@@ -245,6 +257,7 @@ def api_logout():
 
 @app.route('/api/check-auth', methods=['GET'])
 def check_auth():
+    """Check if user is authenticated via session"""
     if 'user_id' in session:
         return jsonify({
             'authenticated': True,
@@ -342,7 +355,6 @@ def create_product():
 def update_product(product_id):
     data = request.json
     
-    # Build dynamic update query
     update_fields = []
     params = []
     
@@ -366,7 +378,6 @@ def update_product(product_id):
 @app.route('/api/products/<int:product_id>', methods=['DELETE'])
 @login_required
 def delete_product(product_id):
-    # Check if product exists in any transactions
     check_query = "SELECT id FROM transaction_items WHERE product_id = %s LIMIT 1"
     exists = execute_query(check_query, (product_id,), fetch_one=True)
     
@@ -389,14 +400,12 @@ def create_transaction():
     if not items:
         return jsonify({'error': 'No items in transaction'}), 400
     
-    # Calculate totals
     subtotal = sum(item['price'] * item['quantity'] for item in items)
     tax = subtotal * 0.10
     total = subtotal + tax
     
     transaction_number = generate_transaction_number()
     
-    # Create transaction
     trans_query = """
         INSERT INTO transactions (transaction_number, user_id, subtotal, tax, total, payment_method, amount_paid, change_amount, notes)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -418,9 +427,7 @@ def create_transaction():
     trans_result = execute_query(trans_query, trans_params, fetch_one=True, commit=True)
     transaction_id = trans_result[0]
     
-    # Create transaction items and update stock
     for item in items:
-        # Insert transaction item
         item_query = """
             INSERT INTO transaction_items (transaction_id, product_id, quantity, price_at_time, subtotal)
             VALUES (%s, %s, %s, %s, %s)
@@ -434,7 +441,6 @@ def create_transaction():
         )
         execute_query(item_query, item_params, commit=True)
         
-        # Update stock
         stock_query = "UPDATE products SET stock = stock - %s WHERE id = %s"
         execute_query(stock_query, (item['quantity'], item['id']), commit=True)
     
@@ -554,7 +560,6 @@ def get_categories():
 @login_required
 def get_dashboard_stats():
     """Get dashboard statistics"""
-    # Today's sales
     today_query = """
         SELECT 
             COALESCE(SUM(total), 0) as today_sales,
@@ -569,11 +574,9 @@ def get_dashboard_stats():
     """
     today_result = execute_query(today_query, fetch_one=True)
     
-    # Low stock products
     low_stock_query = "SELECT COUNT(*) FROM products WHERE stock < min_stock_level"
     low_stock_result = execute_query(low_stock_query, fetch_one=True)
     
-    # Total products
     total_products_query = "SELECT COUNT(*) FROM products"
     total_products_result = execute_query(total_products_query, fetch_one=True)
     

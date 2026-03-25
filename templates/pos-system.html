@@ -730,6 +730,21 @@
         // API Base URL
         const API_BASE = window.location.origin;
         
+        // Example for fetching products
+        const productsResponse = await fetch(url, {
+            credentials: 'include'  // Add this to all fetch calls
+        });
+        const productsData = await productsResponse.json();
+
+        // Example for posting transaction
+        const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',  // Add this
+            body: JSON.stringify({...})
+        });
+        const transactionData = await transactionResponse.json();
+
         // Global variables
         let products = [];
         let cart = [];

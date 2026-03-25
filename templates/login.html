@@ -451,7 +451,7 @@
                         <label class="form-label fw-semibold">Password</label>
                         <input type="password" class="form-control" id="password" placeholder="Enter password" required autocomplete="current-password">
                     </div>
-                    <button type="submit" class="btn-login">
+                    <button type="submit" class="btn-login" id="loginBtn">
                         <i class="fas fa-sign-in-alt me-2"></i>Login to System
                     </button>
                 </form>
@@ -466,59 +466,141 @@
     </div>
 
     <script>
-        // Check if already logged in
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = 'pos-system.html';
+        // API Base URL - uses relative path for same domain
+        const API_BASE = window.location.origin;
+        
+        // Check if already logged in via session
+        async function checkExistingSession() {
+            try {
+                const response = await fetch(`${API_BASE}/api/check-auth`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.authenticated) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = '/pos-system.html';
+                    return true;
+                }
+            } catch (error) {
+                console.error('Session check error:', error);
+                // Fallback to localStorage check
+                if (localStorage.getItem('isLoggedIn') === 'true') {
+                    window.location.href = '/pos-system.html';
+                    return true;
+                }
+            }
+            return false;
         }
-
+        
+        // Login function with Flask backend integration
+        async function loginUser(username, password) {
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            
+            // Disable button and show loading state
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',  // Important: Include cookies for session
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store user data in localStorage for UI display
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('userName', data.user.full_name || data.user.username || 'Administrator');
+                    
+                    // Show success message
+                    showSuccessMessage('Login successful! Redirecting...');
+                    
+                    // Redirect to POS system
+                    setTimeout(() => {
+                        window.location.href = '/pos-system.html';
+                    }, 500);
+                } else {
+                    // Show error message
+                    showErrorMessage(data.message || 'Invalid username or password');
+                    
+                    // Reset button
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = originalText;
+                    
+                    // Clear password field
+                    document.getElementById('password').value = '';
+                    document.getElementById('password').focus();
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showErrorMessage('Connection error. Please check your network and try again.');
+                
+                // Reset button
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = originalText;
+            }
+        }
+        
+        // Show error message
+        function showErrorMessage(message) {
+            // Remove existing error message
+            const existingError = document.querySelector('.alert-danger');
+            if (existingError) existingError.remove();
+            
+            // Create new error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger mt-3';
+            errorDiv.style.borderRadius = '12px';
+            errorDiv.style.fontSize = '14px';
+            errorDiv.style.animation = 'shake 0.5s ease';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${message}`;
+            
+            // Add to card
+            document.querySelector('.login-card').appendChild(errorDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv) errorDiv.remove();
+            }, 5000);
+        }
+        
+        // Show success message
+        function showSuccessMessage(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert alert-success mt-3';
+            successDiv.style.borderRadius = '12px';
+            successDiv.style.fontSize = '14px';
+            successDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i>${message}`;
+            document.querySelector('.login-card').appendChild(successDiv);
+        }
+        
+        // Form submission handler
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
-            if (username === 'admin' && password === 'conlinkhardware') {
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('user', username);
-                localStorage.setItem('userName', 'Administrator');
-                window.location.href = 'pos-system.html';
-            } else {
-                // Remove existing error message if any
-                const existingError = document.querySelector('.alert-danger');
-                if (existingError) existingError.remove();
-                
-                // Create new error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'alert alert-danger mt-3';
-                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Invalid credentials! Use admin / conlinkhardware';
-                errorDiv.style.borderRadius = '12px';
-                errorDiv.style.fontSize = '14px';
-                errorDiv.style.animation = 'shake 0.5s ease';
-                
-                document.querySelector('.login-card').appendChild(errorDiv);
-                
-                // Add shake animation
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes shake {
-                        0%, 100% { transform: translateX(0); }
-                        25% { transform: translateX(-5px); }
-                        75% { transform: translateX(5px); }
-                    }
-                `;
-                document.head.appendChild(style);
-                
-                // Clear error after 3 seconds
-                setTimeout(() => {
-                    if (errorDiv) errorDiv.remove();
-                }, 3000);
-                
-                // Clear password field
-                document.getElementById('password').value = '';
-                document.getElementById('password').focus();
+            if (!username || !password) {
+                showErrorMessage('Please enter both username and password');
+                return;
             }
+            
+            loginUser(username, password);
         });
         
-        // Add input validation for better UX
+        // Input validation for better UX
         document.getElementById('username').addEventListener('input', function() {
             if (this.value.trim() === '') {
                 this.style.borderColor = '#e2e8f0';
@@ -533,6 +615,20 @@
                 document.getElementById('loginForm').dispatchEvent(new Event('submit'));
             }
         });
+        
+        // Add shake animation style
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Check existing session on page load
+        checkExistingSession();
     </script>
 </body>
 </html>
