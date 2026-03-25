@@ -635,6 +635,12 @@
     </style>
 </head>
 <body>
+
+    <!-- Loader Overlay -->
+    <div id="paymentLoader" class="loader-overlay">
+        <div class="loader-spinner"></div>
+        <div id="loaderMessage" style="font-size: 14px;">Processing payment...</div>
+    </div>    
     <!-- Main POS System -->
     <div id="posSystem">
         <!-- Sidebar -->
@@ -1456,7 +1462,6 @@
                 return;
             }
             
-            // Check if payment method is selected
             if (!selectedPaymentMethod) {
                 showToast('Please select a payment method!', 'error');
                 return;
@@ -1467,7 +1472,7 @@
             const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
             
             const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
-                                        selectedPaymentMethod === 'card' ? 'Card' : 'Bank/Mobile Money Transfer';
+                                        selectedPaymentMethod === 'card' ? 'Card' : 'Bank Transfer';
             
             const confirmationHTML = `
                 <div>
@@ -1498,7 +1503,21 @@
             `;
             
             document.getElementById('confirmationContent').innerHTML = confirmationHTML;
-            new bootstrap.Modal(document.getElementById('confirmationModal')).show();
+            
+            // Update the modal footer button to show loader state when clicked
+            const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            modal.show();
+            
+            // Optional: Add loader to the confirm button itself
+            const confirmBtn = document.querySelector('#confirmationModal .btn-primary-dark');
+            if (confirmBtn) {
+                const originalOnClick = confirmBtn.onclick;
+                confirmBtn.onclick = async function(e) {
+                    const loader = document.getElementById('paymentLoader');
+                    if (loader) loader.style.display = 'flex';
+                    if (originalOnClick) await originalOnClick.call(this, e);
+                };
+            }
         }
         
         async function processPayment() {
