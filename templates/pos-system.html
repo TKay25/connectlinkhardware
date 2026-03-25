@@ -1312,7 +1312,7 @@
     
     async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
         try {
-            const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const subtotal = items.reduce((sum, item) => sum + (item.sell_price * item.quantity), 0);
             const total = subtotal; // NO VAT - price is final selling price
             
             const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
@@ -1320,7 +1320,7 @@
                 headers: { 'Content-Type': 'application/json' }, 
                 credentials: 'include',
                 body: JSON.stringify({
-                    items: items.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
+                    items: items.map(item => ({ id: item.id, name: item.name, price: item.sell_price, quantity: item.quantity })),
                     subtotal: subtotal,
                     tax: 0,
                     total: total,
@@ -1376,7 +1376,7 @@
                         </div>
                     </div>
                     <div class="price-add-wrapper">
-                        <div class="price-above">$${product.price.toFixed(2)}</div>
+                        <div class="price-above">$${product.sell_price.toFixed(2)}</div>
                         <button class="add-btn-compact" onclick="event.stopPropagation(); addToCart(${product.id})">
                             <i class="fas fa-plus"></i> Add
                         </button>
@@ -1658,7 +1658,7 @@
                         document.getElementById('productCategory').value = existingProduct.category;
                         document.getElementById('unitType').value = existingProduct.unit_type;
                         document.getElementById('unitDetails').value = existingProduct.unit_details || '';
-                        document.getElementById('productPrice').value = existingProduct.price;
+                        document.getElementById('productPrice').value = existingProduct.sell_price;
                     }
                 });
                 suggestionsDiv.appendChild(div);
@@ -1695,10 +1695,10 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="fw-bold mb-0">${escapeHtml(item.name)}</h6>
-                            <div class="small text-muted">$${item.price.toFixed(2)} each</div>
+                            <div class="small text-muted">$${item.sell_price.toFixed(2)} each</div>
                             <div class="mt-1"><div class="qty-control"><button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button><span class="fw-bold small">${item.quantity}</span><button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button></div></div>
                         </div>
-                        <div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${(item.price * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div>
+                        <div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${(item.sell_price * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div>
                     </div>
                 </div>
             `).join('');
@@ -1718,7 +1718,7 @@
     function clearCart() { if (cart.length) { cart = []; updateCartDisplay(); showToast('Cart cleared', 'info'); } }
     
     function calculateTotals() {
-        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const total = cart.reduce((sum, item) => sum + (item.sell_price * item.quantity), 0);
         document.getElementById('subtotal').innerText = `$${total.toFixed(2)}`;
         document.getElementById('tax').innerText = `$0.00`;
         document.getElementById('total').innerText = `$${total.toFixed(2)}`;
@@ -1750,9 +1750,9 @@
                         <div class="d-flex justify-content-between py-1 border-bottom small">
                             <div>
                                 <strong>${escapeHtml(item.name)}</strong><br>
-                                <span class="text-muted">$${item.price.toFixed(2)} x ${item.quantity}</span>
+                                <span class="text-muted">$${item.sell_price.toFixed(2)} x ${item.quantity}</span>
                             </div>
-                            <span class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+                            <span class="fw-bold">$${(item.sell_price * item.quantity).toFixed(2)}</span>
                         </div>
                     `).join('')}
                 </div>
@@ -1863,7 +1863,7 @@
     }
     
     function generateReceiptHTML(items, method, paid, change) {
-        const total = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+        const total = items.reduce((sum, i) => sum + (i.sell_price * i.quantity), 0);
         return `<div class="text-center">
             <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
             <h6 class="fw-bold mt-1">Connect Link Properties</h6>
@@ -1917,16 +1917,16 @@
     
     function renderAnalytics() {
         const categoryCount = {};
-        products.forEach(p => { if (!categoryCount[p.category]) categoryCount[p.category] = 0; categoryCount[p.category] += p.stock * p.price; });
+        products.forEach(p => { if (!categoryCount[p.category]) categoryCount[p.category] = 0; categoryCount[p.category] += p.stock * p.sell_price; });
         const canvas = document.getElementById('categoryChart');
         if (canvas) {
             const ctx = canvas.getContext('2d');
             if (categoryChart) categoryChart.destroy();
             categoryChart = new Chart(ctx, { type: 'pie', data: { labels: Object.keys(categoryCount), datasets: [{ data: Object.values(categoryCount), backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'] }] }, options: { responsive: true } });
         }
-        const topProducts = [...products].sort((a, b) => b.stock * b.price - a.stock * a.price).slice(0, 5);
+        const topProducts = [...products].sort((a, b) => b.stock * b.sell_price - a.stock * a.sell_price).slice(0, 5);
         const topList = document.getElementById('topProductsList');
-        if (topList) topList.innerHTML = topProducts.map((p, idx) => `<div class="d-flex justify-content-between align-items-center p-1 border-bottom small"><span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span><span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span></div>`).join('');
+        if (topList) topList.innerHTML = topProducts.map((p, idx) => `<div class="d-flex justify-content-between align-items-center p-1 border-bottom small"><span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span><span class="fw-bold">$${(p.stock * p.sell_price).toFixed(0)}</span></div>`).join('');
     }
     
     function updateStats() {

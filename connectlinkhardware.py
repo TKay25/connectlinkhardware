@@ -108,6 +108,17 @@ def init_database():
             DROP COLUMN IF EXISTS barcode,
             DROP COLUMN IF EXISTS icon
     """, commit=True)
+
+    execute_query("""
+        ALTER TABLE products 
+        RENAME COLUMN IF EXISTS price TO sell_price
+    """, commit=True)
+
+    # Add buy_price column if it doesn't exist
+    execute_query("""
+        ALTER TABLE products 
+        ADD COLUMN IF NOT EXISTS buy_price DECIMAL(10,2) DEFAULT 0.00
+    """, commit=True)
     
     # Transactions table
     execute_query("""
@@ -184,7 +195,7 @@ def init_database():
 def run1():
     """Fetch all products from the Products table"""
     query = """
-        SELECT id, name, category, unit_type, unit_details, price, stock, 
+        SELECT id, name, category, unit_type, unit_details, buy_price, sell_price, stock, 
                min_stock_level, description, created_at, updated_at
         FROM products
         ORDER BY name
@@ -200,13 +211,14 @@ def run1():
                 'category': row[2],
                 'unit_type': row[3],
                 'unit_details': row[4],
-                'price': float(row[5]),
-                'stock': row[6],
-                'min_stock_level': row[7],
-                'description': row[8],
-                'created_at': row[9].isoformat() if row[9] else None,
-                'updated_at': row[10].isoformat() if row[10] else None,
-                'low_stock': row[6] < row[7] if row[7] else False
+                'buy_price': float(row[5]) if row[5] else 0.00,
+                'sell_price': float(row[6]),
+                'stock': row[7],
+                'min_stock_level': row[8],
+                'description': row[9],
+                'created_at': row[10].isoformat() if row[10] else None,
+                'updated_at': row[11].isoformat() if row[11] else None,
+                'low_stock': row[7] < row[8] if row[8] else False
             })
     
     return products
@@ -326,8 +338,8 @@ def create_product():
     data = request.json
     
     query = """
-        INSERT INTO products (name, category, unit_type, unit_details, price, stock, min_stock_level, description)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO products (name, category, unit_type, unit_details, buy_price, sell_price, stock, min_stock_level, description)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
     """
     
@@ -336,7 +348,8 @@ def create_product():
         data['category'],
         data.get('unit_type', 'piece'),
         data.get('unit_details', ''),
-        data['price'],
+        data.get('buy_price', 0.00),
+        data['sell_price'],  # renamed from 'price' to 'sell_price'
         data.get('stock', 0),
         data.get('min_stock_level', 10),
         data.get('description', '')
