@@ -109,6 +109,11 @@ def init_database():
             DROP COLUMN IF EXISTS icon
     """, commit=True)
 
+    execute_query("""
+        ALTER TABLE products 
+        ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE
+    """, commit=True)
+
     # Check if column exists first, then rename
     try:
         # First check if price column exists
@@ -210,11 +215,12 @@ def init_database():
 # ==================== PRODUCT FETCH FUNCTION ====================
 
 def run1():
-    """Fetch all products from the Products table"""
+    """Fetch all active products from the Products table"""
     query = """
         SELECT id, name, category, unit_type, unit_details, buy_price, sell_price, stock, 
                min_stock_level, description, created_at, updated_at
         FROM products
+        WHERE is_active = TRUE
         ORDER BY name
     """
     result = execute_query(query, fetch_all=True)
@@ -416,15 +422,14 @@ def update_product(product_id):
 @app.route('/api/products/<int:product_id>', methods=['DELETE'])
 @login_required
 def delete_product(product_id):
-    check_query = "SELECT id FROM transaction_items WHERE product_id = %s LIMIT 1"
-    exists = execute_query(check_query, (product_id,), fetch_one=True)
+    # Soft delete - just mark as inactive
+    execute_query("""
+        UPDATE products 
+        SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = %s
+    """, (product_id,), commit=True)
     
-    if exists:
-        return jsonify({'error': 'Cannot delete product with existing transactions'}), 400
-    
-    execute_query("DELETE FROM products WHERE id = %s", (product_id,), commit=True)
-    
-    return jsonify({'success': True, 'message': 'Product deleted'})
+    return jsonify({'success': True, 'message': 'Product deactivated successfully'})
 
 # ==================== TRANSACTION MANAGEMENT ====================
 
