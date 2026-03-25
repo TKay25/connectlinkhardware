@@ -1543,21 +1543,15 @@
             
             document.getElementById('confirmationContent').innerHTML = confirmationHTML;
             
-            // Update the modal footer button to show loader state when clicked
-            const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-            modal.show();
-            
-            // Optional: Add loader to the confirm button itself
-            const confirmBtn = document.querySelector('#confirmationModal .btn-primary-dark');
-            if (confirmBtn) {
-                const originalOnClick = confirmBtn.onclick;
-                confirmBtn.onclick = async function(e) {
-                    const loader = document.getElementById('paymentLoader');
-                    if (loader) loader.style.display = 'flex';
-                    if (originalOnClick) await originalOnClick.call(this, e);
-                };
+            // Show the modal - use getInstance if exists, otherwise create new
+            const modalElement = document.getElementById('confirmationModal');
+            let modal = bootstrap.Modal.getInstance(modalElement);
+            if (!modal) {
+                modal = new bootstrap.Modal(modalElement);
             }
+            modal.show();
         }
+
 
         // Payment loader functions
         let paymentLoaderModal = null;
@@ -1624,6 +1618,12 @@
             
             const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
             
+            // Close the confirmation modal first
+            const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+            if (confirmationModal) {
+                confirmationModal.hide();
+            }
+            
             // Show payment loader
             showPaymentLoader('Processing payment...');
             
@@ -1644,7 +1644,7 @@
                 showToast('Payment failed', 'error');
             }
         }
-
+        
         async function processOrder(method, paid, change) {
             updatePaymentLoaderMessage('Verifying payment...');
             
