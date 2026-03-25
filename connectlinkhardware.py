@@ -141,12 +141,12 @@ def init_database():
     # Create default admin user if not exists
     admin_check = execute_query("SELECT id FROM users WHERE username = 'admin'", fetch_one=True)
     if not admin_check:
-        admin_password = hash_password('admin123')
+        admin_password = hash_password('conlinkhardware')
         execute_query("""
             INSERT INTO users (username, email, password_hash, full_name, role)
             VALUES (%s, %s, %s, %s, %s)
         """, ('admin', 'admin@connectlink.com', admin_password, 'System Administrator', 'admin'), commit=True)
-        print("Default admin user created - username: admin, password: admin123")
+        print("Default admin user created - username: admin, password: conlinkhardware")
     
     # Create default categories
     default_categories = [
