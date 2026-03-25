@@ -313,13 +313,6 @@
             border-radius: 10px;
         }
 
-        .product-price-compact {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #0a2b3e;
-            margin-bottom: 2px;
-        }
-
         .product-stock-compact {
             font-size: 0.6rem;
             color: #6c757d;
@@ -565,24 +558,30 @@
             border-radius: 0 0 10px 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+
         .autocomplete-items div {
             padding: 8px 12px;
             cursor: pointer;
             border-bottom: 1px solid #e5e9f0;
             font-size: 0.75rem;
         }
+
         .autocomplete-items div:hover {
             background-color: #e9e9e9;
         }
+
         .autocomplete-active {
             background-color: #0a2b3e !important;
             color: white;
         }
+
         .position-relative {
             position: relative;
         }
 
-        /* Loader overlay */
+        /* ==================== MODAL & LOADER FIXES ==================== */
+
+        /* Loader overlay - HIDDEN BY DEFAULT */
         .loader-overlay {
             position: fixed;
             top: 0;
@@ -590,12 +589,19 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.7);
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             color: white;
+            z-index: 9999;
         }
+
+        /* When loader is shown */
+        #globalLoader.loader-overlay {
+            display: flex !important;
+        }
+
         .loader-spinner {
             width: 50px;
             height: 50px;
@@ -635,11 +641,62 @@
             height: 40px;
         }
 
+        /* Modal z-index fixes */
+        .modal {
+            z-index: 1050 !important;
+        }
+
+        .modal-backdrop {
+            z-index: 1040 !important;
+        }
+
+        /* Make sure product cards don't overlap modals */
+        .product-card-compact, 
+        .product-card, 
+        .category-chip, 
+        .add-btn-compact,
+        .products-scroll,
+        .section-card {
+            z-index: auto !important;
+            position: relative;
+        }
+
+        /* Ensure modals are above everything */
+        #addInventoryModal, 
+        #confirmationModal, 
+        #deletePasscodeModal, 
+        #editStockModal, 
+        #receiptModal {
+            z-index: 1060 !important;
+        }
+
+        /* Payment loader modal highest */
+        #paymentLoaderModal {
+            z-index: 1070 !important;
+        }
+
+        /* When modal is open, product cards should not be clickable */
+        .modal-open .product-card-compact,
+        .modal-open .product-card,
+        .modal-open .category-chip,
+        .modal-open .add-btn-compact {
+            pointer-events: none !important;
+        }
+
+        /* Ensure modal content remains clickable */
+        .modal-open .modal-content,
+        .modal-open .modal-body,
+        .modal-open .modal-footer,
+        .modal-open .modal-header {
+            pointer-events: auto !important;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
+        /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
