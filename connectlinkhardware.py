@@ -229,13 +229,13 @@ def run1():
                 'unit_type': row[3],
                 'unit_details': row[4],
                 'buy_price': float(row[5]) if row[5] else 0.00,
-                'sell_price': float(row[6]),
-                'stock': row[7],
-                'min_stock_level': row[8],
-                'description': row[9],
+                'sell_price': float(row[6]) if row[6] else 0.00,  # Make sure this exists
+                'stock': row[7] if row[7] else 0,
+                'min_stock_level': row[8] if row[8] else 10,
+                'description': row[9] if row[9] else '',
                 'created_at': row[10].isoformat() if row[10] else None,
                 'updated_at': row[11].isoformat() if row[11] else None,
-                'low_stock': row[7] < row[8] if row[8] else False
+                'low_stock': row[7] < row[8] if row[7] and row[8] else False
             })
     
     return products
@@ -316,7 +316,10 @@ def get_products_api():
     if category and category != 'all':
         filtered_products = [p for p in filtered_products if p['category'] == category]
     if search:
-        filtered_products = [p for p in filtered_products if search.lower() in p['name'].lower()]
+        search_lower = search.lower()
+        filtered_products = [p for p in filtered_products 
+                            if search_lower in p['name'].lower() 
+                            or (p.get('unit_details') and search_lower in p['unit_details'].lower())]
     
     return jsonify({
         'success': True,
@@ -327,7 +330,7 @@ def get_products_api():
 @app.route('/api/products/<int:product_id>', methods=['GET'])
 @login_required
 def get_product(product_id):
-    query = "SELECT id, name, category, unit_type, unit_details, price, stock, min_stock_level, description FROM products WHERE id = %s"
+    query = "SELECT id, name, category, unit_type, unit_details, buy_price, sell_price, stock, min_stock_level, description FROM products WHERE id = %s"
     product = execute_query(query, (product_id,), fetch_one=True)
     
     if not product:
@@ -341,10 +344,11 @@ def get_product(product_id):
             'category': product[2],
             'unit_type': product[3],
             'unit_details': product[4],
-            'price': float(product[5]),
-            'stock': product[6],
-            'min_stock_level': product[7],
-            'description': product[8]
+            'buy_price': float(product[5]) if product[5] else 0.00,
+            'sell_price': float(product[6]),
+            'stock': product[7],
+            'min_stock_level': product[8],
+            'description': product[9]
         }
     })
 
@@ -353,6 +357,10 @@ def get_product(product_id):
 def create_product():
     """Create new product"""
     data = request.json
+    
+    # Validate required fields
+    if 'sell_price' not in data:
+        return jsonify({'error': 'sell_price is required'}), 400
     
     query = """
         INSERT INTO products (name, category, unit_type, unit_details, buy_price, sell_price, stock, min_stock_level, description)
@@ -366,7 +374,7 @@ def create_product():
         data.get('unit_type', 'piece'),
         data.get('unit_details', ''),
         data.get('buy_price', 0.00),
-        data['sell_price'],  # renamed from 'price' to 'sell_price'
+        data['sell_price'],
         data.get('stock', 0),
         data.get('min_stock_level', 10),
         data.get('description', '')
@@ -388,7 +396,7 @@ def update_product(product_id):
     update_fields = []
     params = []
     
-    updatable_fields = ['name', 'category', 'unit_type', 'unit_details', 'price', 'stock', 'min_stock_level', 'description']
+    updatable_fields = ['name', 'category', 'unit_type', 'unit_details', 'buy_price', 'sell_price', 'stock', 'min_stock_level', 'description']
     
     for field in updatable_fields:
         if field in data:
@@ -431,8 +439,7 @@ def create_transaction():
         return jsonify({'error': 'No items in transaction'}), 400
     
     subtotal = sum(item['price'] * item['quantity'] for item in items)
-    tax = subtotal * 0.10
-    total = subtotal + tax
+    total = subtotal  # No tax as per your requirement
     
     transaction_number = generate_transaction_number()
     
@@ -446,7 +453,7 @@ def create_transaction():
         transaction_number,
         session['user_id'],
         subtotal,
-        tax,
+        0,  # tax
         total,
         data['payment_method'],
         data.get('amount_paid', total),
@@ -604,7 +611,7 @@ def get_dashboard_stats():
     """
     today_result = execute_query(today_query, fetch_one=True)
     
-    low_stock_query = "SELECT COUNT(*) FROM products WHERE stock < min_stock_level"
+    low_stock_query = "SELECT COUNT(*) FROM products WHERE stock < COALESCE(min_stock_level, 10)"
     low_stock_result = execute_query(low_stock_query, fetch_one=True)
     
     total_products_query = "SELECT COUNT(*) FROM products"
