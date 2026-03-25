@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* Your existing CSS remains the same */
+        /* Your existing CSS stays the same */
         * {
             margin: 0;
             padding: 0;
@@ -22,7 +22,6 @@
             font-size: 13px;
         }
 
-        /* Sidebar Styles - Compact */
         .sidebar {
             position: fixed;
             top: 0;
@@ -110,7 +109,6 @@
             font-size: 0.9rem;
         }
 
-        /* Main Content */
         .main-content {
             margin-left: 260px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -122,7 +120,6 @@
             margin-left: 70px;
         }
 
-        /* Toggle Button - Compact */
         .toggle-sidebar {
             position: fixed;
             left: 270px;
@@ -150,7 +147,6 @@
             left: 85px;
         }
 
-        /* Top Bar with Logout - Compact */
         .top-bar {
             background: white;
             border-radius: 16px;
@@ -186,7 +182,6 @@
             color: white;
         }
 
-        /* Cards - Compact */
         .stat-card {
             background: white;
             border-radius: 16px;
@@ -239,7 +234,6 @@
             font-weight: 600;
         }
 
-        /* Category Buttons - Compact */
         .category-chip {
             background: #f8f9fc;
             border: 1px solid #e5e9f0;
@@ -252,7 +246,6 @@
             white-space: nowrap;
         }
 
-        /* Product Cards - Compact */
         .product-card {
             background: white;
             border: 1px solid #eef2f6;
@@ -291,7 +284,6 @@
             display: inline-block;
         }
 
-        /* Cart Items - Compact */
         .cart-item {
             background: #fafbfd;
             border-radius: 12px;
@@ -311,7 +303,6 @@
             font-size: 0.65rem;
         }
 
-        /* Buttons - Compact */
         .btn-primary-dark {
             background: #0a2b3e;
             border: none;
@@ -337,7 +328,6 @@
             padding: 3px 8px;
         }
 
-        /* Payment Method - Compact */
         .payment-method {
             border: 1px solid #e9ecef;
             border-radius: 10px;
@@ -372,7 +362,6 @@
             font-weight: 600;
         }
 
-        /* Form Controls - Compact */
         .form-control, .form-select {
             font-size: 0.75rem;
             padding: 6px 10px;
@@ -385,7 +374,6 @@
             margin-bottom: 4px;
         }
 
-        /* Table - Compact */
         .table {
             font-size: 0.7rem;
         }
@@ -404,7 +392,6 @@
             font-size: 0.8rem;
         }
 
-        /* Modal - Compact */
         .modal-header h5, .modal-header h6 {
             font-size: 0.9rem;
         }
@@ -443,7 +430,6 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        /* Qty Control - Compact */
         .qty-control {
             display: inline-flex;
             align-items: center;
@@ -549,13 +535,10 @@
             <!-- Top Bar with Logout Button -->
             <div class="top-bar">
                 <div class="d-flex justify-content-between align-items-center w-100">
-                    <!-- Left side - Logo and Company Name (Centered) -->
                     <div class="d-flex align-items-center gap-2 mx-auto">
                         <i class="fas fa-hard-hat" style="color: #0a2b3e; font-size: 1.2rem;"></i>
                         <span class="fw-semibold" style="color: #0a2b3e; font-size: 0.85rem;">ConnectLink Properties Hardware</span>
                     </div>
-                    
-                    <!-- Right side - User Info and Logout -->
                     <div class="d-flex align-items-center gap-2">
                         <span class="small"><i class="fas fa-user-circle me-1"></i> <span id="userName">Administrator</span></span>
                         <button class="logout-top-btn" id="logoutBtn">
@@ -583,7 +566,14 @@
                                     <input type="text" class="form-control ps-5" id="searchProduct" placeholder="Search..." style="border-radius: 30px; font-size: 0.7rem; padding: 5px 10px;">
                                 </div>
                             </div>
-                            <div class="row g-2 products-scroll" id="productsContainer"></div>
+                            <div class="row g-2 products-scroll" id="productsContainer">
+                                <div class="col-12 text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="text-muted mt-2 small">Loading products...</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -649,8 +639,10 @@
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-light">
-                                <tr><th>ID</th><th>Product</th><th>Category</th><th>Unit</th><th>Detail</th><th>Price</th><th>Stock</th><th>Status</th><th></th>               </thead>
-                            <tbody id="inventoryList"></tbody>
+                                <tr><th>ID</th><th>Product</th><th>Category</th><th>Unit</th><th>Detail</th><th>Price</th><th>Stock</th><th>Status</th><th></th> </thead>
+                            <tbody id="inventoryList">
+                                <tr><td colspan="9" class="text-center">Loading products...</td></tr>
+                            </tbody>
                          </table>
                     </div>
                 </div>
@@ -662,10 +654,7 @@
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <small class="text-muted">Today's Sales</small>
-                                    <h3 class="mb-0 fw-bold" id="todaySales">$0.00</h3>
-                                </div>
+                                <div><small class="text-muted">Today's Sales</small><h3 class="mb-0 fw-bold" id="todaySales">$0.00</h3></div>
                                 <i class="fas fa-dollar-sign text-muted opacity-50"></i>
                             </div>
                         </div>
@@ -673,10 +662,7 @@
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <small class="text-muted">Items Sold</small>
-                                    <h3 class="mb-0 fw-bold" id="itemsSold">0</h3>
-                                </div>
+                                <div><small class="text-muted">Items Sold</small><h3 class="mb-0 fw-bold" id="itemsSold">0</h3></div>
                                 <i class="fas fa-shopping-cart text-muted opacity-50"></i>
                             </div>
                         </div>
@@ -684,10 +670,7 @@
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <small class="text-muted">Low Stock</small>
-                                    <h3 class="mb-0 fw-bold" id="lowStockCount">0</h3>
-                                </div>
+                                <div><small class="text-muted">Low Stock</small><h3 class="mb-0 fw-bold" id="lowStockCount">0</h3></div>
                                 <i class="fas fa-exclamation-triangle text-muted opacity-50"></i>
                             </div>
                         </div>
@@ -695,10 +678,7 @@
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <small class="text-muted">Products</small>
-                                    <h3 class="mb-0 fw-bold" id="totalProducts">0</h3>
-                                </div>
+                                <div><small class="text-muted">Products</small><h3 class="mb-0 fw-bold" id="totalProducts">0</h3></div>
                                 <i class="fas fa-box text-muted opacity-50"></i>
                             </div>
                         </div>
@@ -717,7 +697,7 @@
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-light"> <tr><th>Date</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Payment</th></tr> </thead>
-                            <tbody id="transactionsList"></tbody>
+                            <tbody id="transactionsList"><tr><td colspan="6" class="text-center">No transactions yet</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -772,11 +752,23 @@
             window.location.href = '/login';
         }
         
-        document.getElementById('userName').innerText = JSON.parse(localStorage.getItem('user') || '{"full_name":"Administrator"}').full_name || 'Administrator';
+        // Fix: Safely get user name from localStorage
+        let userName = "Administrator";
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            try {
+                const userObj = JSON.parse(userData);
+                userName = userObj.full_name || userObj.username || "Administrator";
+            } catch (e) {
+                // If it's just a string like "admin", use it directly
+                userName = userData === "admin" ? "Administrator" : userData;
+            }
+        }
+        document.getElementById('userName').innerText = userName;
 
         // ==================== API FUNCTIONS ====================
         
-        // Fetch products from Flask API using run1()
+        // Fetch products from Flask API
         async function fetchProductsFromAPI() {
             try {
                 let url = `${API_BASE}/api/products`;
@@ -796,6 +788,7 @@
                 if (data.success) {
                     products = data.products;
                     renderProducts();
+                    renderInventory();
                     updateStats();
                 } else {
                     showToast('Failed to load products', 'error');
@@ -832,6 +825,20 @@
                 }
             } catch (error) {
                 console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Fetch transactions
+        async function fetchTransactions() {
+            try {
+                const response = await fetch(`${API_BASE}/api/transactions`);
+                const data = await response.json();
+                if (data.success) {
+                    salesData.transactions = data.transactions;
+                    renderTransactions();
+                }
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
             }
         }
 
@@ -877,6 +884,7 @@
         
         function renderCategories() {
             const container = document.getElementById('categoriesContainer');
+            if (!container) return;
             container.innerHTML = categories.map(cat => `
                 <div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">
                     ${cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -906,6 +914,8 @@
 
         function renderProducts() {
             const container = document.getElementById('productsContainer');
+            if (!container) return;
+            
             if (!products.length) {
                 container.innerHTML = '<div class="col-12 text-center py-4"><i class="fas fa-box-open fa-2x text-muted"></i><p class="text-muted mt-1 small">No products found</p></div>';
                 return;
@@ -967,6 +977,8 @@
 
         function updateCartDisplay() {
             const container = document.getElementById('cartItems');
+            if (!container) return;
+            
             if (!cart.length) {
                 container.innerHTML = '<div class="text-center py-4"><i class="fas fa-shopping-cart fa-2x text-muted mb-1"></i><p class="text-muted small">Cart empty</p></div>';
             } else {
@@ -1101,46 +1113,45 @@
                     if (product) product.stock -= cartItem.quantity;
                 });
                 
-                // Add to transaction history
-                const transaction = {
-                    id: Date.now(),
-                    date: new Date().toLocaleString(),
-                    items: [...cart],
-                    subtotal: parseFloat(document.getElementById('subtotal').innerText.replace('$', '')),
-                    tax: parseFloat(document.getElementById('tax').innerText.replace('$', '')),
-                    total: parseFloat(document.getElementById('total').innerText.replace('$', '')),
-                    paymentMethod: method,
-                    amountPaid: paid,
-                    change: change
-                };
-                salesData.transactions.unshift(transaction);
-                salesData.todaySales += transaction.total;
+                // Update sales data
+                const transactionTotal = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+                salesData.todaySales += transactionTotal;
                 salesData.itemsSold += cart.reduce((sum, i) => sum + i.quantity, 0);
                 
                 updateStats();
-                generateReceipt(transaction);
+                
                 bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
                 
                 cart = [];
                 updateCartDisplay();
                 fetchProductsFromAPI();
+                fetchTransactions();
+                fetchDashboardStats();
                 
                 if (currentPage === 'inventory') renderInventory();
-                if (currentPage === 'transactions') renderTransactions();
                 if (currentPage === 'analytics') renderAnalytics();
+                
+                // Show receipt
+                const receiptHTML = generateReceiptHTML(cart, method, paid, change);
+                document.getElementById('receiptContent').innerHTML = receiptHTML;
+                new bootstrap.Modal(document.getElementById('receiptModal')).show();
             }
         }
 
-        function generateReceipt(transaction) {
-            const receiptHTML = `
+        function generateReceiptHTML(items, method, paid, change) {
+            const subtotal = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+            const tax = subtotal * 0.10;
+            const total = subtotal + tax;
+            
+            return `
                 <div class="text-center">
                     <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
                     <h6 class="fw-bold mt-1">Connect Link Properties</h6>
                     <small>Hardware Supply</small>
                     <hr class="my-1">
-                    <small>${transaction.date}</small>
+                    <small>${new Date().toLocaleString()}</small>
                     <hr class="my-1">
-                    ${transaction.items.map(item => `
+                    ${items.map(item => `
                         <div class="d-flex justify-content-between small">
                             <span>${escapeHtml(item.name)} x${item.quantity}</span>
                             <span>$${(item.price * item.quantity).toFixed(2)}</span>
@@ -1149,17 +1160,15 @@
                     <hr class="my-1">
                     <div class="d-flex justify-content-between small">
                         <strong>Total:</strong>
-                        <strong>$${transaction.total.toFixed(2)}</strong>
+                        <strong>$${total.toFixed(2)}</strong>
                     </div>
                     <hr class="my-1">
-                    <div class="small">Payment: ${transaction.paymentMethod.toUpperCase()}</div>
-                    ${transaction.change > 0 ? `<div class="small">Change: $${transaction.change.toFixed(2)}</div>` : ''}
+                    <div class="small">Payment: ${method.toUpperCase()}</div>
+                    ${change > 0 ? `<div class="small">Change: $${change.toFixed(2)}</div>` : ''}
                     <hr class="my-1">
                     <small>Thank you!</small>
                 </div>
             `;
-            document.getElementById('receiptContent').innerHTML = receiptHTML;
-            new bootstrap.Modal(document.getElementById('receiptModal')).show();
         }
 
         function printReceipt() {
@@ -1180,6 +1189,13 @@
         
         function renderInventory() {
             const tbody = document.getElementById('inventoryList');
+            if (!tbody) return;
+            
+            if (!products.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No products found</td></tr>';
+                return;
+            }
+            
             tbody.innerHTML = products.map(p => `
                 <tr>
                     <td>${p.id}</td>
@@ -1268,11 +1284,17 @@
                 if (item.dataset.page === page) item.classList.add('active');
             });
             
-            document.getElementById('posPage').style.display = page === 'pos' ? 'block' : 'none';
-            document.getElementById('inventoryPage').style.display = page === 'inventory' ? 'block' : 'none';
-            document.getElementById('salesPage').style.display = page === 'sales' ? 'block' : 'none';
-            document.getElementById('transactionsPage').style.display = page === 'transactions' ? 'block' : 'none';
-            document.getElementById('analyticsPage').style.display = page === 'analytics' ? 'block' : 'none';
+            const posPage = document.getElementById('posPage');
+            const inventoryPage = document.getElementById('inventoryPage');
+            const salesPage = document.getElementById('salesPage');
+            const transactionsPage = document.getElementById('transactionsPage');
+            const analyticsPage = document.getElementById('analyticsPage');
+            
+            if (posPage) posPage.style.display = page === 'pos' ? 'block' : 'none';
+            if (inventoryPage) inventoryPage.style.display = page === 'inventory' ? 'block' : 'none';
+            if (salesPage) salesPage.style.display = page === 'sales' ? 'block' : 'none';
+            if (transactionsPage) transactionsPage.style.display = page === 'transactions' ? 'block' : 'none';
+            if (analyticsPage) analyticsPage.style.display = page === 'analytics' ? 'block' : 'none';
             
             if (page === 'inventory') renderInventory();
             if (page === 'sales') renderSalesChart();
@@ -1283,7 +1305,9 @@
         // ==================== REPORT FUNCTIONS ====================
         
         function renderSalesChart() {
-            const ctx = document.getElementById('salesChart').getContext('2d');
+            const canvas = document.getElementById('salesChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
             if (salesChart) salesChart.destroy();
             salesChart = new Chart(ctx, {
                 type: 'line',
@@ -1304,18 +1328,20 @@
 
         function renderTransactions() {
             const tbody = document.getElementById('transactionsList');
+            if (!tbody) return;
+            
             if (!salesData.transactions.length) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center">No transactions yet</td></tr>';
                 return;
             }
             tbody.innerHTML = salesData.transactions.map(t => `
                 <tr>
-                    <td>${t.date}</td>
-                    <td>${t.items.reduce((s, i) => s + i.quantity, 0)} items</td>
+                    <td>${t.date || t.created_at || ''}</td>
+                    <td>${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0} items</td>
                     <td>$${t.subtotal.toFixed(2)}</td>
                     <td>$${t.tax.toFixed(2)}</td>
                     <td class="fw-bold">$${t.total.toFixed(2)}</td>
-                    <td><span class="badge bg-info">${t.paymentMethod}</span></td>
+                    <td><span class="badge bg-info">${t.payment_method || t.paymentMethod}</span></td>
                 </tr>
             `).join('');
         }
@@ -1327,44 +1353,47 @@
                 categoryCount[p.category] += p.stock * p.price;
             });
             
-            const ctx = document.getElementById('categoryChart').getContext('2d');
-            if (categoryChart) categoryChart.destroy();
-            categoryChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(categoryCount),
-                    datasets: [{
-                        data: Object.values(categoryCount),
-                        backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff']
-                    }]
-                },
-                options: { responsive: true }
-            });
+            const canvas = document.getElementById('categoryChart');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                if (categoryChart) categoryChart.destroy();
+                categoryChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(categoryCount),
+                        datasets: [{
+                            data: Object.values(categoryCount),
+                            backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
             
             const topProducts = [...products].sort((a, b) => b.stock * b.price - a.stock * a.price).slice(0, 5);
-            document.getElementById('topProductsList').innerHTML = topProducts.map((p, idx) => `
-                <div class="d-flex justify-content-between align-items-center p-1 border-bottom small">
-                    <span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span>
-                    <span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span>
-                </div>
-            `).join('');
+            const topList = document.getElementById('topProductsList');
+            if (topList) {
+                topList.innerHTML = topProducts.map((p, idx) => `
+                    <div class="d-flex justify-content-between align-items-center p-1 border-bottom small">
+                        <span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span>
+                        <span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span>
+                    </div>
+                `).join('');
+            }
         }
 
         // ==================== UI UPDATE FUNCTIONS ====================
         
         function updateStats() {
-            document.getElementById('todaySales').innerText = `$${salesData.todaySales.toFixed(2)}`;
-            document.getElementById('itemsSold').innerText = salesData.itemsSold;
-            document.getElementById('lowStockCount').innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
-            document.getElementById('totalProducts').innerText = products.length;
+            const todaySalesEl = document.getElementById('todaySales');
+            const itemsSoldEl = document.getElementById('itemsSold');
+            const lowStockCountEl = document.getElementById('lowStockCount');
+            const totalProductsEl = document.getElementById('totalProducts');
             
-            // Update stats on sales page if visible
-            if (document.getElementById('todaySales2')) {
-                document.getElementById('todaySales2').innerText = `$${salesData.todaySales.toFixed(2)}`;
-                document.getElementById('itemsSold2').innerText = salesData.itemsSold;
-                document.getElementById('lowStockCount2').innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
-                document.getElementById('totalProducts2').innerText = products.length;
-            }
+            if (todaySalesEl) todaySalesEl.innerText = `$${salesData.todaySales.toFixed(2)}`;
+            if (itemsSoldEl) itemsSoldEl.innerText = salesData.itemsSold;
+            if (lowStockCountEl) lowStockCountEl.innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
+            if (totalProductsEl) totalProductsEl.innerText = products.length;
         }
 
         function showToast(msg, type) {
@@ -1380,31 +1409,39 @@
         // ==================== EVENT LISTENERS ====================
         
         function setupEventListeners() {
-            document.getElementById('searchProduct').addEventListener('input', (e) => {
-                searchTerm = e.target.value.toLowerCase();
-                fetchProductsFromAPI();
-            });
+            const searchInput = document.getElementById('searchProduct');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    searchTerm = e.target.value.toLowerCase();
+                    fetchProductsFromAPI();
+                });
+            }
             
             document.querySelectorAll('.payment-method').forEach(el => {
                 el.addEventListener('click', function() {
                     document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
                     this.classList.add('active');
                     selectedPaymentMethod = this.dataset.method;
-                    document.getElementById('cashInputDiv').style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
+                    const cashDiv = document.getElementById('cashInputDiv');
+                    if (cashDiv) cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
                 });
             });
             
-            document.getElementById('cashAmount').addEventListener('input', () => {
-                const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-                const cash = parseFloat(document.getElementById('cashAmount').value);
-                if (!isNaN(cash) && cash >= total) {
-                    document.getElementById('changeDue').innerHTML = `Change: $${(cash - total).toFixed(2)}`;
-                } else if (!isNaN(cash)) {
-                    document.getElementById('changeDue').innerHTML = '<span class="text-danger">Insufficient</span>';
-                } else {
-                    document.getElementById('changeDue').innerHTML = '';
-                }
-            });
+            const cashAmount = document.getElementById('cashAmount');
+            if (cashAmount) {
+                cashAmount.addEventListener('input', () => {
+                    const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+                    const cash = parseFloat(cashAmount.value);
+                    const changeDue = document.getElementById('changeDue');
+                    if (!isNaN(cash) && cash >= total) {
+                        if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`;
+                    } else if (!isNaN(cash)) {
+                        if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>';
+                    } else {
+                        if (changeDue) changeDue.innerHTML = '';
+                    }
+                });
+            }
             
             document.querySelectorAll('.menu-item').forEach(item => {
                 item.addEventListener('click', () => {
@@ -1423,30 +1460,40 @@
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
             const toggleBtn = document.getElementById('toggleSidebar');
-            sidebar.classList.add('collapsed');
-            mainContent.classList.add('expanded');
-            toggleBtn.classList.add('shifted');
+            if (sidebar) sidebar.classList.add('collapsed');
+            if (mainContent) mainContent.classList.add('expanded');
+            if (toggleBtn) toggleBtn.classList.add('shifted');
             
             // Toggle button event
-            document.getElementById('toggleSidebar').addEventListener('click', () => {
-                document.getElementById('sidebar').classList.toggle('collapsed');
-                document.getElementById('mainContent').classList.toggle('expanded');
-                document.getElementById('toggleSidebar').classList.toggle('shifted');
-            });
+            const toggleButton = document.getElementById('toggleSidebar');
+            if (toggleButton) {
+                toggleButton.addEventListener('click', () => {
+                    const sidebarEl = document.getElementById('sidebar');
+                    const mainContentEl = document.getElementById('mainContent');
+                    const toggleBtnEl = document.getElementById('toggleSidebar');
+                    if (sidebarEl) sidebarEl.classList.toggle('collapsed');
+                    if (mainContentEl) mainContentEl.classList.toggle('expanded');
+                    if (toggleBtnEl) toggleBtnEl.classList.toggle('shifted');
+                });
+            }
             
             // Logout button
-            document.getElementById('logoutBtn').addEventListener('click', async () => {
-                try {
-                    await fetch('/api/logout', { method: 'POST' });
-                } catch (e) {}
-                localStorage.clear();
-                window.location.href = '/login';
-            });
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    try {
+                        await fetch('/api/logout', { method: 'POST' });
+                    } catch (e) {}
+                    localStorage.clear();
+                    window.location.href = '/login';
+                });
+            }
             
             // Load data
             await fetchCategories();
             await fetchProductsFromAPI();
             await fetchDashboardStats();
+            await fetchTransactions();
         }
         
         // Start the application
