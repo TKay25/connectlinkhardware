@@ -991,886 +991,855 @@
 
     <div class="modal fade" id="receiptModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h6 class="modal-title"><i class="fas fa-receipt"></i> Receipt</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="receiptContent"></div><div class="modal-footer"><button class="btn btn-sm btn-primary-dark" onclick="printReceipt()">Print</button><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // API Base URL
-        const API_BASE = window.location.origin;
-        
-
-        // Variables for stock editing
-        let productToEdit = null;
-        const EDIT_PASSCODE = "conlinkhardwareadmin01"; // Same passcode as delete
-
-        // Show add stock modal
-        function showEditStockModal(productId) {
-            productToEdit = products.find(p => p.id === productId);
-            if (!productToEdit) return;
-            
-            document.getElementById('editStockProductName').innerText = productToEdit.name;
-            document.getElementById('currentStockValue').innerText = productToEdit.stock;
-            document.getElementById('editStockPasscode').value = '';
-            document.getElementById('newStockQuantity').value = 1;
-            document.getElementById('editPasscodeError').innerHTML = '';
-            new bootstrap.Modal(document.getElementById('editStockModal')).show();
-        }
-
-        // Confirm and ADD to stock (not replace)
-        async function confirmAddStock() {
-            const passcode = document.getElementById('editStockPasscode').value;
-            const quantityToAdd = parseInt(document.getElementById('newStockQuantity').value);
-            
-            if (passcode !== EDIT_PASSCODE) {
-                document.getElementById('editPasscodeError').innerHTML = 'Invalid passcode!';
-                return;
-            }
-            
-            if (isNaN(quantityToAdd) || quantityToAdd <= 0) {
-                document.getElementById('editPasscodeError').innerHTML = 'Please enter a valid quantity to add!';
-                return;
-            }
-            
-            if (!productToEdit) return;
-            
-            // Calculate new stock = current stock + quantity to add
-            const newStock = productToEdit.stock + quantityToAdd;
-            
-            showLoader(`Adding ${quantityToAdd} units to "${productToEdit.name}"...`);
-            
-            try {
-                const updateResponse = await fetch(`${API_BASE}/api/products/${productToEdit.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        ...productToEdit,
-                        stock: newStock
-                    })
-                });
-                const updateData = await updateResponse.json();
-                
-                if (updateData.success) {
-                    await fetchProductsFromAPI();
-                    bootstrap.Modal.getInstance(document.getElementById('editStockModal')).hide();
-                    showToast(`Added ${quantityToAdd} units to ${productToEdit.name}. New stock: ${newStock}`, 'success');
-                } else {
-                    showToast('Failed to update stock', 'error');
-                }
-            } catch (error) {
-                showToast('Connection error', 'error');
-            }
-            
-            hideLoader();
-            productToEdit = null;
-        }
-
-
-        // Global variables
-        let products = [];
-        let cart = [];
-        let selectedCategory = "all";
-        let searchTerm = "";
-        let selectedPaymentMethod = "";
-        let salesData = { todaySales: 0, itemsSold: 0, transactions: [] };
-        let currentPage = "pos";
-        let salesChart = null;
-        let categoryChart = null;
-        let categoriesList = [];
-        let productToDelete = null;
-        const DELETE_PASSCODE = "conlinkhardwareadmin01";
-        
-        // ==================== AUTHENTICATION ====================
-        
-        async function checkAuthentication() {
-            try {
-                const authResponse = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
-                const authData = await authResponse.json();
-                if (authData.authenticated) {
-                    localStorage.setItem('isLoggedIn', 'true');
-                    if (authData.user) localStorage.setItem('user', JSON.stringify(authData.user));
-                    return true;
-                } else {
-                    localStorage.removeItem('isLoggedIn');
-                    localStorage.removeItem('user');
-                    window.location.href = '/login';
-                    return false;
-                }
-            } catch (error) {
-                if (localStorage.getItem('isLoggedIn') === 'true') return true;
-                else { window.location.href = '/login'; return false; }
-            }
-        }
-        
-        function setUserName() {
-            let userName = "Administrator";
-            const userData = localStorage.getItem('user');
-            if (userData) {
-                try {
-                    const userObj = JSON.parse(userData);
-                    userName = userObj.full_name || userObj.username || "Administrator";
-                } catch (e) { userName = userData === "admin" ? "Administrator" : userData; }
-            }
-            const userNameSpan = document.getElementById('userName');
-            if (userNameSpan) userNameSpan.innerText = userName;
-        }
-        
-        // ==================== LOADER FUNCTIONS ====================
-        
-        function showLoader(message) {
-            let loader = document.getElementById('globalLoader');
-            if (!loader) {
-                loader = document.createElement('div');
-                loader.id = 'globalLoader';
-                loader.className = 'loader-overlay';
-                loader.innerHTML = `<div class="loader-spinner"></div><div id="loaderMessage" style="font-size: 14px;">${message}</div>`;
-                document.body.appendChild(loader);
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // API Base URL
+    const API_BASE = window.location.origin;
+    
+    // Variables for stock editing
+    let productToEdit = null;
+    const EDIT_PASSCODE = "conlinkhardwareadmin01";
+    
+    // Global variables
+    let products = [];
+    let cart = [];
+    let selectedCategory = "all";
+    let searchTerm = "";
+    let selectedPaymentMethod = "";
+    let salesData = { todaySales: 0, itemsSold: 0, transactions: [] };
+    let currentPage = "pos";
+    let salesChart = null;
+    let categoryChart = null;
+    let categoriesList = [];
+    let productToDelete = null;
+    const DELETE_PASSCODE = "conlinkhardwareadmin01";
+    
+    // Payment loader modal instance
+    let paymentLoaderModal = null;
+    
+    // ==================== AUTHENTICATION ====================
+    
+    async function checkAuthentication() {
+        try {
+            const authResponse = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
+            const authData = await authResponse.json();
+            if (authData.authenticated) {
+                localStorage.setItem('isLoggedIn', 'true');
+                if (authData.user) localStorage.setItem('user', JSON.stringify(authData.user));
+                return true;
             } else {
-                loader.style.display = 'flex';
-                const msgDiv = document.getElementById('loaderMessage');
-                if (msgDiv) msgDiv.innerHTML = message;
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+                return false;
             }
+        } catch (error) {
+            if (localStorage.getItem('isLoggedIn') === 'true') return true;
+            else { window.location.href = '/login'; return false; }
         }
-        
-        function hideLoader() {
-            const loader = document.getElementById('globalLoader');
-            if (loader) loader.style.display = 'none';
-        }
-        
-        // ==================== API FUNCTIONS ====================
-        
-        async function fetchProductsFromAPI() {
+    }
+    
+    function setUserName() {
+        let userName = "Administrator";
+        const userData = localStorage.getItem('user');
+        if (userData) {
             try {
-                let url = `${API_BASE}/api/products`;
-                const productsResponse = await fetch(url, { credentials: 'include' });
-                if (productsResponse.status === 401) { window.location.href = '/login'; return; }
-                const productsData = await productsResponse.json();
-                if (productsData.success) {
-                    products = productsData.products;
-                    renderProducts();
-                    renderInventory();
-                    updateStats();
-                }
-            } catch (error) { console.error('Error fetching products:', error); showToast('Connection error', 'error'); }
+                const userObj = JSON.parse(userData);
+                userName = userObj.full_name || userObj.username || "Administrator";
+            } catch (e) { userName = userData === "admin" ? "Administrator" : userData; }
         }
-        
-        async function fetchCategories() {
-            try {
-                const categoriesResponse = await fetch(`${API_BASE}/api/categories`, { credentials: 'include' });
-                const categoriesData = await categoriesResponse.json();
-                if (categoriesData.success) {
-                    // Filter out any "all" or "All" categories from the API response
-                    categoriesList = categoriesData.categories
-                        .map(c => c.name)
-                        .filter(name => name.toLowerCase() !== 'all');
-                    renderCategories();
-                }
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            }
+        const userNameSpan = document.getElementById('userName');
+        if (userNameSpan) userNameSpan.innerText = userName;
+    }
+    
+    // ==================== LOADER FUNCTIONS ====================
+    
+    function showLoader(message) {
+        let loader = document.getElementById('globalLoader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'globalLoader';
+            loader.className = 'loader-overlay';
+            loader.innerHTML = `<div class="loader-spinner"></div><div id="loaderMessage" style="font-size: 14px;">${message}</div>`;
+            document.body.appendChild(loader);
+        } else {
+            loader.style.display = 'flex';
+            const msgDiv = document.getElementById('loaderMessage');
+            if (msgDiv) msgDiv.innerHTML = message;
         }
+    }
+    
+    function hideLoader() {
+        const loader = document.getElementById('globalLoader');
+        if (loader) loader.style.display = 'none';
+    }
+    
+    // ==================== PAYMENT LOADER FUNCTIONS ====================
+    
+    function showPaymentLoader(message) {
+        const modalElement = document.getElementById('paymentLoaderModal');
+        if (!modalElement) return;
         
-        async function fetchDashboardStats() {
-            try {
-                const statsResponse = await fetch(`${API_BASE}/api/dashboard/stats`, { credentials: 'include' });
-                const statsData = await statsResponse.json();
-                if (statsData.success) {
-                    salesData.todaySales = statsData.stats.today_sales;
-                    salesData.itemsSold = statsData.stats.items_sold;
-                    updateStats();
-                }
-            } catch (error) { console.error('Error fetching stats:', error); }
+        const messageEl = document.getElementById('paymentLoaderMessage');
+        if (messageEl) messageEl.innerHTML = message || 'Processing payment...';
+        
+        // Remove any existing backdrops first
+        const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+        existingBackdrops.forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        
+        // Create and show new modal
+        paymentLoaderModal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        paymentLoaderModal.show();
+    }
+    
+    function hidePaymentLoader() {
+        if (paymentLoaderModal) {
+            paymentLoaderModal.hide();
+            paymentLoaderModal = null;
         }
-        
-        async function fetchTransactions() {
-            try {
-                const transactionsResponse = await fetch(`${API_BASE}/api/transactions`, { credentials: 'include' });
-                const transactionsData = await transactionsResponse.json();
-                if (transactionsData.success) {
-                    salesData.transactions = transactionsData.transactions;
-                    renderTransactions();
-                }
-            } catch (error) { console.error('Error fetching transactions:', error); }
-        }
-        
-        async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
-            try {
-                const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({
-                        items: items.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
-                        payment_method: paymentMethod, amount_paid: amountPaid, change_amount: change
-                    })
-                });
-                if (transactionResponse.status === 401) { window.location.href = '/login'; return false; }
-                const transactionData = await transactionResponse.json();
-                if (transactionData.success) { showToast('Payment successful!', 'success'); return true; }
-                else { showToast(transactionData.error || 'Payment failed', 'error'); return false; }
-            } catch (error) { showToast('Connection error', 'error'); return false; }
-        }
-        
-        // ==================== SEARCH & FILTER ====================
-        
-        function filterProducts() {
-            let filtered = products;
-            if (selectedCategory !== 'all') filtered = filtered.filter(p => p.category === selectedCategory);
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase();
-                filtered = filtered.filter(p => p.name.toLowerCase().includes(term) || (p.unit_details && p.unit_details.toLowerCase().includes(term)));
-            }
-            return filtered;
-        }
-        
-        function renderProducts() {
-            const container = document.getElementById('productsContainer');
-            if (!container) return;
-            
-            const filtered = filterProducts();
-            
-            if (!filtered.length) {
-                container.innerHTML = '<div class="col-12 text-center py-4"><i class="fas fa-box-open fa-2x text-muted"></i><p class="text-muted mt-1 small">No products found</p></div>';
-                return;
-            }
-            
-            // Use col-6 for mobile, col-4 for tablet, col-3 for desktop (reduced width)
-            container.innerHTML = filtered.map(product => `
-                <div class="col-6 col-md-4 col-lg-3">
-                    <div class="product-card-compact" onclick="addToCart(${product.id})">
-                        <div class="product-icon-compact">
-                            <i class="fas ${getCategoryIcon(product.category)}"></i>
-                        </div>
-                        <div class="product-info-compact">
-                            <div class="product-name-compact">${escapeHtml(product.name)}</div>
-                            <div class="product-details-compact">
-                                <span class="product-unit-compact">${product.unit_type}: ${product.unit_details || 'N/A'}</span>
-                            </div>
-                            <div class="product-stock-compact ${product.stock < 10 ? 'low-stock' : ''}">
-                                Stock: ${product.stock}
-                            </div>
-                        </div>
-                        <div class="price-add-wrapper">
-                            <div class="price-above">$${product.price.toFixed(2)}</div>
-                            <button class="add-btn-compact" onclick="event.stopPropagation(); addToCart(${product.id})">
-                                <i class="fas fa-plus"></i> Add
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // ==================== AUTOCOMPLETE ====================
-        
-        function setupAutocomplete() {
-            const productNameInput = document.getElementById('productName');
-            const suggestionsDiv = document.getElementById('productNameSuggestions');
-            if (!productNameInput) return;
-            productNameInput.addEventListener('input', function() {
-                const inputValue = this.value.toLowerCase();
-                suggestionsDiv.innerHTML = '';
-                if (inputValue.length < 2) return;
-                const existingNames = [...new Set(products.map(p => p.name))];
-                const matches = existingNames.filter(name => name.toLowerCase().includes(inputValue));
-                if (matches.length === 0) return;
-                matches.forEach(match => {
-                    const div = document.createElement('div');
-                    div.innerHTML = match;
-                    div.addEventListener('click', function() {
-                        productNameInput.value = match;
-                        suggestionsDiv.innerHTML = '';
-                        const existingProduct = products.find(p => p.name === match);
-                        if (existingProduct) {
-                            document.getElementById('productCategory').value = existingProduct.category;
-                            document.getElementById('unitType').value = existingProduct.unit_type;
-                            document.getElementById('unitDetails').value = existingProduct.unit_details || '';
-                            document.getElementById('productPrice').value = existingProduct.price;
-                        }
-                    });
-                    suggestionsDiv.appendChild(div);
-                });
-            });
-            document.addEventListener('click', function(e) { if (e.target !== productNameInput) suggestionsDiv.innerHTML = ''; });
-        }
-        
-        // ==================== DELETE FUNCTIONS ====================
-        
-        function showDeleteConfirmation(productId) {
-            productToDelete = productId;
-            const product = products.find(p => p.id === productId);
-            if (product) {
-                document.getElementById('deleteProductName').innerText = product.name;
-                document.getElementById('deleteProductCategory').innerText = product.category;
-            }
-            document.getElementById('deletePasscode').value = '';
-            document.getElementById('passcodeError').innerHTML = '';
-            new bootstrap.Modal(document.getElementById('deletePasscodeModal')).show();
-        }
-        
-        async function confirmDelete() {
-            const passcode = document.getElementById('deletePasscode').value;
-            if (passcode !== DELETE_PASSCODE) {
-                document.getElementById('passcodeError').innerHTML = 'Invalid passcode!';
-                return;
-            }
-            if (!productToDelete) return;
-            const product = products.find(p => p.id === productToDelete);
-            const productName = product ? product.name : 'Unknown';
-            showLoader(`Deleting "${productName}" from inventory...`);
-            try {
-                const deleteResponse = await fetch(`${API_BASE}/api/products/${productToDelete}`, { method: 'DELETE', credentials: 'include' });
-                const deleteData = await deleteResponse.json();
-                if (deleteData.success) {
-                    await fetchProductsFromAPI();
-                    showToast(`${productName} deleted successfully`, 'success');
-                } else { showToast(deleteData.error || 'Cannot delete product', 'error'); }
-            } catch (error) { showToast('Connection error', 'error'); }
-            hideLoader();
-            bootstrap.Modal.getInstance(document.getElementById('deletePasscodeModal')).hide();
-            productToDelete = null;
-        }
-        
-        // ==================== ADD PRODUCT ====================
-        
-        function showAddInventoryModal() {
-            document.getElementById('productName').value = '';
-            document.getElementById('productPrice').value = '';
-            document.getElementById('productStock').value = '';
-            document.getElementById('unitDetails').value = '';
-            document.getElementById('productDescription').value = '';
-            document.getElementById('productNameSuggestions').innerHTML = '';
-            new bootstrap.Modal(document.getElementById('addInventoryModal')).show();
-        }
-        
-        async function addNewProduct() {
-            const name = document.getElementById('productName').value;
-            const category = document.getElementById('productCategory').value;
-            const unitType = document.getElementById('unitType').value;
-            const unitDetails = document.getElementById('unitDetails').value;
-            const price = parseFloat(document.getElementById('productPrice').value);
-            const stock = parseInt(document.getElementById('productStock').value);
-            const description = document.getElementById('productDescription').value;
-            if (!name || isNaN(price) || isNaN(stock)) { showToast('Please fill all required fields', 'error'); return; }
-            showLoader(`Adding "${name}" (${category}) to inventory, please wait...`);
-            try {
-                const addResponse = await fetch(`${API_BASE}/api/products`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ name, category, unit_type: unitType, unit_details: unitDetails, price, stock, description })
-                });
-                const addData = await addResponse.json();
-                if (addData.success) {
-                    await fetchProductsFromAPI();
-                    bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide();
-                    showToast(`${name} added successfully!`, 'success');
-                } else { showToast('Failed to add product', 'error'); }
-            } catch (error) { showToast('Connection error', 'error'); }
-            hideLoader();
-        }
-        
-        // ==================== UI RENDER FUNCTIONS ====================
-        
-        function getCategoryIcon(category) {
-            const icons = {
-                'Hand Tools': 'fa-tools', 'Power Tools': 'fa-bolt', 'Fasteners': 'fa-link',
-                'Paint': 'fa-palette', 'Lumber': 'fa-tree', 'Electrical': 'fa-plug',
-                'Plumbing': 'fa-water', 'Safety': 'fa-shield-alt'
-            };
-            return icons[category] || 'fa-box';
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function renderCategories() {
-            const container = document.getElementById('categoriesContainer');
-            if (!container) return;
-            
-            // Only add ONE "All" button manually, then add all other categories
-            // Make sure categoriesList doesn't contain "all" or "All"
-            const filteredCategories = categoriesList.filter(cat => cat.toLowerCase() !== 'all');
-            
-            container.innerHTML = `
-                <div class="category-chip ${selectedCategory === 'all' ? 'active' : ''}" onclick="selectCategory('all')">All</div>
-                ${filteredCategories.map(cat => `
-                    <div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</div>
-                `).join('')}
-            `;
-        }
-        
-        function selectCategory(category) {
-            selectedCategory = category;
-            renderCategories();
-            renderProducts();
-        }
-        
-        function renderInventory() {
-            const tbody = document.getElementById('inventoryList');
-            if (!tbody) return;
-            
-            if (!products.length) {
-                tbody.innerHTML = '=<td colspan="10" class="text-center">No products found</td>';
-                return;
-            }
-            
-            tbody.innerHTML = products.map(p => `
-                <tr>
-                    <td>${p.id}</td>
-                    <td><i class="fas ${getCategoryIcon(p.category)} me-1"></i>${escapeHtml(p.name)}</td>
-                    <td>${p.category}</td>
-                    <td><span class="unit-badge">${p.unit_type}</span></td>
-                    <td><small>${p.unit_details || 'N/A'}</small></td>
-                    <td class="fw-bold">$${p.price.toFixed(2)}</td>
-                    <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
-                    <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-success me-1" onclick="showEditStockModal(${p.id})" title="Add Stock">
-                            <i class="fas fa-plus-circle"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        // ==================== CART FUNCTIONS ====================
-        
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
-            const existing = cart.find(i => i.id === productId);
-            if (existing) {
-                if (existing.quantity + 1 > product.stock) { showToast('Not enough stock!', 'error'); return; }
-                existing.quantity++;
-            } else {
-                if (product.stock < 1) { showToast('Out of stock!', 'error'); return; }
-                cart.push({ ...product, quantity: 1 });
-            }
-            updateCartDisplay();
-            showToast(`${product.name} added`, 'success');
-        }
-        
-        function updateCartDisplay() {
-            const container = document.getElementById('cartItems');
-            if (!container) return;
-            if (!cart.length) {
-                container.innerHTML = '<div class="text-center py-4"><i class="fas fa-shopping-cart fa-2x text-muted mb-1"></i><p class="text-muted small">Cart empty</p></div>';
-            } else {
-                container.innerHTML = cart.map((item, idx) => `
-                    <div class="cart-item">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h6 class="fw-bold mb-0">${escapeHtml(item.name)}</h6>
-                                <div class="small text-muted">$${item.price.toFixed(2)} each</div>
-                                <div class="mt-1"><div class="qty-control"><button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button><span class="fw-bold small">${item.quantity}</span><button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button></div></div>
-                            </div>
-                            <div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${(item.price * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div>
-                        </div>
-                    </div>
-                `).join('');
-            }
-            calculateTotals();
-        }
-        
-        function updateQuantity(idx, delta) {
-            const newQty = cart[idx].quantity + delta;
-            const product = products.find(p => p.id === cart[idx].id);
-            if (newQty < 1) removeFromCart(idx);
-            else if (newQty <= product.stock) { cart[idx].quantity = newQty; updateCartDisplay(); }
-            else showToast('Not enough stock!', 'error');
-        }
-        
-        function removeFromCart(idx) { cart.splice(idx, 1); updateCartDisplay(); }
-        function clearCart() { if (cart.length) { cart = []; updateCartDisplay(); showToast('Cart cleared', 'info'); } }
-        function calculateTotals() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const tax = subtotal * 0.10;
-            const total = subtotal + tax;
-            document.getElementById('subtotal').innerText = `$${subtotal.toFixed(2)}`;
-            document.getElementById('tax').innerText = `$${tax.toFixed(2)}`;
-            document.getElementById('total').innerText = `$${total.toFixed(2)}`;
-        }
-        
-        // ==================== PAYMENT FUNCTIONS ====================
-        
-        function showPaymentConfirmation() {
-            if (!cart.length) {
-                showToast('Cart is empty!', 'error');
-                return;
-            }
-            
-            if (!selectedPaymentMethod) {
-                showToast('Please select a payment method!', 'error');
-                return;
-            }
-            
-            const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('$', ''));
-            const tax = parseFloat(document.getElementById('tax').innerText.replace('$', ''));
-            const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-            
-            const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
-                                        selectedPaymentMethod === 'card' ? 'Card' : 'Bank Transfer';
-            
-            const confirmationHTML = `
-                <div>
-                    <div class="mb-2 p-2 bg-light rounded">
-                        <h6 class="fw-bold mb-1 small">Order Summary</h6>
-                        ${cart.map(item => `
-                            <div class="d-flex justify-content-between py-1 border-bottom small">
-                                <div>
-                                    <strong>${escapeHtml(item.name)}</strong><br>
-                                    <span class="text-muted">$${item.price.toFixed(2)} x ${item.quantity}</span>
-                                </div>
-                                <span class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span></div>
-                        <div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div>
-                        <div class="d-flex justify-content-between fw-bold pt-1 border-top small">
-                            <span>Total:</span>
-                            <span style="color:#0a2b3e;">$${total.toFixed(2)}</span>
-                        </div>
-                    </div>
-                    <div class="alert alert-info small py-1 mb-0">
-                        <i class="fas fa-credit-card me-1"></i>Payment: ${paymentMethodDisplay}
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('confirmationContent').innerHTML = confirmationHTML;
-            
-            // Show the modal - use getInstance if exists, otherwise create new
-            const modalElement = document.getElementById('confirmationModal');
-            let modal = bootstrap.Modal.getInstance(modalElement);
-            if (!modal) {
-                modal = new bootstrap.Modal(modalElement);
-            }
-            modal.show();
-        }
-
-
-        // Payment loader functions
-        let paymentLoaderModal = null;
-
-        function showPaymentLoader(message = 'Processing payment, Please Wait...') {
-            // Get modal element
-            const modalElement = document.getElementById('paymentLoaderModal');
-            if (!modalElement) return;
-            
-            // Update message
-            const messageEl = document.getElementById('paymentLoaderMessage');
-            if (messageEl) messageEl.innerHTML = message;
-            
-            // Remove any existing backdrops first
-            const existingBackdrops = document.querySelectorAll('.modal-backdrop');
-            existingBackdrops.forEach(backdrop => backdrop.remove());
+        // Clean up backdrops
+        setTimeout(() => {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
             document.body.classList.remove('modal-open');
-            
-            // Create new modal instance
-            paymentLoaderModal = new bootstrap.Modal(modalElement, {
-                backdrop: 'static',
-                keyboard: false
-            });
-            
-            // Show the loader
-            paymentLoaderModal.show();
-        }
-
-        function hidePaymentLoader() {
-            if (paymentLoaderModal) {
-                paymentLoaderModal.hide();
-                paymentLoaderModal = null;
-            }
-            
-            // Clean up any leftover backdrops after a short delay
-            setTimeout(() => {
-                const backdrops = document.querySelectorAll('.modal-backdrop');
-                backdrops.forEach(backdrop => {
-                    if (backdrop.parentNode) backdrop.remove();
-                });
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-            }, 300);
-        }
-
-        function updatePaymentLoaderMessage(message) {
-            const messageEl = document.getElementById('paymentLoaderMessage');
-            if (messageEl) messageEl.innerHTML = message;
-        }
-        
-        async function processPayment() {
-            // Check if payment method is selected
-            if (!selectedPaymentMethod) {
-                showToast('Please select a payment method!', 'error');
-                return;
-            }
-            
-            const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-            
-            // First, hide the confirmation modal properly
-            const confirmationModalElement = document.getElementById('confirmationModal');
-            const confirmationModal = bootstrap.Modal.getInstance(confirmationModalElement);
-            if (confirmationModal) {
-                confirmationModal.hide();
-            }
-            
-            // Remove any leftover backdrops from confirmation modal
-            setTimeout(() => {
-                const backdrops = document.querySelectorAll('.modal-backdrop');
-                backdrops.forEach(backdrop => backdrop.remove());
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-            }, 150);
-            
-            // Show payment loader after confirmation modal is fully closed
-            setTimeout(() => {
-                showPaymentLoader('Processing payment...');
-            }, 200);
-            
-            try {
-                if (selectedPaymentMethod === 'cash') {
-                    const cash = parseFloat(document.getElementById('cashAmount').value);
-                    if (isNaN(cash) || cash < total) {
-                        hidePaymentLoader();
-                        showToast('Insufficient cash!', 'error');
-                        return;
-                    }
-                    await processOrder(selectedPaymentMethod, cash, cash - total);
-                } else {
-                    await processOrder(selectedPaymentMethod, total, 0);
-                }
-            } catch (error) {
-                hidePaymentLoader();
-                showToast('Payment failed', 'error');
-            }
-        }  
-
-        async function processOrder(method, paid, change) {
-            updatePaymentLoaderMessage('Verifying payment...');
-            
-            const success = await createTransactionAPI(cart, method, paid, change);
-            
-            if (success) {
-                updatePaymentLoaderMessage('Updating inventory...');
-                
-                // Small delay to show the message
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                cart.forEach(cartItem => {
-                    const product = products.find(p => p.id === cartItem.id);
-                    if (product) product.stock -= cartItem.quantity;
-                });
-                
-                const transactionTotal = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-                salesData.todaySales += transactionTotal;
-                salesData.itemsSold += cart.reduce((sum, i) => sum + i.quantity, 0);
-                
+            document.body.style.overflow = '';
+        }, 300);
+    }
+    
+    function updatePaymentLoaderMessage(message) {
+        const messageEl = document.getElementById('paymentLoaderMessage');
+        if (messageEl) messageEl.innerHTML = message;
+    }
+    
+    // ==================== API FUNCTIONS ====================
+    
+    async function fetchProductsFromAPI() {
+        try {
+            let url = `${API_BASE}/api/products`;
+            const productsResponse = await fetch(url, { credentials: 'include' });
+            if (productsResponse.status === 401) { window.location.href = '/login'; return; }
+            const productsData = await productsResponse.json();
+            if (productsData.success) {
+                products = productsData.products;
+                renderProducts();
+                renderInventory();
                 updateStats();
-                
-                bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
-                
-                // Hide payment loader
-                hidePaymentLoader();
-                
-                // Generate and show receipt
-                const receiptHTML = generateReceiptHTML(cart, method, paid, change);
-                document.getElementById('receiptContent').innerHTML = receiptHTML;
-                new bootstrap.Modal(document.getElementById('receiptModal')).show();
-                
-                cart = [];
-                updateCartDisplay();
-                fetchProductsFromAPI();
-                fetchTransactions();
-                fetchDashboardStats();
-                
-                if (currentPage === 'inventory') renderInventory();
-                if (currentPage === 'analytics') renderAnalytics();
-                
-                showToast('Payment successful!', 'success');
-            } else {
-                hidePaymentLoader();
-                showToast('Payment failed', 'error');
             }
-        }
-        
-        function generateReceiptHTML(items, method, paid, change) {
-            const subtotal = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-            const tax = subtotal * 0.10;
-            const total = subtotal + tax;
-            return `<div class="text-center"><i class="fas fa-hard-hat" style="color:#0a2b3e;"></i><h6 class="fw-bold mt-1">Connect Link Properties</h6><small>Hardware Supply</small><hr class="my-1"><small>${new Date().toLocaleString()}</small><hr class="my-1">${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${(item.price * item.quantity).toFixed(2)}</span></div>`).join('')}<hr class="my-1"><div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div><hr class="my-1"><div class="small">Payment: ${method.toUpperCase()}</div>${change > 0 ? `<div class="small">Change: $${change.toFixed(2)}</div>` : ''}<hr class="my-1"><small>Thank you!</small></div>`;
-        }
-        
-        function printReceipt() {
-            const content = document.getElementById('receiptContent').innerHTML;
-            const win = window.open('', '_blank');
-            win.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;padding:10px;text-align:center;}</style></head><body>${content}</body></html>`);
-            win.print();
-        }
-        
-        // ==================== PAGE NAVIGATION ====================
-        
-        function navigateTo(page) {
-            currentPage = page;
-            document.querySelectorAll('.menu-item').forEach(item => { item.classList.remove('active'); if (item.dataset.page === page) item.classList.add('active'); });
-            const pages = { 'pos': document.getElementById('posPage'), 'inventory': document.getElementById('inventoryPage'), 'sales': document.getElementById('salesPage'), 'transactions': document.getElementById('transactionsPage'), 'analytics': document.getElementById('analyticsPage') };
-            Object.keys(pages).forEach(p => { if (pages[p]) pages[p].style.display = p === page ? 'block' : 'none'; });
-            if (page === 'inventory') renderInventory();
-            if (page === 'sales') renderSalesChart();
-            if (page === 'transactions') renderTransactions();
-            if (page === 'analytics') renderAnalytics();
-        }
-        
-        // ==================== REPORT FUNCTIONS ====================
-        
-        function renderSalesChart() {
-            const canvas = document.getElementById('salesChart');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            if (salesChart) salesChart.destroy();
-            salesChart = new Chart(ctx, { type: 'line', data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Sales ($)', data: [1250, 1450, 1320, 1680, 1890, 2100, 1750], borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)', tension: 0.3, fill: true }] }, options: { responsive: true, maintainAspectRatio: true } });
-        }
-        
-        function renderTransactions() {
-            const tbody = document.getElementById('transactionsList');
-            if (!tbody) return;
-            if (!salesData.transactions.length) { tbody.innerHTML = '=<td colspan="6" class="text-center">No transactions yet</td>'; return; }
-            tbody.innerHTML = salesData.transactions.map(t => `<tr><td>${t.date || t.created_at || ''}</td><td>${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0} items</td><td>$${t.subtotal.toFixed(2)}</td><td>$${t.tax.toFixed(2)}</td><td class="fw-bold">$${t.total.toFixed(2)}</td><td><span class="badge bg-info">${t.payment_method || t.paymentMethod}</span></td></tr>`).join('');
-        }
-        
-        function renderAnalytics() {
-            const categoryCount = {};
-            products.forEach(p => { if (!categoryCount[p.category]) categoryCount[p.category] = 0; categoryCount[p.category] += p.stock * p.price; });
-            const canvas = document.getElementById('categoryChart');
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                if (categoryChart) categoryChart.destroy();
-                categoryChart = new Chart(ctx, { type: 'pie', data: { labels: Object.keys(categoryCount), datasets: [{ data: Object.values(categoryCount), backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'] }] }, options: { responsive: true } });
+        } catch (error) { console.error('Error fetching products:', error); showToast('Connection error', 'error'); }
+    }
+    
+    async function fetchCategories() {
+        try {
+            const categoriesResponse = await fetch(`${API_BASE}/api/categories`, { credentials: 'include' });
+            const categoriesData = await categoriesResponse.json();
+            if (categoriesData.success) {
+                categoriesList = categoriesData.categories.map(c => c.name).filter(name => name.toLowerCase() !== 'all');
+                renderCategories();
             }
-            const topProducts = [...products].sort((a, b) => b.stock * b.price - a.stock * a.price).slice(0, 5);
-            const topList = document.getElementById('topProductsList');
-            if (topList) topList.innerHTML = topProducts.map((p, idx) => `<div class="d-flex justify-content-between align-items-center p-1 border-bottom small"><span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span><span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span></div>`).join('');
-        }
-        
-        function updateStats() {
-            document.getElementById('todaySales').innerText = `$${salesData.todaySales.toFixed(2)}`;
-            document.getElementById('itemsSold').innerText = salesData.itemsSold;
-            document.getElementById('lowStockCount').innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
-            document.getElementById('totalProducts').innerText = products.length;
-        }
-        
-        function showToast(msg, type) {
-            const toast = document.createElement('div');
-            toast.className = 'toast-notify';
-            const icon = type === 'success' ? 'check-circle text-success' : type === 'error' ? 'exclamation-circle text-danger' : 'info-circle text-info';
-            toast.innerHTML = `<i class="fas fa-${icon} me-1"></i>${msg}`;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2500);
-        }
-        
-        // ==================== EVENT LISTENERS ====================
-        
-        function setupEventListeners() {
-            const searchInput = document.getElementById('searchProduct');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => { 
-                    searchTerm = e.target.value.toLowerCase(); 
-                    renderProducts(); 
-                });
+        } catch (error) { console.error('Error fetching categories:', error); }
+    }
+    
+    async function fetchDashboardStats() {
+        try {
+            const statsResponse = await fetch(`${API_BASE}/api/dashboard/stats`, { credentials: 'include' });
+            const statsData = await statsResponse.json();
+            if (statsData.success) {
+                salesData.todaySales = statsData.stats.today_sales;
+                salesData.itemsSold = statsData.stats.items_sold;
+                updateStats();
             }
+        } catch (error) { console.error('Error fetching stats:', error); }
+    }
+    
+    async function fetchTransactions() {
+        try {
+            const transactionsResponse = await fetch(`${API_BASE}/api/transactions`, { credentials: 'include' });
+            const transactionsData = await transactionsResponse.json();
+            if (transactionsData.success) {
+                salesData.transactions = transactionsData.transactions;
+                renderTransactions();
+            }
+        } catch (error) { console.error('Error fetching transactions:', error); }
+    }
+    
+    async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
+        try {
+            const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                body: JSON.stringify({
+                    items: items.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
+                    payment_method: paymentMethod, amount_paid: amountPaid, change_amount: change
+                })
+            });
+            if (transactionResponse.status === 401) { window.location.href = '/login'; return false; }
+            const transactionData = await transactionResponse.json();
+            if (transactionData.success) return true;
+            else { showToast(transactionData.error || 'Payment failed', 'error'); return false; }
+        } catch (error) { showToast('Connection error', 'error'); return false; }
+    }
+    
+    // ==================== SEARCH & FILTER ====================
+    
+    function filterProducts() {
+        let filtered = products;
+        if (selectedCategory !== 'all') filtered = filtered.filter(p => p.category === selectedCategory);
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filtered = filtered.filter(p => p.name.toLowerCase().includes(term) || (p.unit_details && p.unit_details.toLowerCase().includes(term)));
+        }
+        return filtered;
+    }
+    
+    function renderProducts() {
+        const container = document.getElementById('productsContainer');
+        if (!container) return;
+        
+        const filtered = filterProducts();
+        
+        if (!filtered.length) {
+            container.innerHTML = '<div class="col-12 text-center py-4"><i class="fas fa-box-open fa-2x text-muted"></i><p class="text-muted mt-1 small">No products found</p></div>';
+            return;
+        }
+        
+        container.innerHTML = filtered.map(product => `
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="product-card-compact" onclick="addToCart(${product.id})">
+                    <div class="product-icon-compact">
+                        <i class="fas ${getCategoryIcon(product.category)}"></i>
+                    </div>
+                    <div class="product-info-compact">
+                        <div class="product-name-compact">${escapeHtml(product.name)}</div>
+                        <div class="product-details-compact">
+                            <span class="product-unit-compact">${product.unit_type}: ${product.unit_details || 'N/A'}</span>
+                        </div>
+                        <div class="product-stock-compact ${product.stock < 10 ? 'low-stock' : ''}">
+                            Stock: ${product.stock}
+                        </div>
+                    </div>
+                    <div class="price-add-wrapper">
+                        <div class="price-above">$${product.price.toFixed(2)}</div>
+                        <button class="add-btn-compact" onclick="event.stopPropagation(); addToCart(${product.id})">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // ==================== UI RENDER FUNCTIONS ====================
+    
+    function getCategoryIcon(category) {
+        const icons = {
+            'Hand Tools': 'fa-tools', 'Power Tools': 'fa-bolt', 'Fasteners': 'fa-link',
+            'Paint': 'fa-palette', 'Lumber': 'fa-tree', 'Electrical': 'fa-plug',
+            'Plumbing': 'fa-water', 'Safety': 'fa-shield-alt'
+        };
+        return icons[category] || 'fa-box';
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function renderCategories() {
+        const container = document.getElementById('categoriesContainer');
+        if (!container) return;
+        
+        const filteredCategories = categoriesList.filter(cat => cat.toLowerCase() !== 'all');
+        
+        container.innerHTML = `
+            <div class="category-chip ${selectedCategory === 'all' ? 'active' : ''}" onclick="selectCategory('all')">All</div>
+            ${filteredCategories.map(cat => `
+                <div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</div>
+            `).join('')}
+        `;
+    }
+    
+    function selectCategory(category) {
+        selectedCategory = category;
+        renderCategories();
+        renderProducts();
+    }
+    
+    function renderInventory() {
+        const tbody = document.getElementById('inventoryList');
+        if (!tbody) return;
+        
+        if (!products.length) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No products found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = products.map(p => `
+            <tr>
+                <td>${p.id}</td>
+                <td><i class="fas ${getCategoryIcon(p.category)} me-1"></i>${escapeHtml(p.name)}</td>
+                <td>${p.category}</td>
+                <td><span class="unit-badge">${p.unit_type}</span></td>
+                <td><small>${p.unit_details || 'N/A'}</small></td>
+                <td class="fw-bold">$${p.price.toFixed(2)}</td>
+                <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
+                <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-success me-1" onclick="showEditStockModal(${p.id})" title="Add Stock">
+                        <i class="fas fa-plus-circle"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    // ==================== EDIT STOCK FUNCTIONS ====================
+    
+    function showEditStockModal(productId) {
+        productToEdit = products.find(p => p.id === productId);
+        if (!productToEdit) return;
+        
+        document.getElementById('editStockProductName').innerText = productToEdit.name;
+        document.getElementById('currentStockValue').innerText = productToEdit.stock;
+        document.getElementById('editStockPasscode').value = '';
+        document.getElementById('newStockQuantity').value = 1;
+        document.getElementById('editPasscodeError').innerHTML = '';
+        new bootstrap.Modal(document.getElementById('editStockModal')).show();
+    }
+    
+    async function confirmAddStock() {
+        const passcode = document.getElementById('editStockPasscode').value;
+        const quantityToAdd = parseInt(document.getElementById('newStockQuantity').value);
+        
+        if (passcode !== EDIT_PASSCODE) {
+            document.getElementById('editPasscodeError').innerHTML = 'Invalid passcode!';
+            return;
+        }
+        
+        if (isNaN(quantityToAdd) || quantityToAdd <= 0) {
+            document.getElementById('editPasscodeError').innerHTML = 'Please enter a valid quantity to add!';
+            return;
+        }
+        
+        if (!productToEdit) return;
+        
+        const newStock = productToEdit.stock + quantityToAdd;
+        
+        showLoader(`Adding ${quantityToAdd} units to "${productToEdit.name}"...`);
+        
+        try {
+            const updateResponse = await fetch(`${API_BASE}/api/products/${productToEdit.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ ...productToEdit, stock: newStock })
+            });
+            const updateData = await updateResponse.json();
             
-            // Payment method selection - NO DEFAULT SELECTION
-            document.querySelectorAll('.payment-method').forEach(el => {
-                el.addEventListener('click', function() {
-                    // Remove active class from all payment methods
-                    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
-                    // Add active class to clicked method
-                    this.classList.add('active');
-                    // Update global selectedPaymentMethod variable
-                    selectedPaymentMethod = this.dataset.method;
-                    // Show/hide cash input div
-                    const cashDiv = document.getElementById('cashInputDiv');
-                    if (cashDiv) {
-                        cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
+            if (updateData.success) {
+                await fetchProductsFromAPI();
+                bootstrap.Modal.getInstance(document.getElementById('editStockModal')).hide();
+                showToast(`Added ${quantityToAdd} units to ${productToEdit.name}. New stock: ${newStock}`, 'success');
+            } else {
+                showToast('Failed to update stock', 'error');
+            }
+        } catch (error) {
+            showToast('Connection error', 'error');
+        }
+        
+        hideLoader();
+        productToEdit = null;
+    }
+    
+    // ==================== DELETE FUNCTIONS ====================
+    
+    function showDeleteConfirmation(productId) {
+        productToDelete = productId;
+        const product = products.find(p => p.id === productId);
+        if (product) {
+            document.getElementById('deleteProductName').innerText = product.name;
+            document.getElementById('deleteProductCategory').innerText = product.category;
+        }
+        document.getElementById('deletePasscode').value = '';
+        document.getElementById('passcodeError').innerHTML = '';
+        new bootstrap.Modal(document.getElementById('deletePasscodeModal')).show();
+    }
+    
+    async function confirmDelete() {
+        const passcode = document.getElementById('deletePasscode').value;
+        if (passcode !== DELETE_PASSCODE) {
+            document.getElementById('passcodeError').innerHTML = 'Invalid passcode!';
+            return;
+        }
+        if (!productToDelete) return;
+        const product = products.find(p => p.id === productToDelete);
+        const productName = product ? product.name : 'Unknown';
+        showLoader(`Deleting "${productName}" from inventory...`);
+        try {
+            const deleteResponse = await fetch(`${API_BASE}/api/products/${productToDelete}`, { method: 'DELETE', credentials: 'include' });
+            const deleteData = await deleteResponse.json();
+            if (deleteData.success) {
+                await fetchProductsFromAPI();
+                showToast(`${productName} deleted successfully`, 'success');
+            } else { showToast(deleteData.error || 'Cannot delete product', 'error'); }
+        } catch (error) { showToast('Connection error', 'error'); }
+        hideLoader();
+        bootstrap.Modal.getInstance(document.getElementById('deletePasscodeModal')).hide();
+        productToDelete = null;
+    }
+    
+    // ==================== ADD PRODUCT ====================
+    
+    function showAddInventoryModal() {
+        document.getElementById('productName').value = '';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productStock').value = '';
+        document.getElementById('unitDetails').value = '';
+        document.getElementById('productDescription').value = '';
+        document.getElementById('productNameSuggestions').innerHTML = '';
+        new bootstrap.Modal(document.getElementById('addInventoryModal')).show();
+    }
+    
+    async function addNewProduct() {
+        const name = document.getElementById('productName').value;
+        const category = document.getElementById('productCategory').value;
+        const unitType = document.getElementById('unitType').value;
+        const unitDetails = document.getElementById('unitDetails').value;
+        const price = parseFloat(document.getElementById('productPrice').value);
+        const stock = parseInt(document.getElementById('productStock').value);
+        const description = document.getElementById('productDescription').value;
+        if (!name || isNaN(price) || isNaN(stock)) { showToast('Please fill all required fields', 'error'); return; }
+        showLoader(`Adding "${name}" (${category}) to inventory, please wait...`);
+        try {
+            const addResponse = await fetch(`${API_BASE}/api/products`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                body: JSON.stringify({ name, category, unit_type: unitType, unit_details: unitDetails, price, stock, description })
+            });
+            const addData = await addResponse.json();
+            if (addData.success) {
+                await fetchProductsFromAPI();
+                bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide();
+                showToast(`${name} added successfully!`, 'success');
+            } else { showToast('Failed to add product', 'error'); }
+        } catch (error) { showToast('Connection error', 'error'); }
+        hideLoader();
+    }
+    
+    // ==================== AUTOCOMPLETE ====================
+    
+    function setupAutocomplete() {
+        const productNameInput = document.getElementById('productName');
+        const suggestionsDiv = document.getElementById('productNameSuggestions');
+        if (!productNameInput) return;
+        productNameInput.addEventListener('input', function() {
+            const inputValue = this.value.toLowerCase();
+            suggestionsDiv.innerHTML = '';
+            if (inputValue.length < 2) return;
+            const existingNames = [...new Set(products.map(p => p.name))];
+            const matches = existingNames.filter(name => name.toLowerCase().includes(inputValue));
+            if (matches.length === 0) return;
+            matches.forEach(match => {
+                const div = document.createElement('div');
+                div.innerHTML = match;
+                div.addEventListener('click', function() {
+                    productNameInput.value = match;
+                    suggestionsDiv.innerHTML = '';
+                    const existingProduct = products.find(p => p.name === match);
+                    if (existingProduct) {
+                        document.getElementById('productCategory').value = existingProduct.category;
+                        document.getElementById('unitType').value = existingProduct.unit_type;
+                        document.getElementById('unitDetails').value = existingProduct.unit_details || '';
+                        document.getElementById('productPrice').value = existingProduct.price;
                     }
                 });
+                suggestionsDiv.appendChild(div);
+            });
+        });
+        document.addEventListener('click', function(e) { if (e.target !== productNameInput) suggestionsDiv.innerHTML = ''; });
+    }
+    
+    // ==================== CART FUNCTIONS ====================
+    
+    function addToCart(productId) {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+        const existing = cart.find(i => i.id === productId);
+        if (existing) {
+            if (existing.quantity + 1 > product.stock) { showToast('Not enough stock!', 'error'); return; }
+            existing.quantity++;
+        } else {
+            if (product.stock < 1) { showToast('Out of stock!', 'error'); return; }
+            cart.push({ ...product, quantity: 1 });
+        }
+        updateCartDisplay();
+        showToast(`${product.name} added`, 'success');
+    }
+    
+    function updateCartDisplay() {
+        const container = document.getElementById('cartItems');
+        if (!container) return;
+        if (!cart.length) {
+            container.innerHTML = '<div class="text-center py-4"><i class="fas fa-shopping-cart fa-2x text-muted mb-1"></i><p class="text-muted small">Cart empty</p></div>';
+        } else {
+            container.innerHTML = cart.map((item, idx) => `
+                <div class="cart-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="fw-bold mb-0">${escapeHtml(item.name)}</h6>
+                            <div class="small text-muted">$${item.price.toFixed(2)} each</div>
+                            <div class="mt-1"><div class="qty-control"><button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button><span class="fw-bold small">${item.quantity}</span><button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button></div></div>
+                        </div>
+                        <div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${(item.price * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        calculateTotals();
+    }
+    
+    function updateQuantity(idx, delta) {
+        const newQty = cart[idx].quantity + delta;
+        const product = products.find(p => p.id === cart[idx].id);
+        if (newQty < 1) removeFromCart(idx);
+        else if (newQty <= product.stock) { cart[idx].quantity = newQty; updateCartDisplay(); }
+        else showToast('Not enough stock!', 'error');
+    }
+    
+    function removeFromCart(idx) { cart.splice(idx, 1); updateCartDisplay(); }
+    function clearCart() { if (cart.length) { cart = []; updateCartDisplay(); showToast('Cart cleared', 'info'); } }
+    function calculateTotals() {
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const tax = subtotal * 0.10;
+        const total = subtotal + tax;
+        document.getElementById('subtotal').innerText = `$${subtotal.toFixed(2)}`;
+        document.getElementById('tax').innerText = `$${tax.toFixed(2)}`;
+        document.getElementById('total').innerText = `$${total.toFixed(2)}`;
+    }
+    
+    // ==================== PAYMENT FUNCTIONS ====================
+    
+    function showPaymentConfirmation() {
+        if (!cart.length) {
+            showToast('Cart is empty!', 'error');
+            return;
+        }
+        
+        if (!selectedPaymentMethod) {
+            showToast('Please select a payment method!', 'error');
+            return;
+        }
+        
+        const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('$', ''));
+        const tax = parseFloat(document.getElementById('tax').innerText.replace('$', ''));
+        const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+        
+        const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
+                                    selectedPaymentMethod === 'card' ? 'Card' : 'Bank Transfer';
+        
+        const confirmationHTML = `
+            <div>
+                <div class="mb-2 p-2 bg-light rounded">
+                    <h6 class="fw-bold mb-1 small">Order Summary</h6>
+                    ${cart.map(item => `
+                        <div class="d-flex justify-content-between py-1 border-bottom small">
+                            <div>
+                                <strong>${escapeHtml(item.name)}</strong><br>
+                                <span class="text-muted">$${item.price.toFixed(2)} x ${item.quantity}</span>
+                            </div>
+                            <span class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span></div>
+                    <div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div>
+                    <div class="d-flex justify-content-between fw-bold pt-1 border-top small">
+                        <span>Total:</span>
+                        <span style="color:#0a2b3e;">$${total.toFixed(2)}</span>
+                    </div>
+                </div>
+                <div class="alert alert-info small py-1 mb-0">
+                    <i class="fas fa-credit-card me-1"></i>Payment: ${paymentMethodDisplay}
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('confirmationContent').innerHTML = confirmationHTML;
+        
+        const modalElement = document.getElementById('confirmationModal');
+        let modal = bootstrap.Modal.getInstance(modalElement);
+        if (!modal) {
+            modal = new bootstrap.Modal(modalElement);
+        }
+        modal.show();
+    }
+    
+    async function processPayment() {
+        if (!selectedPaymentMethod) {
+            showToast('Please select a payment method!', 'error');
+            return;
+        }
+        
+        const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+        
+        // Hide confirmation modal
+        const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+        if (confirmationModal) {
+            confirmationModal.hide();
+        }
+        
+        // Remove any backdrops
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        
+        // Show payment loader
+        showPaymentLoader('Processing payment...');
+        
+        try {
+            if (selectedPaymentMethod === 'cash') {
+                const cash = parseFloat(document.getElementById('cashAmount').value);
+                if (isNaN(cash) || cash < total) {
+                    hidePaymentLoader();
+                    showToast('Insufficient cash!', 'error');
+                    return;
+                }
+                await processOrder(selectedPaymentMethod, cash, cash - total);
+            } else {
+                await processOrder(selectedPaymentMethod, total, 0);
+            }
+        } catch (error) {
+            hidePaymentLoader();
+            showToast('Payment failed', 'error');
+        }
+    }
+    
+    async function processOrder(method, paid, change) {
+        updatePaymentLoaderMessage('Verifying payment...');
+        
+        const success = await createTransactionAPI(cart, method, paid, change);
+        
+        if (success) {
+            updatePaymentLoaderMessage('Updating inventory...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            cart.forEach(cartItem => {
+                const product = products.find(p => p.id === cartItem.id);
+                if (product) product.stock -= cartItem.quantity;
             });
             
-            // Cash amount input handler
-            const cashAmount = document.getElementById('cashAmount');
-            if (cashAmount) {
-                cashAmount.addEventListener('input', () => { 
-                    const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); 
-                    const cash = parseFloat(cashAmount.value); 
-                    const changeDue = document.getElementById('changeDue'); 
-                    if (!isNaN(cash) && cash >= total) { 
-                        if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; 
-                    } else if (!isNaN(cash)) { 
-                        if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; 
-                    } else { 
-                        if (changeDue) changeDue.innerHTML = ''; 
-                    } 
-                });
-            }
+            const transactionTotal = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+            salesData.todaySales += transactionTotal;
+            salesData.itemsSold += cart.reduce((sum, i) => sum + i.quantity, 0);
             
-            // Menu item navigation
-            document.querySelectorAll('.menu-item').forEach(item => { 
-                item.addEventListener('click', () => { 
-                    const page = item.dataset.page; 
-                    if (page) navigateTo(page); 
-                }); 
+            updateStats();
+            
+            hidePaymentLoader();
+            
+            const receiptHTML = generateReceiptHTML(cart, method, paid, change);
+            document.getElementById('receiptContent').innerHTML = receiptHTML;
+            new bootstrap.Modal(document.getElementById('receiptModal')).show();
+            
+            cart = [];
+            updateCartDisplay();
+            fetchProductsFromAPI();
+            fetchTransactions();
+            fetchDashboardStats();
+            
+            if (currentPage === 'inventory') renderInventory();
+            if (currentPage === 'analytics') renderAnalytics();
+            
+            showToast('Payment successful!', 'success');
+        } else {
+            hidePaymentLoader();
+            showToast('Payment failed', 'error');
+        }
+    }
+    
+    function generateReceiptHTML(items, method, paid, change) {
+        const subtotal = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+        const tax = subtotal * 0.10;
+        const total = subtotal + tax;
+        return `<div class="text-center"><i class="fas fa-hard-hat" style="color:#0a2b3e;"></i><h6 class="fw-bold mt-1">Connect Link Properties</h6><small>Hardware Supply</small><hr class="my-1"><small>${new Date().toLocaleString()}</small><hr class="my-1">${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${(item.price * item.quantity).toFixed(2)}</span></div>`).join('')}<hr class="my-1"><div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div><hr class="my-1"><div class="small">Payment: ${method.toUpperCase()}</div>${change > 0 ? `<div class="small">Change: $${change.toFixed(2)}</div>` : ''}<hr class="my-1"><small>Thank you!</small></div>`;
+    }
+    
+    function printReceipt() {
+        const content = document.getElementById('receiptContent').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;padding:10px;text-align:center;}</style></head><body>${content}</body></html>`);
+        win.print();
+    }
+    
+    // ==================== REPORT FUNCTIONS ====================
+    
+    function renderSalesChart() {
+        const canvas = document.getElementById('salesChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (salesChart) salesChart.destroy();
+        salesChart = new Chart(ctx, { type: 'line', data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Sales ($)', data: [1250, 1450, 1320, 1680, 1890, 2100, 1750], borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)', tension: 0.3, fill: true }] }, options: { responsive: true, maintainAspectRatio: true } });
+    }
+    
+    function renderTransactions() {
+        const tbody = document.getElementById('transactionsList');
+        if (!tbody) return;
+        if (!salesData.transactions.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center">No transactions yet</td></tr>'; return; }
+        tbody.innerHTML = salesData.transactions.map(t => `
+            <tr>
+                <td>${t.date || t.created_at || ''}</td>
+                <td>${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0} items</td>
+                <td>$${t.subtotal.toFixed(2)}</td>
+                <td>$${t.tax.toFixed(2)}</td>
+                <td class="fw-bold">$${t.total.toFixed(2)}</td>
+                <td><span class="badge bg-info">${t.payment_method || t.paymentMethod}</span></td>
+            </tr>
+        `).join('');
+    }
+    
+    function renderAnalytics() {
+        const categoryCount = {};
+        products.forEach(p => { if (!categoryCount[p.category]) categoryCount[p.category] = 0; categoryCount[p.category] += p.stock * p.price; });
+        const canvas = document.getElementById('categoryChart');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(ctx, { type: 'pie', data: { labels: Object.keys(categoryCount), datasets: [{ data: Object.values(categoryCount), backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'] }] }, options: { responsive: true } });
+        }
+        const topProducts = [...products].sort((a, b) => b.stock * b.price - a.stock * a.price).slice(0, 5);
+        const topList = document.getElementById('topProductsList');
+        if (topList) topList.innerHTML = topProducts.map((p, idx) => `<div class="d-flex justify-content-between align-items-center p-1 border-bottom small"><span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span><span class="fw-bold">$${(p.stock * p.price).toFixed(0)}</span></div>`).join('');
+    }
+    
+    function updateStats() {
+        document.getElementById('todaySales').innerText = `$${salesData.todaySales.toFixed(2)}`;
+        document.getElementById('itemsSold').innerText = salesData.itemsSold;
+        document.getElementById('lowStockCount').innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
+        document.getElementById('totalProducts').innerText = products.length;
+    }
+    
+    function showToast(msg, type) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notify';
+        const icon = type === 'success' ? 'check-circle text-success' : type === 'error' ? 'exclamation-circle text-danger' : 'info-circle text-info';
+        toast.innerHTML = `<i class="fas fa-${icon} me-1"></i>${msg}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+    
+    // ==================== PAGE NAVIGATION ====================
+    
+    function navigateTo(page) {
+        currentPage = page;
+        document.querySelectorAll('.menu-item').forEach(item => { item.classList.remove('active'); if (item.dataset.page === page) item.classList.add('active'); });
+        const pages = { 'pos': document.getElementById('posPage'), 'inventory': document.getElementById('inventoryPage'), 'sales': document.getElementById('salesPage'), 'transactions': document.getElementById('transactionsPage'), 'analytics': document.getElementById('analyticsPage') };
+        Object.keys(pages).forEach(p => { if (pages[p]) pages[p].style.display = p === page ? 'block' : 'none'; });
+        if (page === 'inventory') renderInventory();
+        if (page === 'sales') renderSalesChart();
+        if (page === 'transactions') renderTransactions();
+        if (page === 'analytics') renderAnalytics();
+    }
+    
+    // ==================== EVENT LISTENERS ====================
+    
+    function setupEventListeners() {
+        const searchInput = document.getElementById('searchProduct');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => { 
+                searchTerm = e.target.value.toLowerCase(); 
+                renderProducts(); 
             });
         }
-        // ==================== SIDEBAR TOGGLE ====================
         
-        function setupSidebar() {
-            const sidebar = document.getElementById('sidebar'), mainContent = document.getElementById('mainContent'), toggleBtn = document.getElementById('toggleSidebar');
-            if (sidebar && mainContent && toggleBtn) {
-                sidebar.classList.add('collapsed'); mainContent.classList.add('expanded'); toggleBtn.classList.add('shifted');
-                toggleBtn.addEventListener('click', () => { sidebar.classList.toggle('collapsed'); mainContent.classList.toggle('expanded'); toggleBtn.classList.toggle('shifted'); });
-            }
+        document.querySelectorAll('.payment-method').forEach(el => {
+            el.addEventListener('click', function() {
+                document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+                this.classList.add('active');
+                selectedPaymentMethod = this.dataset.method;
+                const cashDiv = document.getElementById('cashInputDiv');
+                if (cashDiv) {
+                    cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
+                }
+            });
+        });
+        
+        const cashAmount = document.getElementById('cashAmount');
+        if (cashAmount) {
+            cashAmount.addEventListener('input', () => { 
+                const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); 
+                const cash = parseFloat(cashAmount.value); 
+                const changeDue = document.getElementById('changeDue'); 
+                if (!isNaN(cash) && cash >= total) { 
+                    if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; 
+                } else if (!isNaN(cash)) { 
+                    if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; 
+                } else { 
+                    if (changeDue) changeDue.innerHTML = ''; 
+                } 
+            });
         }
         
-        // ==================== LOGOUT ====================
-        
-        function setupLogout() {
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) logoutBtn.addEventListener('click', async () => { try { await fetch('/api/logout', { method: 'POST', credentials: 'include' }); } catch (e) {} localStorage.clear(); window.location.href = '/login'; });
+        document.querySelectorAll('.menu-item').forEach(item => { 
+            item.addEventListener('click', () => { 
+                const page = item.dataset.page; 
+                if (page) navigateTo(page); 
+            }); 
+        });
+    }
+    
+    // ==================== SIDEBAR TOGGLE ====================
+    
+    function setupSidebar() {
+        const sidebar = document.getElementById('sidebar'), mainContent = document.getElementById('mainContent'), toggleBtn = document.getElementById('toggleSidebar');
+        if (sidebar && mainContent && toggleBtn) {
+            sidebar.classList.add('collapsed'); mainContent.classList.add('expanded'); toggleBtn.classList.add('shifted');
+            toggleBtn.addEventListener('click', () => { sidebar.classList.toggle('collapsed'); mainContent.classList.toggle('expanded'); toggleBtn.classList.toggle('shifted'); });
         }
+    }
+    
+    // ==================== LOGOUT ====================
+    
+    function setupLogout() {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', async () => { try { await fetch('/api/logout', { method: 'POST', credentials: 'include' }); } catch (e) {} localStorage.clear(); window.location.href = '/login'; });
+    }
+    
+    // ==================== INITIALIZATION ====================
+    
+    async function init() {
+        const isAuthenticated = await checkAuthentication();
+        if (!isAuthenticated) return;
         
-        // ==================== INITIALIZATION ====================
+        setUserName();
         
-        async function init() {
-            const isAuthenticated = await checkAuthentication();
-            if (!isAuthenticated) return;
-            
-            setUserName();
-            
-            // Clear search input
-            const searchInput = document.getElementById('searchProduct');
-            if (searchInput) searchInput.value = '';
-            
-            // Hide cash input div initially since no payment method is selected
-            const cashDiv = document.getElementById('cashInputDiv');
-            if (cashDiv) cashDiv.style.display = 'none';
-            
-            setupSidebar();
-            setupEventListeners();
-            setupLogout();
-            setupAutocomplete();
-            
-            await fetchCategories();
-            await fetchProductsFromAPI();
-            await fetchDashboardStats();
-            await fetchTransactions();
-            
-            navigateTo('pos');
-        }
+        const searchInput = document.getElementById('searchProduct');
+        if (searchInput) searchInput.value = '';
         
-        init();
-    </script>
+        const cashDiv = document.getElementById('cashInputDiv');
+        if (cashDiv) cashDiv.style.display = 'none';
+        
+        setupSidebar();
+        setupEventListeners();
+        setupLogout();
+        setupAutocomplete();
+        
+        await fetchCategories();
+        await fetchProductsFromAPI();
+        await fetchDashboardStats();
+        await fetchTransactions();
+        
+        navigateTo('pos');
+    }
+    
+    init();
+</script>
 </body>
 </html>
