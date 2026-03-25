@@ -1024,7 +1024,7 @@
         let cart = [];
         let selectedCategory = "all";
         let searchTerm = "";
-        let selectedPaymentMethod = "cash";
+        let selectedPaymentMethod = "";
         let salesData = { todaySales: 0, itemsSold: 0, transactions: [] };
         let currentPage = "pos";
         let salesChart = null;
@@ -1575,7 +1575,7 @@
                 });
             }
             
-            // Payment method selection - FIXED
+            // Payment method selection - NO DEFAULT SELECTION
             document.querySelectorAll('.payment-method').forEach(el => {
                 el.addEventListener('click', function() {
                     // Remove active class from all payment methods
@@ -1583,13 +1583,12 @@
                     // Add active class to clicked method
                     this.classList.add('active');
                     // Update global selectedPaymentMethod variable
-                    window.selectedPaymentMethod = this.dataset.method;
+                    selectedPaymentMethod = this.dataset.method;
                     // Show/hide cash input div
                     const cashDiv = document.getElementById('cashInputDiv');
                     if (cashDiv) {
-                        cashDiv.style.display = window.selectedPaymentMethod === 'cash' ? 'block' : 'none';
+                        cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
                     }
-                    console.log('Payment method selected:', window.selectedPaymentMethod);
                 });
             });
             
