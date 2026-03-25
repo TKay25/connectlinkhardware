@@ -1557,7 +1557,7 @@
         let paymentLoaderModal = null;
 
         function showPaymentLoader(message = 'Processing payment, Please Wait...') {
-            // Get or create modal instance
+            // Get modal element
             const modalElement = document.getElementById('paymentLoaderModal');
             if (!modalElement) return;
             
@@ -1565,9 +1565,10 @@
             const messageEl = document.getElementById('paymentLoaderMessage');
             if (messageEl) messageEl.innerHTML = message;
             
-            // Hide any existing backdrop issues
+            // Remove any existing backdrops first
             const existingBackdrops = document.querySelectorAll('.modal-backdrop');
             existingBackdrops.forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
             
             // Create new modal instance
             paymentLoaderModal = new bootstrap.Modal(modalElement, {
@@ -1577,14 +1578,6 @@
             
             // Show the loader
             paymentLoaderModal.show();
-            
-            // Force z-index to be high
-            setTimeout(() => {
-                const modalBackdrop = document.querySelector('.modal-backdrop.show');
-                if (modalBackdrop) {
-                    modalBackdrop.style.zIndex = '9998';
-                }
-            }, 10);
         }
 
         function hidePaymentLoader() {
@@ -1618,14 +1611,25 @@
             
             const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
             
-            // Close the confirmation modal first
-            const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+            // First, hide the confirmation modal properly
+            const confirmationModalElement = document.getElementById('confirmationModal');
+            const confirmationModal = bootstrap.Modal.getInstance(confirmationModalElement);
             if (confirmationModal) {
                 confirmationModal.hide();
             }
             
-            // Show payment loader
-            showPaymentLoader('Processing payment...');
+            // Remove any leftover backdrops from confirmation modal
+            setTimeout(() => {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => backdrop.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+            }, 150);
+            
+            // Show payment loader after confirmation modal is fully closed
+            setTimeout(() => {
+                showPaymentLoader('Processing payment...');
+            }, 200);
             
             try {
                 if (selectedPaymentMethod === 'cash') {
@@ -1643,8 +1647,8 @@
                 hidePaymentLoader();
                 showToast('Payment failed', 'error');
             }
-        }
-        
+        }  
+
         async function processOrder(method, paid, change) {
             updatePaymentLoaderMessage('Verifying payment...');
             
