@@ -759,9 +759,33 @@
     <!-- Modals -->
     <div class="modal fade" id="confirmationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-receipt me-1"></i>Order Confirmation</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="confirmationContent"></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="processPayment()">Confirm & Pay</button></div></div></div></div>
 
-    <div class="modal fade" id="addInventoryModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addProductForm"><div class="row g-2"><div class="col-md-6 position-relative"><label class="form-label">Product Name *</label><input type="text" class="form-control" id="productName" autocomplete="off" required><div id="productNameSuggestions" class="autocomplete-items"></div></div><div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" id="productCategory"><option value="hand tools">Hand Tools</option><option value="power tools">Power Tools</option><option value="fasteners">Fasteners</option><option value="paint">Paint</option><option value="lumber">Lumber</option><option value="electrical">Electrical</option><option value="plumbing">Plumbing</option><option value="safety">Safety</option></select></div><div class="col-md-4"><label class="form-label">Unit Type *</label><select class="form-select" id="unitType"><option value="piece">Piece</option><option value="length">Length</option><option value="weight">Weight</option><option value="volume">Volume</option><option value="pack">Pack</option></select></div><div class="col-md-4"><label class="form-label">Unit Detail *</label><input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required></div><div class="col-md-4"><label class="form-label">Price ($) *</label><input type="number" step="0.01" class="form-control" id="productPrice" required></div><div class="col-md-6"><label class="form-label">Initial Stock *</label><input type="number" class="form-control" id="productStock" required></div><div class="col-md-6"><label class="form-label">Description</label><input type="text" class="form-control" id="productDescription" placeholder="Optional description"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="addNewProduct()">Add</button></div></div></div></div>
+    <div class="modal fade" id="addInventoryModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addProductForm"><div class="row g-2"><div class="col-md-6 position-relative"><label class="form-label">Product Name *</label><input type="text" class="form-control" id="productName" autocomplete="off" required><div id="productNameSuggestions" class="autocomplete-items"></div></div><div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" id="productCategory"><option value="Hand Tools">Hand Tools</option><option value="Power Tools">Power Tools</option><option value="fasteners">Fasteners</option><option value="paint">Paint</option><option value="lumber">Lumber</option><option value="electrical">Electrical</option><option value="plumbing">Plumbing</option><option value="safety">Safety</option></select></div><div class="col-md-4"><label class="form-label">Unit Type *</label><select class="form-select" id="unitType"><option value="piece">Piece</option><option value="length">Length</option><option value="weight">Weight</option><option value="volume">Volume</option><option value="pack">Pack</option></select></div><div class="col-md-4"><label class="form-label">Unit Detail *</label><input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required></div><div class="col-md-4"><label class="form-label">Price ($) *</label><input type="number" step="0.01" class="form-control" id="productPrice" required></div><div class="col-md-6"><label class="form-label">Initial Stock *</label><input type="number" class="form-control" id="productStock" required></div><div class="col-md-6"><label class="form-label">Description</label><input type="text" class="form-control" id="productDescription" placeholder="Optional description"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="addNewProduct()">Add</button></div></div></div></div>
 
-    <div class="modal fade" id="deletePasscodeModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header" style="background:#dc2626;color:white;"><h5 class="modal-title"><i class="fas fa-lock me-1"></i>Delete Confirmation</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Enter admin passcode to delete this product:</p><input type="password" class="form-control" id="deletePasscode" placeholder="Enter passcode"><div id="passcodeError" class="text-danger small mt-1"></div></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger btn-sm" onclick="confirmDelete()">Delete</button></div></div></div></div>
+    <div class="modal fade" id="deletePasscodeModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#dc2626;color:white;">
+                    <h5 class="modal-title"><i class="fas fa-lock me-1"></i>Delete Confirmation</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-3" style="font-size: 0.75rem;">
+                        <i class="fas fa-exclamation-triangle me-1"></i> 
+                        <strong>Warning:</strong> This action cannot be undone!
+                    </div>
+                    <p class="mb-2"><strong>Product:</strong> <span id="deleteProductName" class="text-dark">Loading...</span></p>
+                    <p class="mb-3"><strong>Category:</strong> <span id="deleteProductCategory" class="text-dark">Loading...</span></p>
+                    <p class="mb-2">Enter admin passcode to delete this product:</p>
+                    <input type="password" class="form-control" id="deletePasscode" placeholder="Enter passcode">
+                    <div id="passcodeError" class="text-danger small mt-1"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-danger btn-sm" onclick="confirmDelete()">Delete Permanently</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="receiptModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h6 class="modal-title"><i class="fas fa-receipt"></i> Receipt</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="receiptContent"></div><div class="modal-footer"><button class="btn btn-sm btn-primary-dark" onclick="printReceipt()">Print</button><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>
 
@@ -1046,6 +1070,13 @@
         
         function showDeleteConfirmation(productId) {
             productToDelete = productId;
+            const product = products.find(p => p.id === productId);
+            
+            if (product) {
+                document.getElementById('deleteProductName').innerText = product.name;
+                document.getElementById('deleteProductCategory').innerText = product.category;
+            }
+            
             document.getElementById('deletePasscode').value = '';
             document.getElementById('passcodeError').innerHTML = '';
             new bootstrap.Modal(document.getElementById('deletePasscodeModal')).show();
@@ -1061,6 +1092,9 @@
             
             if (!productToDelete) return;
             
+            const product = products.find(p => p.id === productToDelete);
+            const productName = product ? product.name : 'Unknown';
+            
             try {
                 const deleteResponse = await fetch(`${API_BASE}/api/products/${productToDelete}`, {
                     method: 'DELETE',
@@ -1070,7 +1104,7 @@
                 if (deleteData.success) {
                     bootstrap.Modal.getInstance(document.getElementById('deletePasscodeModal')).hide();
                     fetchProductsFromAPI();
-                    showToast('Product deleted successfully', 'success');
+                    showToast(`${productName} deleted successfully`, 'success');
                 } else {
                     showToast(deleteData.error || 'Cannot delete product', 'error');
                 }
@@ -1084,14 +1118,14 @@
         
         function getCategoryIcon(category) {
             const icons = {
-                'hand tools': 'fa-tools',
-                'power tools': 'fa-bolt',
-                'fasteners': 'fa-link',
-                'paint': 'fa-palette',
-                'lumber': 'fa-tree',
-                'electrical': 'fa-plug',
-                'plumbing': 'fa-water',
-                'safety': 'fa-shield-alt'
+                'Hand Tools': 'fa-tools',
+                'Power Tools': 'fa-bolt',
+                'Fasteners': 'fa-link',
+                'Paint': 'fa-palette',
+                'Lumber': 'fa-tree',
+                'Electrical': 'fa-plug',
+                'Plumbing': 'fa-water',
+                'Safety': 'fa-shield-alt'
             };
             return icons[category] || 'fa-box';
         }
