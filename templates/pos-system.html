@@ -785,7 +785,7 @@
                                 <div class="mb-2">
                                     <label class="small fw-bold mb-1">Payment Method</label>
                                     <div class="row g-1">
-                                        <div class="col-4"><div class="payment-method active" data-method="cash"><i class="fas fa-money-bill-wave"></i><div class="small">Cash</div></div></div>
+                                        <div class="col-4"><div class="payment-method" data-method="cash"><i class="fas fa-money-bill-wave"></i><div class="small">Cash</div></div></div>
                                         <div class="col-4"><div class="payment-method" data-method="card"><i class="fas fa-credit-card"></i><div class="small">Card</div></div></div>
                                         <div class="col-4"><div class="payment-method" data-method="transfer"><i class="fas fa-university"></i><div class="small">Transfer</div></div></div>
                                     </div>
@@ -1569,7 +1569,20 @@
         function setupEventListeners() {
             const searchInput = document.getElementById('searchProduct');
             if (searchInput) searchInput.addEventListener('input', (e) => { searchTerm = e.target.value.toLowerCase(); renderProducts(); });
-            document.querySelectorAll('.payment-method').forEach(el => { el.addEventListener('click', function() { document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active')); this.classList.add('active'); selectedPaymentMethod = this.dataset.method; const cashDiv = document.getElementById('cashInputDiv'); if (cashDiv) cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none'; }); });
+            // In your setupEventListeners function, update the payment method click handler
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.addEventListener('click', function() {
+                    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedPaymentMethod = this.dataset.method;
+                    const cashDiv = document.getElementById('cashInputDiv');
+                    if (cashDiv) cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
+                });
+            });
+
+            // Also update the initial selectedPaymentMethod variable
+            let selectedPaymentMethod = ""; // Empty string means no selection
+            // 
             const cashAmount = document.getElementById('cashAmount');
             if (cashAmount) cashAmount.addEventListener('input', () => { const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); const cash = parseFloat(cashAmount.value); const changeDue = document.getElementById('changeDue'); if (!isNaN(cash) && cash >= total) { if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; } else if (!isNaN(cash)) { if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; } else { if (changeDue) changeDue.innerHTML = ''; } });
             document.querySelectorAll('.menu-item').forEach(item => { item.addEventListener('click', () => { const page = item.dataset.page; if (page) navigateTo(page); }); });
