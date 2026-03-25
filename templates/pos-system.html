@@ -1693,15 +1693,27 @@
         async function init() {
             const isAuthenticated = await checkAuthentication();
             if (!isAuthenticated) return;
+            
             setUserName();
+            
+            // Clear search input
+            const searchInput = document.getElementById('searchProduct');
+            if (searchInput) searchInput.value = '';
+            
+            // Hide cash input div initially since no payment method is selected
+            const cashDiv = document.getElementById('cashInputDiv');
+            if (cashDiv) cashDiv.style.display = 'none';
+            
             setupSidebar();
             setupEventListeners();
             setupLogout();
             setupAutocomplete();
+            
             await fetchCategories();
             await fetchProductsFromAPI();
             await fetchDashboardStats();
             await fetchTransactions();
+            
             navigateTo('pos');
         }
         
