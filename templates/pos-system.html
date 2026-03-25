@@ -819,7 +819,7 @@
                                     <span class="fw-bold small" id="subtotal">$0.00</span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-1">
-                                    <span class="text-muted small">Tax (10%):</span>
+                                    <span class="text-muted small">VAT (15%):</span>
                                     <span class="fw-bold small" id="tax">$0.00</span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2 pb-1 border-bottom">
@@ -1169,11 +1169,23 @@
     
     async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
         try {
+            const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const vat = subtotal * 0.15; // 15% VAT
+            const total = subtotal + vat;
+            
             const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                credentials: 'include',
                 body: JSON.stringify({
                     items: items.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
-                    payment_method: paymentMethod, amount_paid: amountPaid, change_amount: change
+                    subtotal: subtotal,
+                    tax: vat,
+                    total: total,
+                    tax_rate: 15,
+                    payment_method: paymentMethod, 
+                    amount_paid: amountPaid, 
+                    change_amount: change
                 })
             });
             if (transactionResponse.status === 401) { window.location.href = '/login'; return false; }
@@ -1517,10 +1529,10 @@
     function clearCart() { if (cart.length) { cart = []; updateCartDisplay(); showToast('Cart cleared', 'info'); } }
     function calculateTotals() {
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const tax = subtotal * 0.10;
-        const total = subtotal + tax;
+        const vat = subtotal * 0.15; // 15% VAT
+        const total = subtotal + vat;
         document.getElementById('subtotal').innerText = `$${subtotal.toFixed(2)}`;
-        document.getElementById('tax').innerText = `$${tax.toFixed(2)}`;
+        document.getElementById('tax').innerText = `$${vat.toFixed(2)}`;
         document.getElementById('total').innerText = `$${total.toFixed(2)}`;
     }
     
@@ -1538,7 +1550,6 @@
         }
         
         const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('$', ''));
-        const tax = parseFloat(document.getElementById('tax').innerText.replace('$', ''));
         const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
         
         const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
@@ -1560,9 +1571,8 @@
                 </div>
                 <div class="mb-2">
                     <div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span></div>
-                    <div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div>
                     <div class="d-flex justify-content-between fw-bold pt-1 border-top small">
-                        <span>Total:</span>
+                        <span>Total (incl. VAT):</span>
                         <span style="color:#0a2b3e;">$${total.toFixed(2)}</span>
                     </div>
                 </div>
@@ -1667,9 +1677,25 @@
     
     function generateReceiptHTML(items, method, paid, change) {
         const subtotal = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-        const tax = subtotal * 0.10;
-        const total = subtotal + tax;
-        return `<div class="text-center"><i class="fas fa-hard-hat" style="color:#0a2b3e;"></i><h6 class="fw-bold mt-1">Connect Link Properties</h6><small>Hardware Supply</small><hr class="my-1"><small>${new Date().toLocaleString()}</small><hr class="my-1">${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${(item.price * item.quantity).toFixed(2)}</span></div>`).join('')}<hr class="my-1"><div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div><hr class="my-1"><div class="small">Payment: ${method.toUpperCase()}</div>${change > 0 ? `<div class="small">Change: $${change.toFixed(2)}</div>` : ''}<hr class="my-1"><small>Thank you!</small></div>`;
+        const vat = subtotal * 0.15; // 15% VAT calculated but not shown
+        const total = subtotal + vat;
+        return `<div class="text-center">
+            <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
+            <h6 class="fw-bold mt-1">Connect Link Properties</h6>
+            <small>Hardware Supply</small>
+            <hr class="my-1">
+            <small>${new Date().toLocaleString()}</small>
+            <hr class="my-1">
+            ${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${(item.price * item.quantity).toFixed(2)}</span></div>`).join('')}
+            <hr class="my-1">
+            <div class="d-flex justify-content-between small"><strong>Subtotal:</strong><span>$${subtotal.toFixed(2)}</span></div>
+            <div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div>
+            <hr class="my-1">
+            <div class="small">Payment: ${method.toUpperCase()}</div>
+            ${change > 0 ? `<div class="small">Change: $${change.toFixed(2)}</div>` : ''}
+            <hr class="my-1">
+            <small>Thank you!</small>
+        </div>`;
     }
     
     function printReceipt() {
