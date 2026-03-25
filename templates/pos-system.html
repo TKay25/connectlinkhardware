@@ -494,22 +494,30 @@
 
         .toast-notify {
             position: fixed;
-            bottom: 10px;
-            right: 10px;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 9999;
             background: white;
             border-radius: 12px;
-            padding: 6px 12px;
+            padding: 12px 24px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             border-left: 3px solid #0a2b3e;
-            animation: slideUp 0.3s ease;
+            animation: slideDown 0.3s ease;
             font-weight: 500;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
         }
 
         .qty-control {
