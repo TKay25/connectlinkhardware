@@ -1083,18 +1083,22 @@
         const messageEl = document.getElementById('paymentLoaderMessage');
         if (messageEl) messageEl.innerHTML = message || 'Processing payment...';
         
-        // Remove any existing backdrops first
+        // Remove ALL existing backdrops first
         const existingBackdrops = document.querySelectorAll('.modal-backdrop');
         existingBackdrops.forEach(backdrop => backdrop.remove());
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
         
-        // Create and show new modal
-        paymentLoaderModal = new bootstrap.Modal(modalElement, {
-            backdrop: 'static',
-            keyboard: false
-        });
-        paymentLoaderModal.show();
+        // Small delay to ensure DOM is clean
+        setTimeout(() => {
+            // Create and show new modal
+            paymentLoaderModal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            paymentLoaderModal.show();
+        }, 50);
     }
     
     function hidePaymentLoader() {
@@ -1108,7 +1112,8 @@
             backdrops.forEach(backdrop => backdrop.remove());
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
-        }, 300);
+            document.body.style.paddingRight = '';
+        }, 100);
     }
     
     function updatePaymentLoaderMessage(message) {
@@ -1600,20 +1605,25 @@
         
         const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
         
-        // Hide confirmation modal
-        const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+        // Hide confirmation modal properly
+        const confirmationModalElement = document.getElementById('confirmationModal');
+        const confirmationModal = bootstrap.Modal.getInstance(confirmationModalElement);
         if (confirmationModal) {
             confirmationModal.hide();
         }
         
-        // Remove any backdrops
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(backdrop => backdrop.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        
-        // Show payment loader
-        showPaymentLoader('Processing payment...');
+        // Wait for modal to close and remove all backdrops
+        setTimeout(() => {
+            // Remove any lingering backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            
+            // Now show payment loader
+            showPaymentLoader('Processing payment...');
+        }, 200);
         
         try {
             if (selectedPaymentMethod === 'cash') {
