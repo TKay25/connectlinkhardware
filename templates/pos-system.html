@@ -916,10 +916,15 @@
                 const categoriesResponse = await fetch(`${API_BASE}/api/categories`, { credentials: 'include' });
                 const categoriesData = await categoriesResponse.json();
                 if (categoriesData.success) {
-                    categoriesList = categoriesData.categories.map(c => c.name);
+                    // Filter out any "all" or "All" categories from the API response
+                    categoriesList = categoriesData.categories
+                        .map(c => c.name)
+                        .filter(name => name.toLowerCase() !== 'all');
                     renderCategories();
                 }
-            } catch (error) { console.error('Error fetching categories:', error); }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
         }
         
         async function fetchDashboardStats() {
@@ -1129,8 +1134,17 @@
         function renderCategories() {
             const container = document.getElementById('categoriesContainer');
             if (!container) return;
-            container.innerHTML = `<div class="category-chip ${selectedCategory === 'all' ? 'active' : ''}" onclick="selectCategory('all')">All</div>` + 
-                categoriesList.map(cat => `<div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</div>`).join('');
+            
+            // Only add ONE "All" button manually, then add all other categories
+            // Make sure categoriesList doesn't contain "all" or "All"
+            const filteredCategories = categoriesList.filter(cat => cat.toLowerCase() !== 'all');
+            
+            container.innerHTML = `
+                <div class="category-chip ${selectedCategory === 'all' ? 'active' : ''}" onclick="selectCategory('all')">All</div>
+                ${filteredCategories.map(cat => `
+                    <div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</div>
+                `).join('')}
+            `;
         }
         
         function selectCategory(category) {
