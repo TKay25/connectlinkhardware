@@ -1667,6 +1667,7 @@
             if (addData.success) {
                 await fetchProductsFromAPI();
                 bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide();
+                hideLoader();
                 showToast(`${name} added successfully!`, 'success');
             } else {
                 showToast('Failed to add product', 'error');
@@ -1674,7 +1675,6 @@
         } catch (error) {
             showToast('Connection error', 'error');
         }
-        hideLoader();
     }    
     // ==================== AUTOCOMPLETE ====================
     
