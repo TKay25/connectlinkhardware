@@ -753,7 +753,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-text">
                         <div class="eds-logo">
-                            <img style="width: 180px;" src="/static/images/web-logo-white.png" alt="ConnectLink Properties Logo">
+                            <img style="width: 150px;" src="/static/images/web-logo-white.png" alt="ConnectLink Properties Logo">
                         </div>
                         <small class="opacity-75 d-block mt-1">Hardware</small>
                     </div>
@@ -933,7 +933,8 @@
                                     <th>Category</th>
                                     <th>Unit</th>
                                     <th>Detail</th>
-                                    <th>Price</th>
+                                    <th>Buy Price</th>
+                                    <th>Sell Price</th>
                                     <th>Stock</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -1025,7 +1026,81 @@
     <!-- Modals -->
     <div class="modal fade" id="confirmationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-receipt me-1"></i>Order Confirmation</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="confirmationContent"></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="processPayment()">Confirm & Pay</button></div></div></div></div>
 
-    <div class="modal fade" id="addInventoryModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="addProductForm"><div class="row g-2"><div class="col-md-6 position-relative"><label class="form-label">Product Name *</label><input type="text" class="form-control" id="productName" autocomplete="off" required><div id="productNameSuggestions" class="autocomplete-items"></div></div><div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" id="productCategory"><option value="Hand Tools">Hand Tools</option><option value="Power Tools">Power Tools</option><option value="Fasteners">Fasteners</option><option value="Paint">Paint</option><option value="Lumber">Lumber</option><option value="Electrical">Electrical</option><option value="Plumbing">Plumbing</option><option value="Safety">Safety</option></select></div><div class="col-md-4"><label class="form-label">Unit Type *</label><select class="form-select" id="unitType"><option value="piece">Piece</option><option value="length">Length</option><option value="weight">Weight</option><option value="volume">Volume</option><option value="pack">Pack</option></select></div><div class="col-md-4"><label class="form-label">Unit Detail *</label><input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required></div><div class="col-md-4"><label class="form-label">Price ($) *</label><input type="number" step="0.01" class="form-control" id="productPrice" required></div><div class="col-md-6"><label class="form-label">Initial Stock *</label><input type="number" class="form-control" id="productStock" required></div><div class="col-md-6"><label class="form-label">Description</label><input type="text" class="form-control" id="productDescription" placeholder="Optional description"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="addNewProduct()">Add</button></div></div></div></div>
+    <div class="modal fade" id="addInventoryModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#0a2b3e;color:white;">
+                    <h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProductForm">
+                        <div class="row g-2">
+                            <div class="col-md-6 position-relative">
+                                <label class="form-label">Product Name *</label>
+                                <input type="text" class="form-control" id="productName" autocomplete="off" required>
+                                <div id="productNameSuggestions" class="autocomplete-items"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Category *</label>
+                                <select class="form-select" id="productCategory">
+                                    <option value="Hand Tools">Hand Tools</option>
+                                    <option value="Power Tools">Power Tools</option>
+                                    <option value="Fasteners">Fasteners</option>
+                                    <option value="Paint">Paint</option>
+                                    <option value="Lumber">Lumber</option>
+                                    <option value="Electrical">Electrical</option>
+                                    <option value="Plumbing">Plumbing</option>
+                                    <option value="Safety">Safety</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Unit Type *</label>
+                                <select class="form-select" id="unitType">
+                                    <option value="piece">Piece</option>
+                                    <option value="length">Length</option>
+                                    <option value="weight">Weight</option>
+                                    <option value="volume">Volume</option>
+                                    <option value="pack">Pack</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Unit Detail *</label>
+                                <input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Initial Stock *</label>
+                                <input type="number" class="form-control" id="productStock" required min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Buying Price ($) *</label>
+                                <input type="number" step="0.01" class="form-control" id="buyPrice" placeholder="Cost price" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Selling Price ($) *</label>
+                                <input type="number" step="0.01" class="form-control" id="sellPrice" placeholder="Retail price" required>
+                            </div>
+                            <div class="col-12">
+                                <div class="alert alert-info small py-2 mb-0">
+                                    <i class="fas fa-chart-line me-1"></i> 
+                                    <strong>Profit Margin:</strong> <span id="profitPreview">$0.00</span> per unit
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control" id="productDescription" placeholder="Optional description">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary-dark btn-sm" onclick="addNewProduct()">Add Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="modal fade" id="deletePasscodeModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -1354,7 +1429,7 @@
         if (!tbody) return;
         
         if (!products.length) {
-            tbody.innerHTML = '=<td colspan="9" class="text-center">No products found</td>';
+            tbody.innerHTML = '=<td colspan="10" class="text-center">No products found</td>';
             return;
         }
         
@@ -1365,7 +1440,8 @@
                 <td>${p.category}</td>
                 <td><span class="unit-badge">${p.unit_type}</span></td>
                 <td><small>${p.unit_details || 'N/A'}</small></td>
-                <td class="fw-bold">$${p.price.toFixed(2)}</td>
+                <td class="text-danger">$${p.buy_price ? p.buy_price.toFixed(2) : '0.00'}</td>
+                <td class="fw-bold text-success">$${p.price.toFixed(2)}</td>
                 <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
                 <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
                 <td>
@@ -1476,14 +1552,34 @@
     }
     
     // ==================== ADD PRODUCT ====================
+
+    // Calculate and display profit preview
+    function updateProfitPreview() {
+        const buyPrice = parseFloat(document.getElementById('buyPrice').value) || 0;
+        const sellPrice = parseFloat(document.getElementById('sellPrice').value) || 0;
+        const profit = sellPrice - buyPrice;
+        const profitPreview = document.getElementById('profitPreview');
+        if (profitPreview) {
+            profitPreview.innerHTML = `$${profit.toFixed(2)}`;
+            profitPreview.style.color = profit >= 0 ? '#198754' : '#dc2626';
+        }
+    }
+
+    // Add event listeners to price inputs
+    document.getElementById('buyPrice').addEventListener('input', updateProfitPreview);
+    document.getElementById('sellPrice').addEventListener('input', updateProfitPreview);
     
     function showAddInventoryModal() {
         document.getElementById('productName').value = '';
-        document.getElementById('productPrice').value = '';
-        document.getElementById('productStock').value = '';
+        document.getElementById('productCategory').value = 'Hand Tools';
+        document.getElementById('unitType').value = 'piece';
         document.getElementById('unitDetails').value = '';
+        document.getElementById('productStock').value = '';
+        document.getElementById('buyPrice').value = '';
+        document.getElementById('sellPrice').value = '';
         document.getElementById('productDescription').value = '';
         document.getElementById('productNameSuggestions').innerHTML = '';
+        document.getElementById('profitPreview').innerHTML = '$0.00';
         new bootstrap.Modal(document.getElementById('addInventoryModal')).show();
     }
     
@@ -1492,26 +1588,52 @@
         const category = document.getElementById('productCategory').value;
         const unitType = document.getElementById('unitType').value;
         const unitDetails = document.getElementById('unitDetails').value;
-        const price = parseFloat(document.getElementById('productPrice').value);
+        const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+        const sellPrice = parseFloat(document.getElementById('sellPrice').value);
         const stock = parseInt(document.getElementById('productStock').value);
         const description = document.getElementById('productDescription').value;
-        if (!name || isNaN(price) || isNaN(stock)) { showToast('Please fill all required fields', 'error'); return; }
+        
+        if (!name || isNaN(buyPrice) || isNaN(sellPrice) || isNaN(stock)) {
+            showToast('Please fill all required fields (Name, Buy Price, Sell Price, Stock)', 'error');
+            return;
+        }
+        
+        if (sellPrice < buyPrice) {
+            showToast('Warning: Selling price is less than buying price!', 'error');
+            return;
+        }
+        
         showLoader(`Adding "${name}" (${category}) to inventory, please wait...`);
+        
         try {
             const addResponse = await fetch(`${API_BASE}/api/products`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                body: JSON.stringify({ name, category, unit_type: unitType, unit_details: unitDetails, price, stock, description })
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    name: name,
+                    category: category,
+                    unit_type: unitType,
+                    unit_details: unitDetails,
+                    buy_price: buyPrice,
+                    price: sellPrice,  // selling price
+                    stock: stock,
+                    description: description
+                })
             });
             const addData = await addResponse.json();
             if (addData.success) {
                 await fetchProductsFromAPI();
                 bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide();
                 showToast(`${name} added successfully!`, 'success');
-            } else { showToast('Failed to add product', 'error'); }
-        } catch (error) { showToast('Connection error', 'error'); }
+            } else {
+                showToast('Failed to add product', 'error');
+            }
+        } catch (error) {
+            showToast('Connection error', 'error');
+        }
         hideLoader();
-    }
-    
+    }    
     // ==================== AUTOCOMPLETE ====================
     
     function setupAutocomplete() {
