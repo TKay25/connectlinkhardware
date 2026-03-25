@@ -459,7 +459,7 @@
                 <div class="demo-text">
                     <i class="fas fa-info-circle me-1"></i> Demo Credentials:<br>
                     <code>Username: admin</code> &nbsp;|&nbsp; 
-                    <code>Password: admin123</code>
+                    <code>Password: conlinkhardware</code>
                 </div>
             </div>
         </div>
@@ -476,7 +476,7 @@
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
-            if (username === 'admin' && password === 'admin123') {
+            if (username === 'admin' && password === 'conlinkhardware') {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('user', username);
                 localStorage.setItem('userName', 'Administrator');
@@ -489,7 +489,7 @@
                 // Create new error message
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'alert alert-danger mt-3';
-                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Invalid credentials! Use admin / admin123';
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Invalid credentials! Use admin / conlinkhardware';
                 errorDiv.style.borderRadius = '12px';
                 errorDiv.style.fontSize = '14px';
                 errorDiv.style.animation = 'shake 0.5s ease';
