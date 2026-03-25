@@ -1568,26 +1568,56 @@
         
         function setupEventListeners() {
             const searchInput = document.getElementById('searchProduct');
-            if (searchInput) searchInput.addEventListener('input', (e) => { searchTerm = e.target.value.toLowerCase(); renderProducts(); });
-            // In your setupEventListeners function, update the payment method click handler
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => { 
+                    searchTerm = e.target.value.toLowerCase(); 
+                    renderProducts(); 
+                });
+            }
+            
+            // Payment method selection - FIXED
             document.querySelectorAll('.payment-method').forEach(el => {
                 el.addEventListener('click', function() {
+                    // Remove active class from all payment methods
                     document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+                    // Add active class to clicked method
                     this.classList.add('active');
-                    selectedPaymentMethod = this.dataset.method;
+                    // Update global selectedPaymentMethod variable
+                    window.selectedPaymentMethod = this.dataset.method;
+                    // Show/hide cash input div
                     const cashDiv = document.getElementById('cashInputDiv');
-                    if (cashDiv) cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
+                    if (cashDiv) {
+                        cashDiv.style.display = window.selectedPaymentMethod === 'cash' ? 'block' : 'none';
+                    }
+                    console.log('Payment method selected:', window.selectedPaymentMethod);
                 });
             });
-
-            // Also update the initial selectedPaymentMethod variable
-            let selectedPaymentMethod = ""; // Empty string means no selection
-            // 
+            
+            // Cash amount input handler
             const cashAmount = document.getElementById('cashAmount');
-            if (cashAmount) cashAmount.addEventListener('input', () => { const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); const cash = parseFloat(cashAmount.value); const changeDue = document.getElementById('changeDue'); if (!isNaN(cash) && cash >= total) { if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; } else if (!isNaN(cash)) { if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; } else { if (changeDue) changeDue.innerHTML = ''; } });
-            document.querySelectorAll('.menu-item').forEach(item => { item.addEventListener('click', () => { const page = item.dataset.page; if (page) navigateTo(page); }); });
+            if (cashAmount) {
+                cashAmount.addEventListener('input', () => { 
+                    const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); 
+                    const cash = parseFloat(cashAmount.value); 
+                    const changeDue = document.getElementById('changeDue'); 
+                    if (!isNaN(cash) && cash >= total) { 
+                        if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; 
+                    } else if (!isNaN(cash)) { 
+                        if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; 
+                    } else { 
+                        if (changeDue) changeDue.innerHTML = ''; 
+                    } 
+                });
+            }
+            
+            // Menu item navigation
+            document.querySelectorAll('.menu-item').forEach(item => { 
+                item.addEventListener('click', () => { 
+                    const page = item.dataset.page; 
+                    if (page) navigateTo(page); 
+                }); 
+            });
         }
-        
         // ==================== SIDEBAR TOGGLE ====================
         
         function setupSidebar() {
