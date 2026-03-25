@@ -638,7 +638,7 @@
                                 <tr><th>ID</th><th>Product</th><th>Category</th><th>Unit</th><th>Detail</th><th>Price</th><th>Stock</th><th>Status</th><th></th> </thead>
                             <tbody id="inventoryList">
                                 <tr><td colspan="9" class="text-center">Loading products...</td> </tbody>
-                          </table>
+                            </table>
                     </div>
                 </div>
             </div>
@@ -691,7 +691,7 @@
                     <h5 class="fw-bold mb-2"><i class="fas fa-history me-1"></i>Transaction History</h5>
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead class="table-light"> <tr><th>Date</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Payment</th></tr> </thead>
+                            <thead class="table-light"> <tr><th>Date</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Payment</th> </tr></thead>
                             <tbody id="transactionsList"><tr><td colspan="6" class="text-center">No transactions yet</td></tr></tbody>
                         </table>
                     </div>
@@ -730,21 +730,6 @@
         // API Base URL
         const API_BASE = window.location.origin;
         
-        // Example for fetching products
-        const productsResponse = await fetch(url, {
-            credentials: 'include'  // Add this to all fetch calls
-        });
-        const productsData = await productsResponse.json();
-
-        // Example for posting transaction
-        const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',  // Add this
-            body: JSON.stringify({...})
-        });
-        const transactionData = await transactionResponse.json();
-
         // Global variables
         let products = [];
         let cart = [];
@@ -756,19 +741,20 @@
         let salesChart = null;
         let categoryChart = null;
         let categories = ["all"];
-        let authChecked = false;
         
         // ==================== AUTHENTICATION ====================
         
         async function checkAuthentication() {
             try {
-                const response = await fetch(`${API_BASE}/api/check-auth`);
-                const data = await response.json();
+                const authResponse = await fetch(`${API_BASE}/api/check-auth`, {
+                    credentials: 'include'
+                });
+                const authData = await authResponse.json();
                 
-                if (data.authenticated) {
+                if (authData.authenticated) {
                     localStorage.setItem('isLoggedIn', 'true');
-                    if (data.user) {
-                        localStorage.setItem('user', JSON.stringify(data.user));
+                    if (authData.user) {
+                        localStorage.setItem('user', JSON.stringify(authData.user));
                     }
                     return true;
                 } else {
@@ -778,7 +764,7 @@
                     return false;
                 }
             } catch (error) {
-                // If API fails, check localStorage as fallback
+                console.error('Auth check error:', error);
                 if (localStorage.getItem('isLoggedIn') === 'true') {
                     return true;
                 } else {
@@ -816,14 +802,17 @@
                     url += `${selectedCategory !== 'all' ? '&' : '?'}search=${encodeURIComponent(searchTerm)}`;
                 }
                 
-                const response = await fetch(url);
-                if (response.status === 401) {
+                const productsResponse = await fetch(url, {
+                    credentials: 'include'
+                });
+                
+                if (productsResponse.status === 401) {
                     window.location.href = '/login';
                     return;
                 }
-                const data = await response.json();
-                if (data.success) {
-                    products = data.products;
+                const productsData = await productsResponse.json();
+                if (productsData.success) {
+                    products = productsData.products;
                     renderProducts();
                     renderInventory();
                     updateStats();
@@ -838,10 +827,12 @@
         
         async function fetchCategories() {
             try {
-                const response = await fetch(`${API_BASE}/api/categories`);
-                const data = await response.json();
-                if (data.success) {
-                    categories = data.categories.map(c => c.name);
+                const categoriesResponse = await fetch(`${API_BASE}/api/categories`, {
+                    credentials: 'include'
+                });
+                const categoriesData = await categoriesResponse.json();
+                if (categoriesData.success) {
+                    categories = categoriesData.categories.map(c => c.name);
                     renderCategories();
                 }
             } catch (error) {
@@ -851,11 +842,13 @@
         
         async function fetchDashboardStats() {
             try {
-                const response = await fetch(`${API_BASE}/api/dashboard/stats`);
-                const data = await response.json();
-                if (data.success) {
-                    salesData.todaySales = data.stats.today_sales;
-                    salesData.itemsSold = data.stats.items_sold;
+                const statsResponse = await fetch(`${API_BASE}/api/dashboard/stats`, {
+                    credentials: 'include'
+                });
+                const statsData = await statsResponse.json();
+                if (statsData.success) {
+                    salesData.todaySales = statsData.stats.today_sales;
+                    salesData.itemsSold = statsData.stats.items_sold;
                     updateStats();
                 }
             } catch (error) {
@@ -865,10 +858,12 @@
         
         async function fetchTransactions() {
             try {
-                const response = await fetch(`${API_BASE}/api/transactions`);
-                const data = await response.json();
-                if (data.success) {
-                    salesData.transactions = data.transactions;
+                const transactionsResponse = await fetch(`${API_BASE}/api/transactions`, {
+                    credentials: 'include'
+                });
+                const transactionsData = await transactionsResponse.json();
+                if (transactionsData.success) {
+                    salesData.transactions = transactionsData.transactions;
                     renderTransactions();
                 }
             } catch (error) {
@@ -878,9 +873,10 @@
         
         async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
             try {
-                const response = await fetch(`${API_BASE}/api/transactions`, {
+                const transactionResponse = await fetch(`${API_BASE}/api/transactions`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({
                         items: items.map(item => ({
                             id: item.id,
@@ -894,17 +890,17 @@
                     })
                 });
                 
-                if (response.status === 401) {
+                if (transactionResponse.status === 401) {
                     window.location.href = '/login';
                     return false;
                 }
                 
-                const data = await response.json();
-                if (data.success) {
+                const transactionData = await transactionResponse.json();
+                if (transactionData.success) {
                     showToast('Payment successful!', 'success');
                     return true;
                 } else {
-                    showToast(data.error || 'Payment failed', 'error');
+                    showToast(transactionData.error || 'Payment failed', 'error');
                     return false;
                 }
             } catch (error) {
@@ -1262,16 +1258,17 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/api/products`, {
+                const addResponse = await fetch(`${API_BASE}/api/products`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({
                         name, category, unit_type: unitType, unit_details: unitDetails,
                         price, stock, description
                     })
                 });
-                const data = await response.json();
-                if (data.success) {
+                const addData = await addResponse.json();
+                if (addData.success) {
                     bootstrap.Modal.getInstance(document.getElementById('addInventoryModal')).hide();
                     fetchProductsFromAPI();
                     showToast(`${name} added successfully`, 'success');
@@ -1287,15 +1284,16 @@
             if (!confirm('Delete product?')) return;
             
             try {
-                const response = await fetch(`${API_BASE}/api/products/${id}`, {
-                    method: 'DELETE'
+                const deleteResponse = await fetch(`${API_BASE}/api/products/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
                 });
-                const data = await response.json();
-                if (data.success) {
+                const deleteData = await deleteResponse.json();
+                if (deleteData.success) {
                     fetchProductsFromAPI();
                     showToast('Product deleted', 'info');
                 } else {
-                    showToast(data.error || 'Cannot delete product', 'error');
+                    showToast(deleteData.error || 'Cannot delete product', 'error');
                 }
             } catch (error) {
                 showToast('Connection error', 'error');
@@ -1505,7 +1503,7 @@
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async () => {
                     try {
-                        await fetch('/api/logout', { method: 'POST' });
+                        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
                     } catch (e) {}
                     localStorage.clear();
                     window.location.href = '/login';
@@ -1516,7 +1514,7 @@
         // ==================== INITIALIZATION ====================
         
         async function init() {
-            // Check authentication first - this prevents infinite loop
+            // Check authentication first
             const isAuthenticated = await checkAuthentication();
             if (!isAuthenticated) return;
             
