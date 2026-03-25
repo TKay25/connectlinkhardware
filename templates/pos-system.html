@@ -1451,21 +1451,75 @@
         // ==================== PAYMENT FUNCTIONS ====================
         
         function showPaymentConfirmation() {
-            if (!cart.length) { showToast('Cart is empty!', 'error'); return; }
+            if (!cart.length) {
+                showToast('Cart is empty!', 'error');
+                return;
+            }
+            
+            // Check if payment method is selected
+            if (!selectedPaymentMethod) {
+                showToast('Please select a payment method!', 'error');
+                return;
+            }
+            
             const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('$', ''));
             const tax = parseFloat(document.getElementById('tax').innerText.replace('$', ''));
             const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-            document.getElementById('confirmationContent').innerHTML = `<div><div class="mb-2 p-2 bg-light rounded"><h6 class="fw-bold mb-1 small">Order Summary</h6>${cart.map(item => `<div class="d-flex justify-content-between py-1 border-bottom small"><div><strong>${escapeHtml(item.name)}</strong><br><span class="text-muted">$${item.price.toFixed(2)} x ${item.quantity}</span></div><span class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</span></div>`).join('')}</div><div class="mb-2"><div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span></div><div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div><div class="d-flex justify-content-between fw-bold pt-1 border-top small"><span>Total:</span><span style="color:#0a2b3e;">$${total.toFixed(2)}</span></div></div><div class="alert alert-info small py-1 mb-0"><i class="fas fa-credit-card me-1"></i>Payment: ${selectedPaymentMethod.toUpperCase()}</div></div>`;
+            
+            const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
+                                        selectedPaymentMethod === 'card' ? 'Card' : 'Bank Transfer';
+            
+            const confirmationHTML = `
+                <div>
+                    <div class="mb-2 p-2 bg-light rounded">
+                        <h6 class="fw-bold mb-1 small">Order Summary</h6>
+                        ${cart.map(item => `
+                            <div class="d-flex justify-content-between py-1 border-bottom small">
+                                <div>
+                                    <strong>${escapeHtml(item.name)}</strong><br>
+                                    <span class="text-muted">$${item.price.toFixed(2)} x ${item.quantity}</span>
+                                </div>
+                                <span class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small"><span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span></div>
+                        <div class="d-flex justify-content-between small"><span>Tax (10%):</span><span>$${tax.toFixed(2)}</span></div>
+                        <div class="d-flex justify-content-between fw-bold pt-1 border-top small">
+                            <span>Total:</span>
+                            <span style="color:#0a2b3e;">$${total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="alert alert-info small py-1 mb-0">
+                        <i class="fas fa-credit-card me-1"></i>Payment: ${paymentMethodDisplay}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('confirmationContent').innerHTML = confirmationHTML;
             new bootstrap.Modal(document.getElementById('confirmationModal')).show();
         }
         
         async function processPayment() {
+            // Check if payment method is selected
+            if (!selectedPaymentMethod) {
+                showToast('Please select a payment method!', 'error');
+                return;
+            }
+            
             const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+            
             if (selectedPaymentMethod === 'cash') {
                 const cash = parseFloat(document.getElementById('cashAmount').value);
-                if (isNaN(cash) || cash < total) { showToast('Insufficient cash!', 'error'); return; }
+                if (isNaN(cash) || cash < total) {
+                    showToast('Insufficient cash!', 'error');
+                    return;
+                }
                 await processOrder(selectedPaymentMethod, cash, cash - total);
-            } else { await processOrder(selectedPaymentMethod, total, 0); }
+            } else {
+                await processOrder(selectedPaymentMethod, total, 0);
+            }
         }
         
         async function processOrder(method, paid, change) {
