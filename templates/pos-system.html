@@ -1194,23 +1194,33 @@
     // ==================== LOADER FUNCTIONS ====================
     
     function showLoader(message) {
+        // First, remove any existing loader to prevent duplicates
         let loader = document.getElementById('globalLoader');
-        if (!loader) {
-            loader = document.createElement('div');
-            loader.id = 'globalLoader';
-            loader.className = 'loader-overlay';
-            loader.innerHTML = `<div class="loader-spinner"></div><div id="loaderMessage" style="font-size: 14px;">${message}</div>`;
-            document.body.appendChild(loader);
-        } else {
+        if (loader) {
+            // If exists, just update message and show
             loader.style.display = 'flex';
-            const msgDiv = document.getElementById('loaderMessage');
+            const msgDiv = loader.querySelector('#loaderMessage');
             if (msgDiv) msgDiv.innerHTML = message;
+            return;
         }
+        
+        // Create new loader if none exists
+        loader = document.createElement('div');
+        loader.id = 'globalLoader';
+        loader.className = 'loader-overlay';
+        loader.innerHTML = `<div class="loader-spinner"></div><div id="loaderMessage" style="font-size: 14px;">${message}</div>`;
+        document.body.appendChild(loader);
     }
     
     function hideLoader() {
         const loader = document.getElementById('globalLoader');
-        if (loader) loader.style.display = 'none';
+        if (loader) {
+            loader.style.display = 'none';
+            // Also remove any leftover loader elements
+            if (loader.parentNode) {
+                // Don't remove, just hide
+            }
+        }
     }
     
     // ==================== PAYMENT LOADER FUNCTIONS ====================
@@ -1551,20 +1561,36 @@
             return;
         }
         if (!productToDelete) return;
+        
         const product = products.find(p => p.id === productToDelete);
         const productName = product ? product.name : 'Unknown';
+        
         showLoader(`Deleting "${productName}" from inventory...`);
+        
         try {
-            const deleteResponse = await fetch(`${API_BASE}/api/products/${productToDelete}`, { method: 'DELETE', credentials: 'include' });
+            const deleteResponse = await fetch(`${API_BASE}/api/products/${productToDelete}`, { 
+                method: 'DELETE', 
+                credentials: 'include' 
+            });
             const deleteData = await deleteResponse.json();
+            
             if (deleteData.success) {
                 await fetchProductsFromAPI();
                 showToast(`${productName} deleted successfully`, 'success');
-            } else { showToast(deleteData.error || 'Cannot delete product', 'error'); }
-        } catch (error) { showToast('Connection error', 'error'); }
-        hideLoader();
-        bootstrap.Modal.getInstance(document.getElementById('deletePasscodeModal')).hide();
-        productToDelete = null;
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deletePasscodeModal'));
+                if (modal) modal.hide();
+            } else { 
+                showToast(deleteData.error || 'Cannot delete product', 'error'); 
+            }
+        } catch (error) { 
+            console.error('Delete error:', error);
+            showToast('Connection error', 'error'); 
+        } finally {
+            // ALWAYS hide loader, whether success or error
+            hideLoader();
+            productToDelete = null;
+        }
     }
     
     // ==================== ADD PRODUCT ====================
