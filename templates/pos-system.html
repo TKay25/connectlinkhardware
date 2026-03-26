@@ -1267,6 +1267,51 @@
         showToast(`Showing ${filteredTransactions.length} transactions`, 'info');
     }
 
+    function formatItemsList(items) {
+        if (!items || items.length === 0) return 'No items';
+        
+        const itemNames = items.map(i => i.product_name || i.name).slice(0, 2).join(', ');
+        const moreCount = items.length - 2;
+        
+        if (moreCount > 0) {
+            return `${itemNames} + ${moreCount} more`;
+        }
+        return itemNames;
+    }
+
+    function getItemsHTML(items, transactionId) {
+        if (!items || items.length === 0) return '<span class="text-muted">No items</span>';
+        
+        const itemsListHTML = items.map(item => `
+            <li>
+                <span class="item-name">${escapeHtml(item.product_name || item.name)}</span>
+                <span class="item-qty"> x${item.quantity}</span>
+                <span class="item-price"> @ $${(item.price || item.price_at_time || 0).toFixed(2)}</span>
+                <span class="float-end">$${((item.price || item.price_at_time || 0) * item.quantity).toFixed(2)}</span>
+            </li>
+        `).join('');
+        
+        return `
+            <div>
+                <span class="transaction-items-preview" onclick="toggleItemsDetail('items-${transactionId}')">
+                    <i class="fas fa-list me-1"></i>${formatItemsList(items)}
+                </span>
+                <div id="items-${transactionId}" class="transaction-items-detail">
+                    <ul style="margin-bottom: 0;">
+                        ${itemsListHTML}
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+
+    function toggleItemsDetail(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.classList.toggle('show');
+        }
+    }
+
     function renderFilteredTransactions() {
         const tbody = document.getElementById('transactionsList');
         if (!tbody) return;
@@ -1278,16 +1323,19 @@
             return;
         }
         
-        tbody.innerHTML = transactionsToShow.map(t => `
-            <tr>
-                <td><small>${t.date || t.created_at || ''}</small></td>
-                <td><small class="text-muted">${t.transaction_number || 'N/A'}</small></td>
-                <td><small>${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0} items</small></td>
-                <td class="fw-bold text-success">$${(t.total || 0).toFixed(2)}</td>
-                <td><span class="badge ${t.payment_method === 'cash' ? 'bg-success' : t.payment_method === 'card' ? 'bg-info' : 'bg-warning'}">${t.payment_method || 'N/A'}</span></td>
-                <td><small>${t.cashier || 'Admin'}</small></td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = transactionsToShow.map((t, index) => {
+            const transactionId = t.id || index;
+            return `
+                <tr>
+                    <td><small>${t.date || t.created_at || ''}</small></td>
+                    <td><small class="text-muted">${t.transaction_number || 'N/A'}</small></td>
+                    <td>${getItemsHTML(t.items, transactionId)}</td>
+                    <td class="fw-bold text-success">$${(t.total || 0).toFixed(2)}</td>
+                    <td><span class="badge ${t.payment_method === 'cash' ? 'bg-success' : t.payment_method === 'card' ? 'bg-info' : 'bg-warning'}">${t.payment_method || 'N/A'}</span></td>
+                    <td><small>${t.cashier || 'Admin'}</small></td>
+                </tr>
+            `;
+        }).join('');
     }
 
     // ==================== EXPORT FUNCTIONS ====================
@@ -1300,22 +1348,20 @@
             return;
         }
         
-        // Prepare data for Excel
+        // Prepare data for Excel with items list
         const excelData = transactionsToExport.map(t => ({
             'Date': t.date || t.created_at || '',
             'Transaction Number': t.transaction_number || '',
-            'Items': t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0,
+            'Items': t.items ? t.items.map(i => `${i.product_name || i.name} x${i.quantity}`).join(', ') : '',
             'Total': (t.total || 0).toFixed(2),
             'Payment Method': t.payment_method || '',
             'Cashier': t.cashier || 'Admin'
         }));
         
-        // Convert to worksheet
         const ws = XLSX.utils.json_to_sheet(excelData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
         
-        // Generate filename with date range
         let filename = 'transactions_';
         const startDate = document.getElementById('filterStartDate').value;
         const endDate = document.getElementById('filterEndDate').value;
@@ -1326,7 +1372,6 @@
         }
         filename += '.xlsx';
         
-        // Download
         XLSX.writeFile(wb, filename);
         showToast('Excel export complete!', 'success');
     }
@@ -1339,7 +1384,6 @@
             return;
         }
         
-        // Create a hidden div for PDF generation
         const pdfContent = document.createElement('div');
         pdfContent.style.padding = '20px';
         pdfContent.style.fontFamily = 'Arial, sans-serif';
@@ -1371,7 +1415,7 @@
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd;">${t.date || t.created_at || ''}</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${t.transaction_number || 'N/A'}</td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${t.items ? t.items.map(i => `${i.product_name || i.name} x${i.quantity}`).join(', ') : ''}</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">$${(t.total || 0).toFixed(2)}</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${t.payment_method || 'N/A'}</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${t.cashier || 'Admin'}</td>
@@ -1396,7 +1440,6 @@
         
         document.body.appendChild(pdfContent);
         
-        // Use html2pdf
         const opt = {
             margin: [0.5, 0.5, 0.5, 0.5],
             filename: `transactions_${new Date().toISOString().split('T')[0]}.pdf`,
@@ -1417,9 +1460,8 @@
             });
     }
 
-    // Update renderTransactions to use filtered view
+    // Update renderTransactions to reset filters
     function renderTransactions() {
-        // Reset filters
         document.getElementById('filterStartDate').value = '';
         document.getElementById('filterEndDate').value = '';
         document.getElementById('filterPaymentMethod').value = 'all';
