@@ -8,6 +8,9 @@ from functools import wraps
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
+import pytz
+
+ZIMBABWE_TZ = pytz.timezone('Africa/Harare')
 
 from db_helper import get_db, execute_query
 
@@ -153,8 +156,7 @@ def init_database():
     
     # ADD ALL MISSING COLUMNS TO TRANSACTIONS TABLE
     execute_query("""
-        ALTER TABLE transaction_items 
-        ADD COLUMN IF NOT EXISTS unit_details VARCHAR(100) DEFAULT '';
+        ALTER TABLE transactions SET timezone TO 'Africa/Harare';
     """, commit=True)
     
     execute_query("""
@@ -462,21 +464,22 @@ def create_transaction():
         data = request.json
         items = data.get('items', [])
         
-        print("Received transaction data:", data)  # Debug print
-        
         if not items:
             return jsonify({'error': 'No items in transaction'}), 400
         
-        # Calculate subtotal from items
+        # Calculate totals
         subtotal = sum(item['price'] * item['quantity'] for item in items)
-        total = subtotal  # No tax
+        total = subtotal
         
         transaction_number = generate_transaction_number()
         
-        # Insert transaction
+        # Get current Zimbabwe time
+        zimbabwe_now = datetime.now(ZIMBABWE_TZ)
+        
+        # Insert transaction with explicit Zimbabwe time
         trans_query = """
-            INSERT INTO transactions (transaction_number, user_id, subtotal, tax, total, payment_method, amount_paid, change_amount, notes)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO transactions (transaction_number, user_id, subtotal, tax, total, payment_method, amount_paid, change_amount, notes, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """
         
@@ -489,17 +492,16 @@ def create_transaction():
             data['payment_method'],
             data.get('amount_paid', total),
             data.get('change_amount', 0),
-            data.get('notes', '')
+            data.get('notes', ''),
+            zimbabwe_now  # Explicit Zimbabwe time
         )
-        
-        print("Transaction params:", trans_params)
         
         trans_result = execute_query(trans_query, trans_params, fetch_one=True, commit=True)
         transaction_id = trans_result[0]
         
-        # Insert transaction items - NOW INCLUDING UNIT DETAILS
+        # Insert transaction items
         for item in items:
-            # First get the product details from database to ensure we have unit info
+            # Get product details for unit info
             product_query = "SELECT unit_type, unit_details FROM products WHERE id = %s"
             product_info = execute_query(product_query, (item['id'],), fetch_one=True)
             
@@ -529,13 +531,14 @@ def create_transaction():
             'success': True,
             'transaction_id': transaction_id,
             'transaction_number': transaction_number,
+            'created_at': zimbabwe_now.isoformat(),
             'message': 'Transaction completed successfully'
         }), 201
         
     except Exception as e:
         print(f"Error creating transaction: {e}")
         return jsonify({'error': str(e)}), 500
-        
+            
 @app.route('/api/transactions', methods=['GET'])
 @login_required
 def get_transactions():
