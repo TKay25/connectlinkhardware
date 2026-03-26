@@ -10,9 +10,15 @@ from psycopg2.extras import RealDictCursor
 import os
 import pytz
 
+from db_helper import get_db, execute_query
+
+# Zimbabwe timezone (UTC+2, no daylight savings)
 ZIMBABWE_TZ = pytz.timezone('Africa/Harare')
 
-from db_helper import get_db, execute_query
+def get_zimbabwe_time():
+    """Get current time in Zimbabwe (Africa/Harare)"""
+    return datetime.now(ZIMBABWE_TZ)
+
 
 app = Flask(__name__)
 
@@ -152,11 +158,6 @@ def init_database():
             notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """, commit=True)
-    
-    # ADD ALL MISSING COLUMNS TO TRANSACTIONS TABLE
-    execute_query("""
-        ALTER TABLE transactions SET timezone TO 'Africa/Harare';
     """, commit=True)
     
     execute_query("""
@@ -467,14 +468,13 @@ def create_transaction():
         if not items:
             return jsonify({'error': 'No items in transaction'}), 400
         
-        # Calculate totals
         subtotal = sum(item['price'] * item['quantity'] for item in items)
         total = subtotal
         
         transaction_number = generate_transaction_number()
         
-        # Get current Zimbabwe time
-        zimbabwe_now = datetime.now(ZIMBABWE_TZ)
+        # Get Zimbabwe time
+        zimbabwe_now = get_zimbabwe_time()
         
         # Insert transaction with explicit Zimbabwe time
         trans_query = """
@@ -487,13 +487,13 @@ def create_transaction():
             transaction_number,
             session['user_id'],
             subtotal,
-            0,  # tax
+            0,
             total,
             data['payment_method'],
             data.get('amount_paid', total),
             data.get('change_amount', 0),
             data.get('notes', ''),
-            zimbabwe_now  # Explicit Zimbabwe time
+            zimbabwe_now
         )
         
         trans_result = execute_query(trans_query, trans_params, fetch_one=True, commit=True)
@@ -501,7 +501,6 @@ def create_transaction():
         
         # Insert transaction items
         for item in items:
-            # Get product details for unit info
             product_query = "SELECT unit_type, unit_details FROM products WHERE id = %s"
             product_info = execute_query(product_query, (item['id'],), fetch_one=True)
             
@@ -523,7 +522,6 @@ def create_transaction():
             )
             execute_query(item_query, item_params, commit=True)
             
-            # Update stock
             stock_query = "UPDATE products SET stock = stock - %s WHERE id = %s"
             execute_query(stock_query, (item['quantity'], item['id']), commit=True)
         
@@ -538,7 +536,7 @@ def create_transaction():
     except Exception as e:
         print(f"Error creating transaction: {e}")
         return jsonify({'error': str(e)}), 500
-            
+                
 @app.route('/api/transactions', methods=['GET'])
 @login_required
 def get_transactions():
