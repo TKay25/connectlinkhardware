@@ -1444,33 +1444,69 @@
         const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
         
         if (!transactionsToShow.length) {
-            tbody.innerHTML = '=<td colspan="7" class="text-center">No transactions found</td>=';
+            tbody.innerHTML = '=<td colspan="7" class="text-center">No transactions found<\/td>='；
             return;
         }
         
-        tbody.innerHTML = transactionsToShow.map((t, index) => {
-            const transactionId = t.id || index;
+        let htmlString = '';
+        
+        for (let i = 0; i < transactionsToShow.length; i++) {
+            const t = transactionsToShow[i];
+            const transactionId = t.id || i;
             
-            // Format the items list correctly
+            // Format date
+            let dateStr = '';
+            if (t.created_at || t.date) {
+                const date = new Date(t.created_at || t.date);
+                dateStr = date.toLocaleString();
+            }
+            
+            // Build items HTML with unit details
             let itemsHtml = '';
             if (t.items && t.items.length > 0) {
-                const itemNames = t.items.map(item => item.product_name || item.name).slice(0, 2).join(', ');
+                // Preview text with first 2 items including unit info
+                const itemNames = t.items.slice(0, 2).map(function(item) { 
+                    let name = item.product_name || item.name;
+                    if (item.unit_details) {
+                        name += ' (' + item.unit_details + ')';
+                    }
+                    return name;
+                }).join(', ');
                 const moreCount = t.items.length - 2;
                 const previewText = moreCount > 0 ? itemNames + ' + ' + moreCount + ' more' : itemNames;
                 
-                const itemsListHTML = t.items.map(item => {
+                let itemsListHTML = '';
+                for (let j = 0; j < t.items.length; j++) {
+                    const item = t.items[j];
                     const itemName = escapeHtml(item.product_name || item.name);
                     const itemPrice = item.price || item.price_at_time || 0;
                     const itemTotal = itemPrice * item.quantity;
-                    return `
-                        <li style="padding: 4px 0; border-bottom: 1px solid #eee;">
-                            <span style="font-weight: 600;">${itemName}</span>
-                            <span style="color: #6c757d;"> x${item.quantity}</span>
-                            <span style="color: #0a2b3e;"> @ $${itemPrice.toFixed(2)}</span>
-                            <span style="float: right; font-weight: 500;">$${itemTotal.toFixed(2)}</span>
+                    const unitType = item.unit_type || '';
+                    const unitDetails = item.unit_details || '';
+                    
+                    // Build unit info string
+                    let unitInfo = '';
+                    if (unitType || unitDetails) {
+                        unitInfo = '<div><small class="text-muted">' + unitType + (unitType && unitDetails ? ': ' : '') + unitDetails + '</small></div>';
+                    }
+                    
+                    itemsListHTML += `
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="text-start" style="flex: 2;">
+                                    <strong>${itemName}</strong>
+                                    ${unitInfo}
+                                </div>
+                                <div class="text-center" style="flex: 1;">
+                                    <small>$${itemPrice.toFixed(2)} x ${item.quantity}</small>
+                                </div>
+                                <div class="text-end" style="flex: 1;">
+                                    <strong>$${itemTotal.toFixed(2)}</strong>
+                                </div>
+                            </div>
                         </li>
                     `;
-                }).join('');
+                }
                 
                 itemsHtml = `
                     <div>
@@ -1478,7 +1514,7 @@
                             <i class="fas fa-list me-1"></i>${escapeHtml(previewText)}
                         </span>
                         <div id="items-${transactionId}" class="transaction-items-detail" style="display: none; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; font-size: 0.7rem;">
-                            <ul style="margin: 0; padding-left: 20px; list-style: none;">
+                            <ul style="margin: 0; padding-left: 0; list-style: none;">
                                 ${itemsListHTML}
                             </ul>
                         </div>
@@ -1488,22 +1524,35 @@
                 itemsHtml = '<span class="text-muted">No items</span>';
             }
             
-            // Format date
-            let dateStr = '';
-            if (t.created_at || t.date) {
-                const date = new Date(t.created_at || t.date);
-                dateStr = date.toLocaleString();
+            // Build payment badge class
+            let paymentBadgeClass = 'bg-warning';
+            if (t.payment_method === 'cash') {
+                paymentBadgeClass = 'bg-success';
+            } else if (t.payment_method === 'card') {
+                paymentBadgeClass = 'bg-info';
             }
             
-            return '<td><small>' + dateStr + '</small></td>' +
-                '<td><small class="text-muted">' + (t.transaction_number || 'N/A') + '</small></td>' +
-                '<td>' + itemsHtml + '</td>' +
-                '<td class="fw-bold text-success">$' + ((t.total || 0).toFixed(2)) + '</td>' +
-                '<td><span class="badge ' + (t.payment_method === 'cash' ? 'bg-success' : t.payment_method === 'card' ? 'bg-info' : 'bg-warning') + '">' + (t.payment_method || 'N/A') + '</span></td>' +
-                '<td><small>' + (t.cashier || 'Admin') + '</small></td>' +
-                '<td><button class="btn-view-receipt" onclick="viewReceipt(\'' + (t.transaction_number || t.id) + '\')" title="View Receipt"><i class="fas fa-receipt me-1"></i>View Receipt</button></td>' +            
-            '</tr>';
-        }).join('');
+            // Format transaction number
+            let transNum = t.transaction_number || 'N/A';
+            if (transNum.length > 20) {
+                transNum = transNum.substring(0, 17) + '...';
+            }
+            
+            // Build row
+            htmlString += `
+                <tr>
+                    <td><small>${dateStr}</small></td>
+                    <td><small class="text-muted">${transNum}</small></td>
+                    <td>${itemsHtml}</td>
+                    <td class="fw-bold text-success">$${(t.total || 0).toFixed(2)}</td>
+                    <td><span class="badge ${paymentBadgeClass}">${t.payment_method || 'N/A'}</span></td>
+                    <td><small>${t.cashier || 'Admin'}</small></td>
+                    <td><button class="btn-view-receipt" onclick="viewReceipt('${t.transaction_number || t.id}')"><i class="fas fa-receipt me-1"></i>View Receipt</button></td>
+                </tr>
+            `;
+        }
+        
+        tbody.innerHTML = htmlString;
     }
 
     // ==================== EXPORT FUNCTIONS ====================
