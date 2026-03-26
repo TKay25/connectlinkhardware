@@ -1444,7 +1444,7 @@
         const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
         
         if (!transactionsToShow.length) {
-            tbody.innerHTML = '=<td colspan="7" class="text-center">No transactions found<\/td>='；
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No transactions found</td></tr>';
             return;
         }
         
@@ -1464,16 +1464,21 @@
             // Build items HTML with unit details
             let itemsHtml = '';
             if (t.items && t.items.length > 0) {
-                // Preview text with first 2 items including unit info
-                const itemNames = t.items.slice(0, 2).map(function(item) { 
-                    let name = item.product_name || item.name;
-                    if (item.unit_details) {
-                        name += ' (' + item.unit_details + ')';
+                // Preview text
+                let previewText = '';
+                const firstTwo = t.items.slice(0, 2);
+                const itemNames = [];
+                for (let j = 0; j < firstTwo.length; j++) {
+                    let name = firstTwo[j].product_name || firstTwo[j].name;
+                    if (firstTwo[j].unit_details) {
+                        name = name + ' (' + firstTwo[j].unit_details + ')';
                     }
-                    return name;
-                }).join(', ');
-                const moreCount = t.items.length - 2;
-                const previewText = moreCount > 0 ? itemNames + ' + ' + moreCount + ' more' : itemNames;
+                    itemNames.push(name);
+                }
+                previewText = itemNames.join(', ');
+                if (t.items.length > 2) {
+                    previewText = previewText + ' + ' + (t.items.length - 2) + ' more';
+                }
                 
                 let itemsListHTML = '';
                 for (let j = 0; j < t.items.length; j++) {
@@ -1484,42 +1489,43 @@
                     const unitType = item.unit_type || '';
                     const unitDetails = item.unit_details || '';
                     
-                    // Build unit info string
                     let unitInfo = '';
                     if (unitType || unitDetails) {
-                        unitInfo = '<div><small class="text-muted">' + unitType + (unitType && unitDetails ? ': ' : '') + unitDetails + '</small></div>';
+                        if (unitType && unitDetails) {
+                            unitInfo = '<div><small class="text-muted">' + unitType + ': ' + unitDetails + '</small></div>';
+                        } else if (unitType) {
+                            unitInfo = '<div><small class="text-muted">' + unitType + '</small></div>';
+                        } else if (unitDetails) {
+                            unitInfo = '<div><small class="text-muted">' + unitDetails + '</small></div>';
+                        }
                     }
                     
-                    itemsListHTML += `
-                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div class="text-start" style="flex: 2;">
-                                    <strong>${itemName}</strong>
-                                    ${unitInfo}
-                                </div>
-                                <div class="text-center" style="flex: 1;">
-                                    <small>$${itemPrice.toFixed(2)} x ${item.quantity}</small>
-                                </div>
-                                <div class="text-end" style="flex: 1;">
-                                    <strong>$${itemTotal.toFixed(2)}</strong>
-                                </div>
-                            </div>
-                        </li>
-                    `;
+                    itemsListHTML = itemsListHTML + 
+                        '<li style="padding: 8px 0; border-bottom: 1px solid #eee;">' +
+                            '<div class="d-flex justify-content-between align-items-start">' +
+                                '<div class="text-start" style="flex: 2;">' +
+                                    '<strong>' + itemName + '</strong>' +
+                                    unitInfo +
+                                '</div>' +
+                                '<div class="text-center" style="flex: 1;">' +
+                                    '<small>$' + itemPrice.toFixed(2) + ' x ' + item.quantity + '</small>' +
+                                '</div>' +
+                                '<div class="text-end" style="flex: 1;">' +
+                                    '<strong>$' + itemTotal.toFixed(2) + '</strong>' +
+                                '</div>' +
+                            '</div>' +
+                        '</li>';
                 }
                 
-                itemsHtml = `
-                    <div>
-                        <span style="cursor: pointer; color: #0a2b3e; text-decoration: underline; font-size: 0.7rem;" onclick="toggleItemsDetail('items-${transactionId}')">
-                            <i class="fas fa-list me-1"></i>${escapeHtml(previewText)}
-                        </span>
-                        <div id="items-${transactionId}" class="transaction-items-detail" style="display: none; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; font-size: 0.7rem;">
-                            <ul style="margin: 0; padding-left: 0; list-style: none;">
-                                ${itemsListHTML}
-                            </ul>
-                        </div>
-                    </div>
-                `;
+                itemsHtml = 
+                    '<div>' +
+                        '<span style="cursor: pointer; color: #0a2b3e; text-decoration: underline; font-size: 0.7rem;" onclick="toggleItemsDetail(\'items-' + transactionId + '\')">' +
+                            '<i class="fas fa-list me-1"></i>' + escapeHtml(previewText) +
+                        '</span>' +
+                        '<div id="items-' + transactionId + '" class="transaction-items-detail" style="display: none; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; font-size: 0.7rem;">' +
+                            '<ul style="margin: 0; padding-left: 0; list-style: none;">' + itemsListHTML + '</ul>' +
+                        '</div>' +
+                    '</div>';
             } else {
                 itemsHtml = '<span class="text-muted">No items</span>';
             }
@@ -1538,18 +1544,17 @@
                 transNum = transNum.substring(0, 17) + '...';
             }
             
-            // Build row
-            htmlString += `
-                <tr>
-                    <td><small>${dateStr}</small></td>
-                    <td><small class="text-muted">${transNum}</small></td>
-                    <td>${itemsHtml}</td>
-                    <td class="fw-bold text-success">$${(t.total || 0).toFixed(2)}</td>
-                    <td><span class="badge ${paymentBadgeClass}">${t.payment_method || 'N/A'}</span></td>
-                    <td><small>${t.cashier || 'Admin'}</small></td>
-                    <td><button class="btn-view-receipt" onclick="viewReceipt('${t.transaction_number || t.id}')"><i class="fas fa-receipt me-1"></i>View Receipt</button></td>
-                </tr>
-            `;
+            // Build row using string concatenation
+            htmlString = htmlString + 
+                '<tr>' +
+                    '<td><small>' + dateStr + '</small></td>' +
+                    '<td><small class="text-muted">' + transNum + '</small></td>' +
+                    '<td>' + itemsHtml + '</td>' +
+                    '<td class="fw-bold text-success">$' + (t.total || 0).toFixed(2) + '</td>' +
+                    '<td><span class="badge ' + paymentBadgeClass + '">' + (t.payment_method || 'N/A') + '</span></td>' +
+                    '<td><small>' + (t.cashier || 'Admin') + '</small></td>' +
+                    '<td><button class="btn-view-receipt" onclick="viewReceipt(\'' + (t.transaction_number || t.id) + '\')"><i class="fas fa-receipt me-1"></i>View Receipt</button></td>' +
+                '</tr>';
         }
         
         tbody.innerHTML = htmlString;
