@@ -114,9 +114,8 @@ def init_database():
         ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE
     """, commit=True)
 
-    # Check if column exists first, then rename
+    # Rename price to sell_price if it exists
     try:
-        # First check if price column exists
         check_query = """
             SELECT column_name 
             FROM information_schema.columns 
@@ -125,7 +124,6 @@ def init_database():
         result = execute_query(check_query, fetch_one=True)
         
         if result:
-            # If price column exists, rename it
             execute_query("""
                 ALTER TABLE products 
                 RENAME COLUMN price TO sell_price
@@ -134,66 +132,54 @@ def init_database():
     except Exception as e:
         print(f"Note: Could not rename column: {e}")
 
-
-
     # Add buy_price column if it doesn't exist
     execute_query("""
         ALTER TABLE products 
         ADD COLUMN IF NOT EXISTS buy_price DECIMAL(10,2) DEFAULT 0.00
     """, commit=True)
     
-    # Transactions table
+    # Transactions table - CREATE OR UPDATE
     execute_query("""
         CREATE TABLE IF NOT EXISTS transactions (
             id SERIAL PRIMARY KEY,
             transaction_number VARCHAR(50) UNIQUE NOT NULL,
             user_id INTEGER REFERENCES users(id),
-            subtotal DECIMAL(10,2) DEFAULT 0,
-            tax DECIMAL(10,2) DEFAULT 0,
-            tax_rate DECIMAL(5,2) DEFAULT 10.0,
-            total DECIMAL(10,2) DEFAULT 0,
             payment_method VARCHAR(20) NOT NULL,
-            amount_paid DECIMAL(10,2) DEFAULT 0,
-            change_amount DECIMAL(10,2) DEFAULT 0,
             status VARCHAR(20) DEFAULT 'completed',
             notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """, commit=True)
-
-    # Add all missing columns to transactions table
-    execute_query("""
-        ALTER TABLE transactions 
-        ADD COLUMN IF NOT EXISTS amount_paid DECIMAL(10,2) DEFAULT 0.00
-    """, commit=True)
-
-    execute_query("""
-        ALTER TABLE transactions 
-        ADD COLUMN IF NOT EXISTS change_amount DECIMAL(10,2) DEFAULT 0.00
-    """, commit=True)
-
-    # Also check if tax_rate exists (might be missing)
-    execute_query("""
-        ALTER TABLE transactions 
-        ADD COLUMN IF NOT EXISTS tax_rate DECIMAL(5,2) DEFAULT 10.0
-    """, commit=True)
-
-    # Check if subtotal exists
+    
+    # ADD ALL MISSING COLUMNS TO TRANSACTIONS TABLE
     execute_query("""
         ALTER TABLE transactions 
         ADD COLUMN IF NOT EXISTS subtotal DECIMAL(10,2) DEFAULT 0.00
     """, commit=True)
-
-    # Check if tax exists
+    
     execute_query("""
         ALTER TABLE transactions 
         ADD COLUMN IF NOT EXISTS tax DECIMAL(10,2) DEFAULT 0.00
     """, commit=True)
-
-    # Check if total exists
+    
+    execute_query("""
+        ALTER TABLE transactions 
+        ADD COLUMN IF NOT EXISTS tax_rate DECIMAL(5,2) DEFAULT 10.0
+    """, commit=True)
+    
     execute_query("""
         ALTER TABLE transactions 
         ADD COLUMN IF NOT EXISTS total DECIMAL(10,2) DEFAULT 0.00
+    """, commit=True)
+    
+    execute_query("""
+        ALTER TABLE transactions 
+        ADD COLUMN IF NOT EXISTS amount_paid DECIMAL(10,2) DEFAULT 0.00
+    """, commit=True)
+    
+    execute_query("""
+        ALTER TABLE transactions 
+        ADD COLUMN IF NOT EXISTS change_amount DECIMAL(10,2) DEFAULT 0.00
     """, commit=True)
     
     # Transaction Items table
@@ -246,7 +232,7 @@ def init_database():
                 INSERT INTO categories (name, display_order)
                 VALUES (%s, %s)
             """, (cat_name, order), commit=True)
-
+            
 # ==================== PRODUCT FETCH FUNCTION ====================
 
 def run1():
