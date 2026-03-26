@@ -2565,7 +2565,6 @@
                 products = productsData.products;
                 renderProducts();
                 renderInventory();
-                updateStats();
             }
         } catch (error) { 
             console.error('Error fetching products:', error); 
@@ -2593,7 +2592,6 @@
                 salesData.itemsSold = statsData.stats.items_sold;
                 // Track total profit from all time
                 currentTotalProfit = statsData.stats.total_profit || 0;
-                updateStats();
             }
         } catch (error) { console.error('Error fetching stats:', error); }
     }
@@ -3582,10 +3580,15 @@
     }
     
     function updateStats() {
-        document.getElementById('todaySales').innerText = `$${salesData.todaySales.toFixed(2)}`;
-        document.getElementById('itemsSold').innerText = salesData.itemsSold;
-        document.getElementById('lowStockCount').innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
-        document.getElementById('totalProducts').innerText = products.length;
+        const todaySalesEl = document.getElementById('todaySales');
+        const itemsSoldEl = document.getElementById('itemsSold');
+        const lowStockCountEl = document.getElementById('lowStockCount');
+        const totalProductsEl = document.getElementById('totalProducts');
+        
+        if (todaySalesEl) todaySalesEl.innerText = `$${salesData.todaySales.toFixed(2)}`;
+        if (itemsSoldEl) itemsSoldEl.innerText = salesData.itemsSold;
+        if (lowStockCountEl) lowStockCountEl.innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
+        if (totalProductsEl) totalProductsEl.innerText = products.length;
     }
     
     function showToast(msg, type) {
