@@ -1974,7 +1974,7 @@
     }
     
     function generateReceiptHTML(items, method, paid, change) {
-        const total = items.reduce((sum, i) => sum + ((i.sell_price || i.price || 0) * i.quantity), 0);
+        const total = items.reduce((sum, item) => sum + ((item.sell_price || item.price || 0) * item.quantity), 0);
         
         // Base receipt template
         let receiptHTML = `
@@ -1988,7 +1988,7 @@
                 ${items.map(item => `
                     <div class="d-flex justify-content-between small">
                         <span>${escapeHtml(item.name)} x${item.quantity}</span>
-                        <span>$${((i.sell_price || i.price || 0) * i.quantity).toFixed(2)}</span>
+                        <span>$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span>
                     </div>
                 `).join('')}
                 <hr class="my-1">
@@ -2023,6 +2023,7 @@
         
         return receiptHTML;
     }
+
     
     function printReceipt() {
         const content = document.getElementById('receiptContent').innerHTML;
