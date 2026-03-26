@@ -134,8 +134,8 @@ def init_database():
 
     # Add buy_price column if it doesn't exist
     execute_query("""
-        ALTER TABLE products 
-        ADD COLUMN IF NOT EXISTS buy_price DECIMAL(10,2) DEFAULT 0.00
+        ALTER TABLE transaction_items 
+        ADD COLUMN IF NOT EXISTS unit_type VARCHAR(20) DEFAULT 'piece';
     """, commit=True)
     
     # Transactions table - CREATE OR UPDATE
@@ -153,8 +153,8 @@ def init_database():
     
     # ADD ALL MISSING COLUMNS TO TRANSACTIONS TABLE
     execute_query("""
-        ALTER TABLE transactions 
-        ADD COLUMN IF NOT EXISTS subtotal DECIMAL(10,2) DEFAULT 0.00
+        ALTER TABLE transaction_items 
+        ADD COLUMN IF NOT EXISTS unit_details VARCHAR(100) DEFAULT '';
     """, commit=True)
     
     execute_query("""
@@ -492,23 +492,32 @@ def create_transaction():
             data.get('notes', '')
         )
         
-        print("Transaction params:", trans_params)  # Debug print
+        print("Transaction params:", trans_params)
         
         trans_result = execute_query(trans_query, trans_params, fetch_one=True, commit=True)
         transaction_id = trans_result[0]
         
-        # Insert transaction items and update stock
+        # Insert transaction items - NOW INCLUDING UNIT DETAILS
         for item in items:
+            # First get the product details from database to ensure we have unit info
+            product_query = "SELECT unit_type, unit_details FROM products WHERE id = %s"
+            product_info = execute_query(product_query, (item['id'],), fetch_one=True)
+            
+            unit_type = product_info[0] if product_info else ''
+            unit_details = product_info[1] if product_info else ''
+            
             item_query = """
-                INSERT INTO transaction_items (transaction_id, product_id, quantity, price_at_time, subtotal)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO transaction_items (transaction_id, product_id, quantity, price_at_time, subtotal, unit_type, unit_details)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             item_params = (
                 transaction_id,
                 item['id'],
                 item['quantity'],
                 item['price'],
-                item['price'] * item['quantity']
+                item['price'] * item['quantity'],
+                unit_type,
+                unit_details
             )
             execute_query(item_query, item_params, commit=True)
             
@@ -526,7 +535,7 @@ def create_transaction():
     except Exception as e:
         print(f"Error creating transaction: {e}")
         return jsonify({'error': str(e)}), 500
-    
+        
 @app.route('/api/transactions', methods=['GET'])
 @login_required
 def get_transactions():
@@ -544,8 +553,8 @@ def get_transactions():
                        'quantity', ti.quantity,
                        'price', ti.price_at_time,
                        'subtotal', ti.subtotal,
-                       'unit_type', p.unit_type,
-                       'unit_details', p.unit_details
+                       'unit_type', ti.unit_type,
+                       'unit_details', ti.unit_details
                    ))
                    FROM transaction_items ti
                    LEFT JOIN products p ON ti.product_id = p.id
