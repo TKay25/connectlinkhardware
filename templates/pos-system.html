@@ -886,10 +886,6 @@
                                 </div>
                             </div>
                             <div class="border-top pt-2 mt-2">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span class="text-muted small">Subtotal:</span>
-                                    <span class="fw-bold small" id="subtotal">$0.00</span>
-                                </div>
                                 <div class="d-flex justify-content-between mb-2 pb-1 border-bottom">
                                     <span class="fw-bold small">Total:</span>
                                     <span class="fw-bold small" style="color: #0a2b3e;" id="total">$0.00</span>
@@ -1714,13 +1710,27 @@
     function addToCart(productId) {
         const product = products.find(p => p.id === productId);
         if (!product) return;
+        
+        // Use sell_price, fallback to price, then default to 0
+        const priceToUse = product.sell_price || product.price || 0;
+        
         const existing = cart.find(i => i.id === productId);
         if (existing) {
-            if (existing.quantity + 1 > product.stock) { showToast('Not enough stock!', 'error'); return; }
+            if (existing.quantity + 1 > product.stock) { 
+                showToast('Not enough stock!', 'error'); 
+                return; 
+            }
             existing.quantity++;
         } else {
-            if (product.stock < 1) { showToast('Out of stock!', 'error'); return; }
-            cart.push({ ...product, quantity: 1 });
+            if (product.stock < 1) { 
+                showToast('Out of stock!', 'error'); 
+                return; 
+            }
+            cart.push({ 
+                ...product, 
+                quantity: 1,
+                sell_price: priceToUse  // Ensure sell_price is set
+            });
         }
         updateCartDisplay();
         showToast(`${product.name} added`, 'success');
@@ -1729,6 +1739,7 @@
     function updateCartDisplay() {
         const container = document.getElementById('cartItems');
         if (!container) return;
+        
         if (!cart.length) {
             container.innerHTML = '<div class="text-center py-4"><i class="fas fa-shopping-cart fa-2x text-muted mb-1"></i><p class="text-muted small">Cart empty</p></div>';
         } else {
@@ -1737,10 +1748,10 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="fw-bold mb-0">${escapeHtml(item.name)}</h6>
-                            <div class="small text-muted">$${item.sell_price.toFixed(2)} each</div>
+                            <div class="small text-muted">$${(item.sell_price || item.price || 0).toFixed(2)} each</div>
                             <div class="mt-1"><div class="qty-control"><button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button><span class="fw-bold small">${item.quantity}</span><button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button></div></div>
                         </div>
-                        <div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${(item.sell_price * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div>
+                        <div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div>
                     </div>
                 </div>
             `).join('');
@@ -1760,9 +1771,8 @@
     function clearCart() { if (cart.length) { cart = []; updateCartDisplay(); showToast('Cart cleared', 'info'); } }
     
     function calculateTotals() {
-        const total = cart.reduce((sum, item) => sum + (item.sell_price * item.quantity), 0);
-        document.getElementById('subtotal').innerText = `$${total.toFixed(2)}`;
-        document.getElementById('tax').innerText = `$0.00`;
+        const total = cart.reduce((sum, item) => sum + ((item.sell_price || item.price || 0) * item.quantity), 0);
+        // Only show total, remove subtotal line
         document.getElementById('total').innerText = `$${total.toFixed(2)}`;
     }
     
@@ -1905,7 +1915,7 @@
     }
     
     function generateReceiptHTML(items, method, paid, change) {
-        const total = items.reduce((sum, i) => sum + (i.sell_price * i.quantity), 0);
+        const total = items.reduce((sum, i) => sum + ((i.sell_price || i.price || 0) * i.quantity), 0);
         return `<div class="text-center">
             <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
             <h6 class="fw-bold mt-1">Connect Link Properties</h6>
@@ -1913,12 +1923,45 @@
             <hr class="my-1">
             <small>${new Date().toLocaleString()}</small>
             <hr class="my-1">
-            ${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${(item.price * item.quantity).toFixed(2)}</span></div>`).join('')}
+            ${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span></div>`).join('')}
+            <hr class="my-1">
+            <div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div>
+            <hr class="my-1">
+            <div class="d-flex justify-content-between small"><span>Payment Method:</span><span>${method.toUpperCase()}</span></div>`;
+        
+        // Add amount paid and change for cash payments
+        if (method === 'cash') {
+            return `<div class="text-center">
+                <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
+                <h6 class="fw-bold mt-1">Connect Link Properties</h6>
+                <small>Hardware Supply</small>
+                <hr class="my-1">
+                <small>${new Date().toLocaleString()}</small>
+                <hr class="my-1">
+                ${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span></div>`).join('')}
+                <hr class="my-1">
+                <div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div>
+                <div class="d-flex justify-content-between small"><span>Amount Paid:</span><span>$${paid.toFixed(2)}</span></div>
+                <div class="d-flex justify-content-between small"><span>Change:</span><span>$${change.toFixed(2)}</span></div>
+                <hr class="my-1">
+                <div class="small">Payment: ${method.toUpperCase()}</div>
+                <hr class="my-1">
+                <small>Thank you!</small>
+            </div>`;
+        }
+        
+        return `<div class="text-center">
+            <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
+            <h6 class="fw-bold mt-1">Connect Link Properties</h6>
+            <small>Hardware Supply</small>
+            <hr class="my-1">
+            <small>${new Date().toLocaleString()}</small>
+            <hr class="my-1">
+            ${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span></div>`).join('')}
             <hr class="my-1">
             <div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div>
             <hr class="my-1">
             <div class="small">Payment: ${method.toUpperCase()}</div>
-            ${change > 0 ? `<div class="small">Change: $${change.toFixed(2)}</div>` : ''}
             <hr class="my-1">
             <small>Thank you!</small>
         </div>`;
