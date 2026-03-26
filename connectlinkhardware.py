@@ -706,13 +706,27 @@ def get_dashboard_stats():
     total_products_query = "SELECT COUNT(*) FROM products"
     total_products_result = execute_query(total_products_query, fetch_one=True)
     
+    # Calculate total profit from all transactions
+    profit_query = """
+        SELECT COALESCE(SUM(
+            ti.quantity * (ti.price_at_time - p.buy_price)
+        ), 0) as total_profit
+        FROM transaction_items ti
+        JOIN products p ON ti.product_id = p.id
+        JOIN transactions t ON ti.transaction_id = t.id
+        WHERE t.status = 'completed'
+    """
+    profit_result = execute_query(profit_query, fetch_one=True)
+    total_profit = float(profit_result[0]) if profit_result else 0
+    
     return jsonify({
         'success': True,
         'stats': {
             'today_sales': float(today_result[0]) if today_result else 0,
             'items_sold': today_result[1] if today_result else 0,
             'low_stock_count': low_stock_result[0] if low_stock_result else 0,
-            'total_products': total_products_result[0] if total_products_result else 0
+            'total_products': total_products_result[0] if total_products_result else 0,
+            'total_profit': total_profit  # Add this field
         }
     })
 
