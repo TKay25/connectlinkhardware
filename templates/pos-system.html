@@ -1228,24 +1228,21 @@
         const messageEl = document.getElementById('paymentLoaderMessage');
         if (messageEl) messageEl.innerHTML = message || 'Processing payment...';
         
-        // Force remove all backdrops
+        // Remove any existing backdrops
         document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         
-        // Show loader
+        // Create new modal instance
         paymentLoaderModal = new bootstrap.Modal(modalElement, {
             backdrop: 'static',
             keyboard: false
         });
+        
+        // Show the loader
         paymentLoaderModal.show();
         
-        // Force z-index to ensure it's on top
-        setTimeout(() => {
-            const modalBackdrop = document.querySelector('.modal-backdrop');
-            if (modalBackdrop) modalBackdrop.style.zIndex = '10000';
-            modalElement.style.zIndex = '10001';
-        }, 10);
+        console.log('Payment loader shown with message:', message);
     }
     
     function hidePaymentLoader() {
@@ -1874,16 +1871,20 @@
     }
     
     async function processPayment() {
+        console.log('1. processPayment started');
+        
         if (!selectedPaymentMethod) {
             showToast('Please select a payment method!', 'error');
             return;
         }
         
         const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+        console.log('2. Total:', total);
         
         // VALIDATE CASH AMOUNT
         if (selectedPaymentMethod === 'cash') {
             const cash = parseFloat(document.getElementById('cashAmount').value);
+            console.log('3. Cash amount:', cash);
             if (isNaN(cash) || cash < total) {
                 showToast(`Insufficient cash! Amount tendered: $${cash || 0} is less than total: $${total.toFixed(2)}`, 'error');
                 return;
@@ -1894,6 +1895,7 @@
         const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
         if (confirmationModal) {
             confirmationModal.hide();
+            console.log('4. Confirmation modal hidden');
         }
         
         // Clean up backdrops
@@ -1901,30 +1903,40 @@
             document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
+            console.log('5. Backdrops cleaned');
+            
+            // Show payment loader
+            showPaymentLoader('Processing payment...');
+            console.log('6. Payment loader shown');
         }, 100);
-        
-        // Show payment loader
-        showPaymentLoader('Processing payment...');
         
         try {
             if (selectedPaymentMethod === 'cash') {
                 const cash = parseFloat(document.getElementById('cashAmount').value);
+                console.log('7. Calling processOrder with cash:', cash);
                 await processOrder(selectedPaymentMethod, cash, cash - total);
             } else {
+                console.log('7. Calling processOrder with card/transfer');
                 await processOrder(selectedPaymentMethod, total, 0);
             }
+            console.log('8. processOrder completed successfully');
         } catch (error) {
+            console.error('9. ERROR in processPayment:', error);
             hidePaymentLoader();
             showToast('Payment failed', 'error');
         }
     }
 
     async function processOrder(method, paid, change) {
+        console.log('processOrder started - method:', method, 'paid:', paid, 'change:', change);
+        
         updatePaymentLoaderMessage('Verifying payment...');
+        console.log('Verifying payment...');
         
         const success = await createTransactionAPI(cart, method, paid, change);
+        console.log('createTransactionAPI returned:', success);
         
-        if (success === true) {
+        if (success) {
             updatePaymentLoaderMessage('Updating inventory...');
             await new Promise(resolve => setTimeout(resolve, 500));
             
@@ -1954,8 +1966,10 @@
             if (currentPage === 'analytics') renderAnalytics();
             
             showToast('Payment successful!', 'success');
+            console.log('Payment completed successfully');
         } else {
             hidePaymentLoader();
+            console.log('Payment failed - createTransactionAPI returned false');
         }
     }
     
