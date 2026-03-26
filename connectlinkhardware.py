@@ -593,9 +593,7 @@ def get_transactions():
                        'price', ti.price_at_time,
                        'subtotal', ti.subtotal,
                        'unit_type', ti.unit_type,
-                       'unit_details', ti.unit_details,
-                       'buy_price', p.buy_price,
-                       'category', p.category
+                       'unit_details', ti.unit_details
                    ))
                    FROM transaction_items ti
                    LEFT JOIN products p ON ti.product_id = p.id
