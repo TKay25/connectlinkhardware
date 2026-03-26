@@ -1293,73 +1293,76 @@
         const change = transaction.change_amount || 0;
         
         let receiptHTML = `
-            <div class="text-center">
-                <img src="/static/images/reqlogo.jpg" style="height: 45px; width: auto;" alt="ConnectLink Properties Logo">
-                <h6 class="fw-bold mt-1">Connect Link Properties</h6>
+            <div class="receipt-header">
+                <img src="/static/images/reqlogo.jpg" style="height: 40px; width: auto;" alt="Logo">
+                <h6>Connect Link Properties</h6>
                 <small>Hardware Supply</small>
-                <hr class="my-1">
-                <small>${new Date(transaction.created_at || transaction.date).toLocaleString()}</small>
-                <hr class="my-1">
-                <small><strong>Transaction #:</strong> ${transaction.transaction_number || 'N/A'}</small>
-                <hr class="my-1">
+                <div>${new Date(transaction.created_at || transaction.date).toLocaleString()}</div>
+                <div class="transaction-number">#${transaction.transaction_number || 'N/A'}</div>
+            </div>
+            <hr>
         `;
         
-        // Items list with proper layout
-        receiptHTML += items.map(item => {
+        // Items list
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
             const itemPrice = item.price || item.price_at_time || 0;
             const itemTotal = itemPrice * item.quantity;
+            const unitInfo = (item.unit_type && item.unit_details) ? `<div class="item-detail">${item.unit_type}: ${item.unit_details}</div>` : '';
             
-            return `
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="text-start" style="width: 45%;">
-                        <strong>${escapeHtml(item.product_name || item.name)}</strong>
-                        ${item.unit_type && item.unit_details ? `<div><small class="text-muted">${item.unit_type}: ${item.unit_details}</small></div>` : ''}
-                    </div>
-                    <div class="text-center" style="width: 30%;">
-                        <small>$${itemPrice.toFixed(2)} x ${item.quantity}</small>
-                    </div>
-                    <div class="text-end" style="width: 20%;">
-                        <strong>$${itemTotal.toFixed(2)}</strong>
+            receiptHTML += `
+                <div class="item-row">
+                    <div class="item-name">${escapeHtml(item.product_name || item.name)}</div>
+                    ${unitInfo}
+                    <div class="item-line">
+                        <span>${item.quantity} x $${itemPrice.toFixed(2)}</span>
+                        <span>$${itemTotal.toFixed(2)}</span>
                     </div>
                 </div>
             `;
-        }).join('');
+        }
         
+        receiptHTML += `<hr>`;
+        
+        // Total
         receiptHTML += `
-                <hr class="my-2">
-                <div class="d-flex justify-content-between small">
-                    <strong>Total:</strong>
-                    <strong>$${total.toFixed(2)}</strong>
-                </div>
+            <div class="total-line">
+                <span>TOTAL</span>
+                <span>$${total.toFixed(2)}</span>
+            </div>
         `;
         
+        // Payment details for cash
         if (method === 'cash') {
             receiptHTML += `
-                <hr class="my-1">
-                <div class="d-flex justify-content-between small">
+                <div class="payment-line">
                     <span>Amount Tendered:</span>
                     <span>$${paid.toFixed(2)}</span>
                 </div>
-                <div class="d-flex justify-content-between small">
+                <div class="payment-line">
                     <span>Change:</span>
-                    <span class="text-success">$${change.toFixed(2)}</span>
+                    <span>$${change.toFixed(2)}</span>
                 </div>
             `;
         }
         
         receiptHTML += `
-                <hr class="my-1">
-                <div class="small">Payment: ${method.toUpperCase()}</div>
-                <hr class="my-1">
-                <div class="small">Cashier: ${transaction.cashier || 'Admin'}</div>
-                <hr class="my-1">
-                <small>Thank you! Please come again</small>
+            <div class="payment-line">
+                <span>Payment:</span>
+                <span>${method.toUpperCase()}</span>
+            </div>
+            <div class="payment-line">
+                <span>Cashier:</span>
+                <span>${transaction.cashier || 'Admin'}</span>
+            </div>
+            <hr>
+            <div class="footer">
+                Thank you! Please come again
             </div>
         `;
         
         return receiptHTML;
     }
-
     let filteredTransactions = [];
 
     function applyTransactionFilters() {
@@ -2550,63 +2553,66 @@
         const total = items.reduce((sum, item) => sum + ((item.sell_price || item.price || 0) * item.quantity), 0);
         
         let receiptHTML = `
-            <div class="text-center">
-                <img src="/static/images/reqlogo.jpg" style="height: 45px; width: auto;" alt="ConnectLink Properties Logo">
-                <h6 class="fw-bold mt-1">Connect Link Properties</h6>
+            <div class="receipt-header">
+                <img src="/static/images/reqlogo.jpg" style="height: 40px; width: auto;" alt="Logo">
+                <h6>Connect Link Properties</h6>
                 <small>Hardware Supply</small>
-                <hr class="my-1">
-                <small>${new Date().toLocaleString()}</small>
-                <hr class="my-1">
+                <div>${new Date().toLocaleString()}</div>
+            </div>
+            <hr>
         `;
         
-        // Items list with proper layout
-        receiptHTML += items.map(item => {
+        // Items list
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
             const itemPrice = item.sell_price || item.price || 0;
             const itemTotal = itemPrice * item.quantity;
+            const unitInfo = (item.unit_type && item.unit_details) ? `<div class="item-detail">${item.unit_type}: ${item.unit_details}</div>` : '';
             
-            return `
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="text-start" style="width: 45%;">
-                        <strong>${escapeHtml(item.name)}</strong>
-                        ${item.unit_type && item.unit_details ? `<div><small class="text-muted">${item.unit_type}: ${item.unit_details}</small></div>` : ''}
-                    </div>
-                    <div class="text-center" style="width: 30%;">
-                        <small>$${itemPrice.toFixed(2)} x ${item.quantity}</small>
-                    </div>
-                    <div class="text-end" style="width: 20%;">
-                        <strong>$${itemTotal.toFixed(2)}</strong>
+            receiptHTML += `
+                <div class="item-row">
+                    <div class="item-name">${escapeHtml(item.name)}</div>
+                    ${unitInfo}
+                    <div class="item-line">
+                        <span>${item.quantity} x $${itemPrice.toFixed(2)}</span>
+                        <span>$${itemTotal.toFixed(2)}</span>
                     </div>
                 </div>
             `;
-        }).join('');
+        }
         
+        receiptHTML += `<hr>`;
+        
+        // Total
         receiptHTML += `
-                <hr class="my-2">
-                <div class="d-flex justify-content-between small">
-                    <strong>Total:</strong>
-                    <strong>$${total.toFixed(2)}</strong>
-                </div>
+            <div class="total-line">
+                <span>TOTAL</span>
+                <span>$${total.toFixed(2)}</span>
+            </div>
         `;
         
+        // Payment details for cash
         if (method === 'cash') {
             receiptHTML += `
-                <hr class="my-1">
-                <div class="d-flex justify-content-between small">
+                <div class="payment-line">
                     <span>Amount Tendered:</span>
                     <span>$${paid.toFixed(2)}</span>
                 </div>
-                <div class="d-flex justify-content-between small">
+                <div class="payment-line">
                     <span>Change:</span>
-                    <span class="text-success">$${change.toFixed(2)}</span>
+                    <span>$${change.toFixed(2)}</span>
                 </div>
             `;
         }
         
         receiptHTML += `
-                <hr class="my-1">
-                <div class="small">Payment: ${method.toUpperCase()}</div>
-                <hr class="my-1">
-                <small>Thank you! Please come again</small>
+            <div class="payment-line">
+                <span>Payment:</span>
+                <span>${method.toUpperCase()}</span>
+            </div>
+            <hr>
+            <div class="footer">
+                Thank you! Please come again
             </div>
         `;
         
@@ -2621,11 +2627,23 @@
             <head>
                 <title>Receipt</title>
                 <style>
-                    body {
-                        font-family: monospace;
-                        padding: 10px;
+                    @page {
+                        size: 80mm auto;
                         margin: 0;
-                        font-size: 12px;
+                    }
+                    body {
+                        font-family: 'Courier New', monospace;
+                        width: 80mm;
+                        margin: 0 auto;
+                        padding: 8px 5px;
+                        font-size: 11px;
+                        line-height: 1.3;
+                        background: white;
+                    }
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
                     }
                     .text-center {
                         text-align: center;
@@ -2637,30 +2655,69 @@
                         text-align: right;
                     }
                     hr {
-                        margin: 5px 0;
+                        margin: 4px 0;
                         border: none;
-                        border-top: 1px dashed #ccc;
+                        border-top: 1px dashed #888;
                     }
-                    table, .table-layout {
-                        width: 100%;
+                    .receipt-header {
+                        text-align: center;
+                        margin-bottom: 8px;
+                    }
+                    .receipt-header img {
+                        max-width: 120px;
+                        height: auto;
+                        margin-bottom: 4px;
+                    }
+                    .receipt-header h6 {
+                        font-size: 14px;
+                        font-weight: bold;
+                        margin: 2px 0;
+                    }
+                    .receipt-header small {
+                        font-size: 9px;
                     }
                     .item-row {
-                        margin: 5px 0;
+                        margin: 6px 0;
+                        width: 100%;
                     }
                     .item-name {
-                        text-align: left;
-                        width: 45%;
-                        display: inline-block;
+                        font-weight: bold;
+                        word-break: break-word;
                     }
-                    .item-price-qty {
+                    .item-detail {
+                        font-size: 9px;
+                        color: #666;
+                        margin-top: 2px;
+                    }
+                    .item-line {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 2px;
+                    }
+                    .total-line {
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 5px 0;
+                        font-weight: bold;
+                    }
+                    .payment-line {
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 3px 0;
+                    }
+                    .footer {
                         text-align: center;
-                        width: 30%;
-                        display: inline-block;
+                        margin-top: 10px;
+                        font-size: 9px;
                     }
-                    .item-total {
-                        text-align: right;
-                        width: 20%;
-                        display: inline-block;
+                    .divider {
+                        border-top: 1px dashed #888;
+                        margin: 8px 0;
+                    }
+                    .transaction-number {
+                        font-size: 9px;
+                        text-align: center;
+                        margin: 5px 0;
                     }
                 </style>
             </head>
