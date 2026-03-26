@@ -2127,141 +2127,148 @@
         `;
     }
 
-    function toggleItemsDetail(elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.classList.toggle('show');
+function toggleItemsDetail(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        if (element.style.display === 'none' || element.style.display === '') {
+            element.style.display = 'block';
+        } else {
+            element.style.display = 'none';
         }
     }
+}
 
-    function renderFilteredTransactions() {
-        const tbody = document.getElementById('transactionsList');
-        if (!tbody) return;
-        
-        const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
-        
-        if (!transactionsToShow.length) {
-            tbody.innerHTML = '=<td colspan="7" class="text-center">No transactions found<\/td>=';
-            return;
-        }
-        
-        let htmlString = '';
-        
-        for (let i = 0; i < transactionsToShow.length; i++) {
-            const t = transactionsToShow[i];
-            const transactionId = t.id || i;
-            
-            // Format date in dd/mm/yyyy hh:mm:ss format
-            let dateStr = '';
-            if (t.created_at || t.date) {
-                const date = new Date(t.created_at || t.date);
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                const seconds = String(date.getSeconds()).padStart(2, '0');
-                dateStr = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-            }
-            
-            // Build items HTML with unit details
-            let itemsHtml = '';
-            if (t.items && t.items.length > 0) {
-                // Preview text
-                let previewText = '';
-                const firstTwo = t.items.slice(0, 2);
-                const itemNames = [];
-                for (let j = 0; j < firstTwo.length; j++) {
-                    let name = firstTwo[j].product_name || firstTwo[j].name;
-                    if (firstTwo[j].unit_details) {
-                        name = name + ' (' + firstTwo[j].unit_details + ')';
-                    }
-                    itemNames.push(name);
-                }
-                previewText = itemNames.join(', ');
-                if (t.items.length > 2) {
-                    previewText = previewText + ' + ' + (t.items.length - 2) + ' more';
-                }
-                
-                let itemsListHTML = '';
-                for (let j = 0; j < t.items.length; j++) {
-                    const item = t.items[j];
-                    const itemName = escapeHtml(item.product_name || item.name);
-                    const itemPrice = item.price || item.price_at_time || 0;
-                    const itemTotal = itemPrice * item.quantity;
-                    const unitType = item.unit_type || '';
-                    const unitDetails = item.unit_details || '';
-                    
-                    let unitInfo = '';
-                    if (unitType || unitDetails) {
-                        if (unitType && unitDetails) {
-                            unitInfo = '<div><small class="text-muted">' + unitType + ': ' + unitDetails + '</small></div>';
-                        } else if (unitType) {
-                            unitInfo = '<div><small class="text-muted">' + unitType + '</small></div>';
-                        } else if (unitDetails) {
-                            unitInfo = '<div><small class="text-muted">' + unitDetails + '</small></div>';
-                        }
-                    }
-                    
-                    itemsListHTML = itemsListHTML + 
-                        '<li style="padding: 8px 0; border-bottom: 1px solid #eee;">' +
-                            '<div class="d-flex justify-content-between align-items-start">' +
-                                '<div class="text-start" style="flex: 2;">' +
-                                    '<strong>' + itemName + '</strong>' +
-                                    unitInfo +
-                                '</div>' +
-                                '<div class="text-center" style="flex: 1;">' +
-                                    '<small>$' + itemPrice.toFixed(2) + ' x ' + item.quantity + '</small>' +
-                                '</div>' +
-                                '<div class="text-end" style="flex: 1;">' +
-                                    '<strong>$' + itemTotal.toFixed(2) + '</strong>' +
-                                '</div>' +
-                            '</div>' +
-                        '</li>';
-                }
-                
-                itemsHtml = 
-                    '<div>' +
-                        '<span style="cursor: pointer; color: #0a2b3e; text-decoration: underline; font-size: 0.7rem;" onclick="toggleItemsDetail(\'items-' + transactionId + '\')">' +
-                            '<i class="fas fa-list me-1"></i>' + escapeHtml(previewText) +
-                        '</span>' +
-                        '<div id="items-' + transactionId + '" class="transaction-items-detail" style="display: none; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; font-size: 0.7rem;">' +
-                            '<ul style="margin: 0; padding-left: 0; list-style: none;">' + itemsListHTML + '</ul>' +
-                        '</div>' +
-                    '</div>';
-            } else {
-                itemsHtml = '<span class="text-muted">No items</span>';
-            }
-            
-            // Build payment badge class
-            let paymentBadgeClass = 'bg-warning';
-            if (t.payment_method === 'cash') {
-                paymentBadgeClass = 'bg-success';
-            } else if (t.payment_method === 'card') {
-                paymentBadgeClass = 'bg-info';
-            }
-            
-            // Format transaction number
-            let transNum = t.transaction_number || 'N/A';
-            if (transNum.length > 20) {
-                transNum = transNum.substring(0, 17) + '...';
-            }
-            
-            // Build row
-            htmlString = htmlString + 
-                '<tr>' +
-                    '<td><small>' + dateStr + '</small>\\n' +
-                    '}\\n<small class="text-muted">' + transNum + '</small>\\n' +
-                    '}\\n' + itemsHtml + '\\n' +
-                    '<td class="fw-bold text-success">$' + (t.total || 0).toFixed(2) + '\\n' +
-                    '}\\n<span class="badge ' + paymentBadgeClass + '">' + (t.payment_method || 'N/A') + '</span>\\n' +
-                    '}\\n<small>' + (t.cashier || 'Admin') + '</small>\\n' +
-                    '}\\n<button class="btn-view-receipt" onclick="viewReceipt(\'' + (t.transaction_number || t.id) + '\')"><i class="fas fa-receipt me-1"></i>View Receipt</button>\\n' +
-                ' </div>';
-        }
-        
-        tbody.innerHTML = htmlString;
+function renderFilteredTransactions() {
+    const tbody = document.getElementById('transactionsList');
+    if (!tbody) return;
+    
+    const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
+    
+    if (!transactionsToShow.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No transactions found</td></tr>';
+        return;
     }
+    
+    let htmlString = '';
+    
+    for (let i = 0; i < transactionsToShow.length; i++) {
+        const t = transactionsToShow[i];
+        const transactionId = t.id || i;
+        
+        // Format date in dd/mm/yyyy hh:mm:ss format
+        let dateStr = '';
+        if (t.created_at) {
+            const date = new Date(t.created_at);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            dateStr = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        }
+        
+        // Build items HTML
+        let itemsHtml = '';
+        if (t.items && t.items.length > 0) {
+            // Preview text - first 2 items
+            let previewText = '';
+            const firstTwo = t.items.slice(0, 2);
+            const itemNames = [];
+            for (let j = 0; j < firstTwo.length; j++) {
+                let name = firstTwo[j].product_name || firstTwo[j].name;
+                if (firstTwo[j].unit_details) {
+                    name = name + ' (' + firstTwo[j].unit_details + ')';
+                }
+                itemNames.push(name);
+            }
+            previewText = itemNames.join(', ');
+            if (t.items.length > 2) {
+                previewText = previewText + ' + ' + (t.items.length - 2) + ' more';
+            }
+            
+            // Build items list HTML for dropdown
+            let itemsListHTML = '';
+            for (let j = 0; j < t.items.length; j++) {
+                const item = t.items[j];
+                const itemName = escapeHtml(item.product_name || item.name);
+                const itemPrice = item.price || item.price_at_time || 0;
+                const itemTotal = itemPrice * item.quantity;
+                const unitType = item.unit_type || '';
+                const unitDetails = item.unit_details || '';
+                
+                let unitInfo = '';
+                if (unitType && unitDetails) {
+                    unitInfo = '<div><small class="text-muted">' + escapeHtml(unitType) + ': ' + escapeHtml(unitDetails) + '</small></div>';
+                } else if (unitType) {
+                    unitInfo = '<div><small class="text-muted">' + escapeHtml(unitType) + '</small></div>';
+                } else if (unitDetails) {
+                    unitInfo = '<div><small class="text-muted">' + escapeHtml(unitDetails) + '</small></div>';
+                }
+                
+                itemsListHTML += 
+                    '<li style="padding: 8px 0; border-bottom: 1px solid #eee;">' +
+                        '<div class="d-flex justify-content-between align-items-start">' +
+                            '<div class="text-start" style="flex: 2;">' +
+                                '<strong>' + itemName + '</strong>' +
+                                unitInfo +
+                            '</div>' +
+                            '<div class="text-center" style="flex: 1;">' +
+                                '<small>$' + itemPrice.toFixed(2) + ' x ' + item.quantity + '</small>' +
+                            '</div>' +
+                            '<div class="text-end" style="flex: 1;">' +
+                                '<strong>$' + itemTotal.toFixed(2) + '</strong>' +
+                            '</div>' +
+                        '</div>' +
+                    '</li>';
+            }
+            
+            itemsHtml = 
+                '<div>' +
+                    '<span style="cursor: pointer; color: #0a2b3e; text-decoration: underline; font-size: 0.7rem;" onclick="toggleItemsDetail(\'items-' + transactionId + '\')">' +
+                        '<i class="fas fa-list me-1"></i>' + escapeHtml(previewText) +
+                    '</span>' +
+                    '<div id="items-' + transactionId + '" class="transaction-items-detail" style="display: none; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; font-size: 0.7rem;">' +
+                        '<ul style="margin: 0; padding-left: 0; list-style: none;">' + itemsListHTML + '</ul>' +
+                    '</div>' +
+                '</div>';
+        } else {
+            itemsHtml = '<span class="text-muted">No items</span>';
+        }
+        
+        // Build payment badge class
+        let paymentBadgeClass = 'bg-warning';
+        let paymentDisplay = (t.payment_method || 'N/A').toUpperCase();
+        if (t.payment_method === 'cash') {
+            paymentBadgeClass = 'bg-success';
+        } else if (t.payment_method === 'card') {
+            paymentBadgeClass = 'bg-info';
+        } else if (t.payment_method === 'transfer') {
+            paymentBadgeClass = 'bg-primary';
+            paymentDisplay = 'Transfer';
+        }
+        
+        // Format transaction number
+        let transNum = t.transaction_number || 'N/A';
+        if (transNum.length > 20) {
+            transNum = transNum.substring(0, 17) + '...';
+        }
+        
+        // Build row - FIXED: removed stray backslashes and newlines
+        htmlString += 
+            '<tr>' +
+                '<td><small>' + dateStr + '</small></td>' +
+                '<td><small class="text-muted">' + escapeHtml(transNum) + '</small></td>' +
+                '<td>' + itemsHtml + '</td>' +
+                '<td class="fw-bold text-success">$' + (t.total || 0).toFixed(2) + '</td>' +
+                '<td><span class="badge ' + paymentBadgeClass + '">' + paymentDisplay + '</span></td>' +
+                '<td><small>' + escapeHtml(t.cashier || 'Admin') + '</small></td>' +
+                '<td><button class="btn-view-receipt" onclick="viewReceipt(\'' + (t.transaction_number || t.id) + '\')"><i class="fas fa-receipt me-1"></i>View Receipt</button></td>' +
+            '</tr>';
+    }
+    
+    tbody.innerHTML = htmlString;
+}
     // ==================== EXPORT FUNCTIONS ====================
 
     function downloadTransactionsExcel() {
