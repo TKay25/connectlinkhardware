@@ -1495,8 +1495,7 @@
                 dateStr = date.toLocaleString();
             }
             
-            return '业' +
-                '<td><small>' + dateStr + '</small></td>' +
+            return '<td><small>' + dateStr + '</small></td>' +
                 '<td><small class="text-muted">' + (t.transaction_number || 'N/A') + '</small></td>' +
                 '<td>' + itemsHtml + '</td>' +
                 '<td class="fw-bold text-success">$' + ((t.total || 0).toFixed(2)) + '</td>' +
