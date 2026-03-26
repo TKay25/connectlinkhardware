@@ -1353,15 +1353,16 @@
             
             console.log('Transaction response status:', transactionResponse.status);
             
+            // Check if response is OK (status 200-299)
             if (transactionResponse.ok) {
                 const transactionData = await transactionResponse.json();
                 console.log('Transaction data:', transactionData);
                 
+                // If success is true, return true WITHOUT showing any error
                 if (transactionData.success === true) {
-                    // REMOVE THIS TOAST - don't show here
-                    // showToast('Payment successful!', 'success');
-                    return true;
+                    return true;  // DO NOT show any toast here
                 } else {
+                    // Only show error if success is false
                     showToast(transactionData.error || 'Payment failed', 'error');
                     return false;
                 }
