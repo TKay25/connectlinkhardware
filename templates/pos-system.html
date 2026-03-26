@@ -1619,8 +1619,101 @@
     // API Base URL
     const API_BASE = window.location.origin;
     
+    let salesTrendChart = null;
+    let categorySalesChart = null;
+    let topProductsChart = null;
+    let categoryMarginChart = null;
+    let hourlySalesChart = null;
+
     let selectedFundingSource = "profit"; // Default to profit
     let currentTotalProfit = 0;
+
+    async function exportSalesReport(type) {
+        if (!currentReportData.length) {
+            showToast('No data to export', 'error');
+            return;
+        }
+        
+        const totalRevenue = currentReportData.reduce((s, t) => s + t.total, 0);
+        const totalProfit = currentReportData.reduce((s, t) => s + (t.profit || 0), 0);
+        
+        const reportData = currentReportData.map(t => ({
+            'Date': new Date(t.created_at).toLocaleDateString('en-ZA'),
+            'Transaction #': t.transaction_number,
+            'Items': t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0,
+            'Revenue': t.total,
+            'Profit': t.profit || 0,
+            'Profit Margin %': t.total > 0 ? ((t.profit || 0) / t.total * 100).toFixed(1) : 0,
+            'Payment Method': t.payment_method,
+            'Cashier': t.cashier
+        }));
+        
+        const ws = XLSX.utils.json_to_sheet(reportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
+        
+        const filename = `sales_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, filename);
+        showToast('Export complete!', 'success');
+    }
+
+    function updateReportDateRange() {
+        const period = document.getElementById('reportPeriod').value;
+        const startDiv = document.getElementById('dateRangeStartDiv');
+        const endDiv = document.getElementById('dateRangeEndDiv');
+        
+        if (period === 'custom') {
+            startDiv.style.display = 'block';
+            endDiv.style.display = 'block';
+        } else {
+            startDiv.style.display = 'none';
+            endDiv.style.display = 'none';
+        }
+    }
+
+    async function loadSalesReport() {
+        showLoader('Loading sales report...');
+        try {
+            const period = document.getElementById('reportPeriod').value;
+            let startDate = '', endDate = '';
+            const today = new Date();
+            
+            if (period === 'custom') {
+                startDate = document.getElementById('reportStartDate').value;
+                endDate = document.getElementById('reportEndDate').value;
+            } else if (period === 'today') {
+                startDate = endDate = today.toISOString().split('T')[0];
+            } else if (period === 'yesterday') {
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+                startDate = endDate = yesterday.toISOString().split('T')[0];
+            } else if (period === 'week') {
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - today.getDay());
+                startDate = weekStart.toISOString().split('T')[0];
+                endDate = today.toISOString().split('T')[0];
+            } else if (period === 'month') {
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                endDate = today.toISOString().split('T')[0];
+            }
+            
+            const response = await fetch(`${API_BASE}/api/transactions?limit=2000`, { credentials: 'include' });
+            const data = await response.json();
+            
+            if (data.success) {
+                const filtered = data.transactions.filter(t => {
+                    const transDate = new Date(t.created_at).toISOString().split('T')[0];
+                    return transDate >= startDate && transDate <= endDate;
+                });
+                renderSalesReport(filtered);
+            }
+        } catch (error) {
+            console.error('Error loading sales report:', error);
+            showToast('Error loading report', 'error');
+        } finally {
+            hideLoader();
+        }
+    }
 
     function renderSalesReport(transactions) {
         // Calculate totals
