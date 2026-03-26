@@ -475,6 +475,10 @@ def create_transaction():
         
         # Get Zimbabwe time
         zimbabwe_now = get_zimbabwe_time()
+
+        print("yearrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
+
+        print(zimbabwe_now)
         
         # Insert transaction with explicit Zimbabwe time
         trans_query = """
