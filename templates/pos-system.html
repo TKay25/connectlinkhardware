@@ -799,7 +799,23 @@
         .btn-view-receipt i {
             font-size: 0.7rem;
         }
+        /* Date/Time styling */
+        #currentDate {
+            font-size: 0.65rem;
+            line-height: 1.2;
+        }
 
+        #currentTime {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .top-bar .vr {
+            height: 30px;
+            width: 1px;
+            background: #e9ecef;
+        }
     </style>
 </head>
 <body>
@@ -870,16 +886,23 @@
         <div class="main-content" id="mainContent">
             <!-- Top Bar with Logout Button -->
             <div class="top-bar">
-                <div class="d-flex justify-content-between align-items-center w-100">
-                    <div class="d-flex align-items-center gap-2 mx-auto">
+                <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
                         <img src="/static/images/reqlogo.jpg" style="height: 28px; width: auto;" alt="ConnectLink Properties Logo">
                         <span class="fw-semibold" style="color: #0a2b3e; font-size: 0.85rem;">ConnectLink Properties Hardware</span>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="small"><i class="fas fa-user-circle me-1"></i> <span id="userName">Administrator</span></span>
-                        <button class="logout-top-btn" id="logoutBtn">
-                            <i class="fas fa-sign-out-alt me-1"></i>Logout
-                        </button>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="text-end">
+                            <div class="small text-muted" id="currentDate">Loading...</div>
+                            <div class="small fw-bold" id="currentTime" style="color: #0a2b3e;">--:--:--</div>
+                        </div>
+                        <div class="vr"></div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="small"><i class="fas fa-user-circle me-1"></i> <span id="userName">Administrator</span></span>
+                            <button class="logout-top-btn" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1268,6 +1291,58 @@
     // API Base URL
     const API_BASE = window.location.origin;
     
+    // ==================== ZIMBABWE TIME FUNCTIONS ====================
+
+    function getZimbabweTime() {
+        // Zimbabwe is UTC+2 (no daylight savings)
+        const now = new Date();
+        // Convert to Zimbabwe time (UTC+2)
+        const zimbabweTime = new Date(now.getTime() + (2 * 60 * 60 * 1000));
+        return zimbabweTime;
+    }
+
+    function updateDateTime() {
+        const zimbabweTime = getZimbabweTime();
+        
+        // Format date: 26 March 2026
+        const dateOptions = { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            timeZone: 'Africa/Harare'
+        };
+        const formattedDate = zimbabweTime.toLocaleDateString('en-ZA', dateOptions);
+        
+        // Format time: 14:30:45 (24-hour format)
+        const timeOptions = { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            hour12: false,
+            timeZone: 'Africa/Harare'
+        };
+        const formattedTime = zimbabweTime.toLocaleTimeString('en-ZA', timeOptions);
+        
+        document.getElementById('currentDate').innerHTML = formattedDate;
+        document.getElementById('currentTime').innerHTML = formattedTime;
+    }
+
+    // Update time every second
+    let timeInterval;
+
+    function startDateTimeUpdater() {
+        updateDateTime();
+        if (timeInterval) clearInterval(timeInterval);
+        timeInterval = setInterval(updateDateTime, 1000);
+    }
+
+    function stopDateTimeUpdater() {
+        if (timeInterval) {
+            clearInterval(timeInterval);
+            timeInterval = null;
+        }
+    }
+
     // ==================== TRANSACTION FILTERS ====================
 
     // View receipt for a specific transaction
@@ -2874,6 +2949,9 @@
         setupLogout();
         setupAutocomplete();
         
+        // Start Zimbabwe time updater
+        startDateTimeUpdater();
+        
         await fetchCategories();
         await fetchProductsFromAPI();
         await fetchDashboardStats();
@@ -2881,7 +2959,7 @@
         
         navigateTo('pos');
     }
-    
+
     init();
 </script>
 </body>
