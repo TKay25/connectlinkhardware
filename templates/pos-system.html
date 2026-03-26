@@ -1319,7 +1319,7 @@
         const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
         
         if (!transactionsToShow.length) {
-            tbody.innerHTML = '=<td colspan="6" class="text-center">No transactions found<\/td>='；
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No transactions found</td></tr>';
             return;
         }
         
@@ -1332,17 +1332,22 @@
                 // Get item names for preview
                 const itemNames = t.items.map(item => item.product_name || item.name).slice(0, 2).join(', ');
                 const moreCount = t.items.length - 2;
-                const previewText = moreCount > 0 ? `${itemNames} + ${moreCount} more` : itemNames;
+                const previewText = moreCount > 0 ? itemNames + ' + ' + moreCount + ' more' : itemNames;
                 
                 // Build full items list HTML
-                const itemsListHTML = t.items.map(item => `
-                    <li style="padding: 4px 0; border-bottom: 1px solid #eee;">
-                        <span style="font-weight: 600;">${escapeHtml(item.product_name || item.name)}</span>
-                        <span style="color: #6c757d;"> x${item.quantity}</span>
-                        <span style="color: #0a2b3e;"> @ $${(item.price || item.price_at_time || 0).toFixed(2)}</span>
-                        <span style="float: right; font-weight: 500;">$${((item.price || item.price_at_time || 0) * item.quantity).toFixed(2)}</span>
-                    </li>
-                `).join('');
+                const itemsListHTML = t.items.map(item => {
+                    const itemName = escapeHtml(item.product_name || item.name);
+                    const itemPrice = item.price || item.price_at_time || 0;
+                    const itemTotal = itemPrice * item.quantity;
+                    return `
+                        <li style="padding: 4px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">${itemName}</span>
+                            <span style="color: #6c757d;"> x${item.quantity}</span>
+                            <span style="color: #0a2b3e;"> @ $${itemPrice.toFixed(2)}</span>
+                            <span style="float: right; font-weight: 500;">$${itemTotal.toFixed(2)}</span>
+                        </li>
+                    `;
+                }).join('');
                 
                 itemsHtml = `
                     <div>
@@ -1360,16 +1365,21 @@
                 itemsHtml = '<span class="text-muted">No items</span>';
             }
             
-            return `
-                <tr>
-                    <td><small>${new Date(t.created_at || t.date).toLocaleString()}</small></td>
-                    <td><small class="text-muted">${t.transaction_number || 'N/A'}</small></td>
-                    <td>${itemsHtml}</td>
-                    <td class="fw-bold text-success">$${(t.total || 0).toFixed(2)}</td>
-                    <td><span class="badge ${t.payment_method === 'cash' ? 'bg-success' : t.payment_method === 'card' ? 'bg-info' : 'bg-warning'}">${t.payment_method || 'N/A'}</span></td>
-                    <td><small>${t.cashier || 'Admin'}</small></td>
-                </tr>
-            `;
+            // Format date
+            let dateStr = '';
+            if (t.created_at || t.date) {
+                const date = new Date(t.created_at || t.date);
+                dateStr = date.toLocaleString();
+            }
+            
+            return '<tr>' +
+                '<td><small>' + dateStr + '</small></td>' +
+                '<td><small class="text-muted">' + (t.transaction_number || 'N/A') + '</small></td>' +
+                '<td>' + itemsHtml + '</td>' +
+                '<td class="fw-bold text-success">$' + ((t.total || 0).toFixed(2)) + '</td>' +
+                '<td><span class="badge ' + (t.payment_method === 'cash' ? 'bg-success' : t.payment_method === 'card' ? 'bg-info' : 'bg-warning') + '">' + (t.payment_method || 'N/A') + '</span></td>' +
+                '<td><small>' + (t.cashier || 'Admin') + '</small></td>' +
+            '</tr>';
         }).join('');
     }
 
