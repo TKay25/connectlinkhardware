@@ -3700,12 +3700,27 @@ function renderFilteredTransactions() {
     
     // ==================== REPORT FUNCTIONS ====================
     
+    // Either delete this function entirely or update it to check if the element exists
     function renderSalesChart() {
         const canvas = document.getElementById('salesChart');
-        if (!canvas) return;
+        if (!canvas) return; // Exit if the element doesn't exist
         const ctx = canvas.getContext('2d');
         if (salesChart) salesChart.destroy();
-        salesChart = new Chart(ctx, { type: 'line', data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Sales ($)', data: [1250, 1450, 1320, 1680, 1890, 2100, 1750], borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)', tension: 0.3, fill: true }] }, options: { responsive: true, maintainAspectRatio: true } });
+        salesChart = new Chart(ctx, { 
+            type: 'line', 
+            data: { 
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], 
+                datasets: [{ 
+                    label: 'Sales ($)', 
+                    data: [1250, 1450, 1320, 1680, 1890, 2100, 1750], 
+                    borderColor: '#0a2b3e', 
+                    backgroundColor: 'rgba(10,43,62,0.1)', 
+                    tension: 0.3, 
+                    fill: true 
+                }] 
+            }, 
+            options: { responsive: true, maintainAspectRatio: true } 
+        });
     }
     
     function renderAnalytics() {
@@ -3745,16 +3760,39 @@ function renderFilteredTransactions() {
     
     // ==================== PAGE NAVIGATION ====================
     
-    function navigateTo(page) {
-        currentPage = page;
-        document.querySelectorAll('.menu-item').forEach(item => { item.classList.remove('active'); if (item.dataset.page === page) item.classList.add('active'); });
-        const pages = { 'pos': document.getElementById('posPage'), 'inventory': document.getElementById('inventoryPage'), 'sales': document.getElementById('salesPage'), 'transactions': document.getElementById('transactionsPage'), 'analytics': document.getElementById('analyticsPage') };
-        Object.keys(pages).forEach(p => { if (pages[p]) pages[p].style.display = p === page ? 'block' : 'none'; });
-        if (page === 'inventory') renderInventory();
-        if (page === 'sales') renderSalesChart();
-        if (page === 'transactions') renderTransactions();
-        if (page === 'analytics') renderAnalytics();
+function navigateTo(page) {
+    currentPage = page;
+    document.querySelectorAll('.menu-item').forEach(item => { 
+        item.classList.remove('active'); 
+        if (item.dataset.page === page) item.classList.add('active'); 
+    });
+    
+    const pages = { 
+        'pos': document.getElementById('posPage'), 
+        'inventory': document.getElementById('inventoryPage'), 
+        'sales': document.getElementById('salesPage'), 
+        'transactions': document.getElementById('transactionsPage'), 
+        'analytics': document.getElementById('analyticsPage') 
+    };
+    
+    Object.keys(pages).forEach(p => { 
+        if (pages[p]) pages[p].style.display = p === page ? 'block' : 'none'; 
+    });
+    
+    if (page === 'inventory') {
+        renderInventory();
     }
+    if (page === 'sales') {
+        // Load the actual sales report data instead of using placeholder chart
+        loadSalesReport();
+    }
+    if (page === 'transactions') {
+        renderTransactions();
+    }
+    if (page === 'analytics') {
+        renderAnalytics();
+    }
+}
     
     // ==================== EVENT LISTENERS ====================
     

@@ -289,6 +289,38 @@ def run1():
 
 # ==================== USER AUTHENTICATION ====================
 
+@app.route('/api/stock-additions', methods=['GET'])
+@login_required
+def get_stock_additions():
+    """Get stock addition history for reinvestment tracking"""
+    query = """
+        SELECT sa.added_at as date, p.name as product_name, sa.quantity, 
+               sa.total_cost, sa.funding_source, u.full_name as user
+        FROM stock_additions sa
+        LEFT JOIN products p ON sa.product_id = p.id
+        LEFT JOIN users u ON sa.user_id = u.id
+        ORDER BY sa.added_at DESC
+        LIMIT 100
+    """
+    result = execute_query(query, fetch_all=True)
+    
+    additions = []
+    if result:
+        for row in result:
+            additions.append({
+                'date': row[0].isoformat() if row[0] else '',
+                'product_name': row[1],
+                'quantity': row[2],
+                'total_cost': float(row[3]),
+                'funding_source': row[4],
+                'user': row[5] or 'System'
+            })
+    
+    return jsonify({
+        'success': True,
+        'additions': additions
+    })
+
 @app.route('/api/login', methods=['POST'])
 def api_login():
     """API endpoint for login"""
