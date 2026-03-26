@@ -1351,27 +1351,17 @@
                 })
             });
             
-            console.log('Transaction response status:', transactionResponse.status);
+            // Always parse the response as JSON
+            const transactionData = await transactionResponse.json();
             
-            // Check if response is OK (status 200-299)
-            if (transactionResponse.ok) {
-                const transactionData = await transactionResponse.json();
-                console.log('Transaction data:', transactionData);
-                
-                // If success is true, return true WITHOUT showing any error
-                if (transactionData.success === true) {
-                    return true;  // DO NOT show any toast here
-                } else {
-                    // Only show error if success is false
-                    showToast(transactionData.error || 'Payment failed', 'error');
-                    return false;
-                }
-            } else if (transactionResponse.status === 401) {
-                window.location.href = '/login';
-                return false;
+            // Log the response for debugging
+            console.log('Transaction Response:', transactionData);
+            
+            // Check the success flag directly from the parsed JSON
+            if (transactionData.success === true) {
+                return true;
             } else {
-                const errorData = await transactionResponse.json();
-                showToast(errorData.error || 'Payment failed', 'error');
+                showToast(transactionData.error || 'Payment failed', 'error');
                 return false;
             }
         } catch (error) { 
@@ -1934,11 +1924,10 @@
         
         const success = await createTransactionAPI(cart, method, paid, change);
         
-        if (success) {
+        if (success === true) {
             updatePaymentLoaderMessage('Updating inventory...');
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            // Update local stock
             cart.forEach(cartItem => {
                 const product = products.find(p => p.id === cartItem.id);
                 if (product) product.stock -= cartItem.quantity;
@@ -1949,10 +1938,8 @@
             salesData.itemsSold += cart.reduce((sum, i) => sum + i.quantity, 0);
             
             updateStats();
-            
             hidePaymentLoader();
             
-            // Generate and show receipt
             const receiptHTML = generateReceiptHTML(cart, method, paid, change);
             document.getElementById('receiptContent').innerHTML = receiptHTML;
             new bootstrap.Modal(document.getElementById('receiptModal')).show();
@@ -1966,11 +1953,9 @@
             if (currentPage === 'inventory') renderInventory();
             if (currentPage === 'analytics') renderAnalytics();
             
-            // ONLY ONE TOAST - SHOW SUCCESS HERE
             showToast('Payment successful!', 'success');
         } else {
             hidePaymentLoader();
-            // Error toast already shown in createTransactionAPI
         }
     }
     
