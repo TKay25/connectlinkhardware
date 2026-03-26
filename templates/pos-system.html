@@ -779,24 +779,25 @@
             font-weight: 500;
         }
 
-        /* Receipt button styling */
         .btn-view-receipt {
-            background: none;
+            background: #0a2b3e;
             border: none;
-            color: #0a2b3e;
+            color: white;
             cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-view-receipt:hover {
-            background: #eef2ff;
-            color: #1e6f9f;
+            background: #1e4a6e;
+            transform: translateY(-1px);
         }
 
         .btn-view-receipt i {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
         }
 
     </style>
@@ -1501,7 +1502,7 @@
                 '<td class="fw-bold text-success">$' + ((t.total || 0).toFixed(2)) + '</td>' +
                 '<td><span class="badge ' + (t.payment_method === 'cash' ? 'bg-success' : t.payment_method === 'card' ? 'bg-info' : 'bg-warning') + '">' + (t.payment_method || 'N/A') + '</span></td>' +
                 '<td><small>' + (t.cashier || 'Admin') + '</small></td>' +
-                '<td><button class="btn-view-receipt" onclick="viewReceipt(' + (t.id || t.transaction_number) + ')" title="View Receipt"><i class="fas fa-receipt"></i></button></td>' +
+                '<td><button class="btn-view-receipt" onclick="viewReceipt(\'' + (t.transaction_number || t.id) + '\')" title="View Receipt"><i class="fas fa-receipt me-1"></i>View Receipt</button></td>' +            
             '</tr>';
         }).join('');
     }
