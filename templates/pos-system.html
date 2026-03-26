@@ -3023,45 +3023,57 @@ function renderFilteredTransactions() {
         new bootstrap.Modal(document.getElementById('editStockModal')).show();
     }
 
-    function setupFundingSelection() {
-        const profitOption = document.getElementById('fundingProfit');
-        const capitalOption = document.getElementById('fundingCapital');
+function setupFundingSelection() {
+    const profitOption = document.getElementById('fundingProfit');
+    const capitalOption = document.getElementById('fundingCapital');
+    
+    // Remove existing listeners by cloning and replacing
+    const newProfit = profitOption.cloneNode(true);
+    const newCapital = capitalOption.cloneNode(true);
+    profitOption.parentNode.replaceChild(newProfit, profitOption);
+    capitalOption.parentNode.replaceChild(newCapital, capitalOption);
+    
+    // Add click handlers to the new elements
+    newProfit.addEventListener('click', () => {
+        document.querySelectorAll('#fundingProfit, #fundingCapital').forEach(el => {
+            if (el) el.classList.remove('active');
+        });
+        newProfit.classList.add('active');
+        selectedFundingSource = "profit";
         
-        const removeListeners = () => {
-            const newProfit = profitOption.cloneNode(true);
-            const newCapital = capitalOption.cloneNode(true);
-            profitOption.parentNode.replaceChild(newProfit, profitOption);
-            capitalOption.parentNode.replaceChild(newCapital, capitalOption);
-            return { profit: newProfit, capital: newCapital };
-        };
-        
-        const { profit: newProfit, capital: newCapital } = removeListeners();
-        
-        newProfit.addEventListener('click', () => {
-            document.querySelectorAll('#fundingProfit, #fundingCapital').forEach(el => el.classList.remove('active'));
-            newProfit.classList.add('active');
-            selectedFundingSource = "profit";
-            // Trigger cost preview update
-            const quantity = parseInt(document.getElementById('newStockQuantity').value) || 0;
-            const price = parseFloat(document.getElementById('stockBuyPrice').value) || 0;
-            const totalCost = quantity * price;
+        // Trigger cost preview update
+        const quantity = parseInt(document.getElementById('newStockQuantity').value) || 0;
+        const price = parseFloat(document.getElementById('stockBuyPrice').value) || 0;
+        const totalCost = quantity * price;
+        const profitWarning = document.getElementById('profitWarning');
+        if (profitWarning) {
             if (totalCost > currentTotalProfit) {
-                document.getElementById('profitWarning').style.display = 'block';
+                profitWarning.style.display = 'block';
+                const warningProfitAmount = document.getElementById('warningProfitAmount');
+                const warningCostAmount = document.getElementById('warningCostAmount');
+                const warningAvailableAmount = document.getElementById('warningAvailableAmount');
+                if (warningProfitAmount) warningProfitAmount.innerText = `$${currentTotalProfit.toFixed(2)}`;
+                if (warningCostAmount) warningCostAmount.innerText = `$${totalCost.toFixed(2)}`;
+                if (warningAvailableAmount) warningAvailableAmount.innerText = `$${currentTotalProfit.toFixed(2)}`;
             } else {
-                document.getElementById('profitWarning').style.display = 'none';
+                profitWarning.style.display = 'none';
             }
+        }
+    });
+    
+    newCapital.addEventListener('click', () => {
+        document.querySelectorAll('#fundingProfit, #fundingCapital').forEach(el => {
+            if (el) el.classList.remove('active');
         });
+        newCapital.classList.add('active');
+        selectedFundingSource = "capital";
         
-        newCapital.addEventListener('click', () => {
-            document.querySelectorAll('#fundingProfit, #fundingCapital').forEach(el => el.classList.remove('active'));
-            newCapital.classList.add('active');
-            selectedFundingSource = "capital";
-            document.getElementById('profitWarning').style.display = 'none';
-        });
-        
-        document.getElementById('fundingProfit') = newProfit;
-        document.getElementById('fundingCapital') = newCapital;
-    }
+        const profitWarning = document.getElementById('profitWarning');
+        if (profitWarning) {
+            profitWarning.style.display = 'none';
+        }
+    });
+}
 
     
     // Update confirmAddStock to track funding source
