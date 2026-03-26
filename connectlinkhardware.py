@@ -16,8 +16,11 @@ from db_helper import get_db, execute_query
 ZIMBABWE_TZ = pytz.timezone('Africa/Harare')
 
 def get_zimbabwe_time():
-    """Get current time in Zimbabwe (Africa/Harare)"""
-    return datetime.now(ZIMBABWE_TZ)
+    """Get current time in Zimbabwe (UTC+2)"""
+    # Get current UTC time and add 2 hours
+    utc_now = datetime.utcnow()
+    zimbabwe_time = utc_now + timedelta(hours=2)
+    return zimbabwe_time
 
 
 app = Flask(__name__)
