@@ -437,62 +437,75 @@ def delete_product(product_id):
 @login_required
 def create_transaction():
     """Create new transaction"""
-    data = request.json
-    items = data.get('items', [])
-    
-    if not items:
-        return jsonify({'error': 'No items in transaction'}), 400
-    
-    subtotal = sum(item['price'] * item['quantity'] for item in items)
-    total = subtotal  # No tax as per your requirement
-    
-    transaction_number = generate_transaction_number()
-    
-    trans_query = """
-        INSERT INTO transactions (transaction_number, user_id, subtotal, tax, total, payment_method, amount_paid, change_amount, notes)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        RETURNING id
-    """
-    
-    trans_params = (
-        transaction_number,
-        session['user_id'],
-        subtotal,
-        0,  # tax
-        total,
-        data['payment_method'],
-        data.get('amount_paid', total),
-        data.get('change_amount', 0),
-        data.get('notes', '')
-    )
-    
-    trans_result = execute_query(trans_query, trans_params, fetch_one=True, commit=True)
-    transaction_id = trans_result[0]
-    
-    for item in items:
-        item_query = """
-            INSERT INTO transaction_items (transaction_id, product_id, quantity, price_at_time, subtotal)
-            VALUES (%s, %s, %s, %s, %s)
-        """
-        item_params = (
-            transaction_id,
-            item['id'],
-            item['quantity'],
-            item['price'],
-            item['price'] * item['quantity']
-        )
-        execute_query(item_query, item_params, commit=True)
+    try:
+        data = request.json
+        items = data.get('items', [])
         
-        stock_query = "UPDATE products SET stock = stock - %s WHERE id = %s"
-        execute_query(stock_query, (item['quantity'], item['id']), commit=True)
+        print("Received transaction data:", data)  # Debug print
+        
+        if not items:
+            return jsonify({'error': 'No items in transaction'}), 400
+        
+        # Calculate subtotal from items
+        subtotal = sum(item['price'] * item['quantity'] for item in items)
+        total = subtotal  # No tax
+        
+        transaction_number = generate_transaction_number()
+        
+        # Insert transaction
+        trans_query = """
+            INSERT INTO transactions (transaction_number, user_id, subtotal, tax, total, payment_method, amount_paid, change_amount, notes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """
+        
+        trans_params = (
+            transaction_number,
+            session['user_id'],
+            subtotal,
+            0,  # tax
+            total,
+            data['payment_method'],
+            data.get('amount_paid', total),
+            data.get('change_amount', 0),
+            data.get('notes', '')
+        )
+        
+        print("Transaction params:", trans_params)  # Debug print
+        
+        trans_result = execute_query(trans_query, trans_params, fetch_one=True, commit=True)
+        transaction_id = trans_result[0]
+        
+        # Insert transaction items and update stock
+        for item in items:
+            item_query = """
+                INSERT INTO transaction_items (transaction_id, product_id, quantity, price_at_time, subtotal)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            item_params = (
+                transaction_id,
+                item['id'],
+                item['quantity'],
+                item['price'],
+                item['price'] * item['quantity']
+            )
+            execute_query(item_query, item_params, commit=True)
+            
+            # Update stock
+            stock_query = "UPDATE products SET stock = stock - %s WHERE id = %s"
+            execute_query(stock_query, (item['quantity'], item['id']), commit=True)
+        
+        return jsonify({
+            'success': True,
+            'transaction_id': transaction_id,
+            'transaction_number': transaction_number,
+            'message': 'Transaction completed successfully'
+        }), 201
+        
+    except Exception as e:
+        print(f"Error creating transaction: {e}")
+        return jsonify({'error': str(e)}), 500
     
-    return jsonify({
-        'success': True,
-        'transaction_id': transaction_id,
-        'transaction_number': transaction_number,
-        'message': 'Transaction completed successfully'
-    }), 201
-
 @app.route('/api/transactions', methods=['GET'])
 @login_required
 def get_transactions():
