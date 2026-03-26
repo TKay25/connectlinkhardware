@@ -160,6 +160,41 @@ def init_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """, commit=True)
+
+    # Add all missing columns to transactions table
+    execute_query("""
+        ALTER TABLE transactions 
+        ADD COLUMN IF NOT EXISTS amount_paid DECIMAL(10,2) DEFAULT 0.00
+    """, commit=True)
+
+    execute_query("""
+        ALTER TABLE transactions 
+        ADD COLUMN IF NOT EXISTS change_amount DECIMAL(10,2) DEFAULT 0.00
+    """, commit=True)
+
+    # Also check if tax_rate exists (might be missing)
+    execute_query("""
+        ALTER TABLE transactions 
+        ADD COLUMN IF NOT EXISTS tax_rate DECIMAL(5,2) DEFAULT 10.0
+    """, commit=True)
+
+    # Check if subtotal exists
+    execute_query("""
+        ALTER TABLE transactions 
+        ADD COLUMN IF NOT EXISTS subtotal DECIMAL(10,2) DEFAULT 0.00
+    """, commit=True)
+
+    # Check if tax exists
+    execute_query("""
+        ALTER TABLE transactions 
+        ADD COLUMN IF NOT EXISTS tax DECIMAL(10,2) DEFAULT 0.00
+    """, commit=True)
+
+    # Check if total exists
+    execute_query("""
+        ALTER TABLE transactions 
+        ADD COLUMN IF NOT EXISTS total DECIMAL(10,2) DEFAULT 0.00
+    """, commit=True)
     
     # Transaction Items table
     execute_query("""
