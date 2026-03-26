@@ -2035,8 +2035,7 @@ function renderSalesReport(transactions) {
             const data = categoryData[cat];
             const margin = data.sales > 0 ? (data.profit / data.sales * 100).toFixed(1) : 0;
             const contribution = totalRevenueForContribution > 0 ? (data.sales / totalRevenueForContribution * 100).toFixed(1) : 0;
-            return `一起
-                        <td><strong>${escapeHtml(cat)}</strong></td>
+            return `<td><strong>${escapeHtml(cat)}</strong></td>
                         <td>${data.quantity}</td>
                         <td>$${data.sales.toFixed(2)}</td>
                         <td>$${data.cogs.toFixed(2)}</td>
@@ -2075,15 +2074,14 @@ function renderSalesReport(transactions) {
     const reinvestmentHistoryList = document.getElementById('reinvestmentHistoryList');
     if (reinvestmentHistoryList) {
         reinvestmentHistoryList.innerHTML = reinvestmentHistory.length ? 
-            reinvestmentHistory.map(h => `一起
-                <td>${h.date}</td>
+            reinvestmentHistory.map(h => `<td>${h.date}</td>
                 <td>${escapeHtml(h.product_name)}</td>
                 <td>${h.quantity}</td>
                 <td>$${h.total_cost.toFixed(2)}</td>
                 <td><span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span></td>
                 <td>${escapeHtml(h.user)}</td>
              </tr>`).join('') : 
-            '一起<td colspan="6" class="text-center">No reinvestment history</td> </tr>';
+            '<td colspan="6" class="text-center">No reinvestment history</td> </tr>';
     }
 }
 
