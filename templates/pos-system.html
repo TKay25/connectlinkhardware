@@ -754,7 +754,7 @@
         }
 
         .transaction-items-detail.show {
-            display: block;
+            display: block !important;
         }
 
         .transaction-items-detail ul {
@@ -1319,17 +1319,52 @@
         const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
         
         if (!transactionsToShow.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No transactions found</td></tr>';
+            tbody.innerHTML = '=<td colspan="6" class="text-center">No transactions found<\/td>='；
             return;
         }
         
         tbody.innerHTML = transactionsToShow.map((t, index) => {
             const transactionId = t.id || index;
+            
+            // Format the items list correctly
+            let itemsHtml = '';
+            if (t.items && t.items.length > 0) {
+                // Get item names for preview
+                const itemNames = t.items.map(item => item.product_name || item.name).slice(0, 2).join(', ');
+                const moreCount = t.items.length - 2;
+                const previewText = moreCount > 0 ? `${itemNames} + ${moreCount} more` : itemNames;
+                
+                // Build full items list HTML
+                const itemsListHTML = t.items.map(item => `
+                    <li style="padding: 4px 0; border-bottom: 1px solid #eee;">
+                        <span style="font-weight: 600;">${escapeHtml(item.product_name || item.name)}</span>
+                        <span style="color: #6c757d;"> x${item.quantity}</span>
+                        <span style="color: #0a2b3e;"> @ $${(item.price || item.price_at_time || 0).toFixed(2)}</span>
+                        <span style="float: right; font-weight: 500;">$${((item.price || item.price_at_time || 0) * item.quantity).toFixed(2)}</span>
+                    </li>
+                `).join('');
+                
+                itemsHtml = `
+                    <div>
+                        <span style="cursor: pointer; color: #0a2b3e; text-decoration: underline; font-size: 0.7rem;" onclick="toggleItemsDetail('items-${transactionId}')">
+                            <i class="fas fa-list me-1"></i>${escapeHtml(previewText)}
+                        </span>
+                        <div id="items-${transactionId}" class="transaction-items-detail" style="display: none; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; font-size: 0.7rem;">
+                            <ul style="margin: 0; padding-left: 20px; list-style: none;">
+                                ${itemsListHTML}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } else {
+                itemsHtml = '<span class="text-muted">No items</span>';
+            }
+            
             return `
                 <tr>
-                    <td><small>${t.date || t.created_at || ''}</small></td>
+                    <td><small>${new Date(t.created_at || t.date).toLocaleString()}</small></td>
                     <td><small class="text-muted">${t.transaction_number || 'N/A'}</small></td>
-                    <td>${getItemsHTML(t.items, transactionId)}</td>
+                    <td>${itemsHtml}</td>
                     <td class="fw-bold text-success">$${(t.total || 0).toFixed(2)}</td>
                     <td><span class="badge ${t.payment_method === 'cash' ? 'bg-success' : t.payment_method === 'card' ? 'bg-info' : 'bg-warning'}">${t.payment_method || 'N/A'}</span></td>
                     <td><small>${t.cashier || 'Admin'}</small></td>
