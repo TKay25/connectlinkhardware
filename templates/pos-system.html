@@ -1790,11 +1790,10 @@
         }
         
         const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-        
         const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
                                     selectedPaymentMethod === 'card' ? 'Card' : 'Bank Transfer';
         
-        const confirmationHTML = `
+        let confirmationHTML = `
             <div>
                 <div class="mb-2 p-2 bg-light rounded">
                     <h6 class="fw-bold mb-1 small">Order Summary</h6>
@@ -1802,9 +1801,9 @@
                         <div class="d-flex justify-content-between py-1 border-bottom small">
                             <div>
                                 <strong>${escapeHtml(item.name)}</strong><br>
-                                <span class="text-muted">$${item.sell_price.toFixed(2)} x ${item.quantity}</span>
+                                <span class="text-muted">$${(item.sell_price || item.price || 0).toFixed(2)} x ${item.quantity}</span>
                             </div>
-                            <span class="fw-bold">$${(item.sell_price * item.quantity).toFixed(2)}</span>
+                            <span class="fw-bold">$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span>
                         </div>
                     `).join('')}
                 </div>
@@ -1814,6 +1813,28 @@
                         <span style="color:#0a2b3e;">$${total.toFixed(2)}</span>
                     </div>
                 </div>
+        `;
+        
+        // For cash payments, show amount tendered and change fields
+        if (selectedPaymentMethod === 'cash') {
+            const cashAmount = parseFloat(document.getElementById('cashAmount').value) || 0;
+            const change = cashAmount - total;
+            
+            confirmationHTML += `
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Amount Tendered:</span>
+                        <span class="fw-bold">$${cashAmount.toFixed(2)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span>Change:</span>
+                        <span class="fw-bold text-success">$${change >= 0 ? change.toFixed(2) : '0.00'}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        confirmationHTML += `
                 <div class="alert alert-info small py-1 mb-0">
                     <i class="fas fa-credit-card me-1"></i>Payment: ${paymentMethodDisplay}
                 </div>
@@ -1916,55 +1937,53 @@
     
     function generateReceiptHTML(items, method, paid, change) {
         const total = items.reduce((sum, i) => sum + ((i.sell_price || i.price || 0) * i.quantity), 0);
-        return `<div class="text-center">
-            <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
-            <h6 class="fw-bold mt-1">Connect Link Properties</h6>
-            <small>Hardware Supply</small>
-            <hr class="my-1">
-            <small>${new Date().toLocaleString()}</small>
-            <hr class="my-1">
-            ${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span></div>`).join('')}
-            <hr class="my-1">
-            <div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div>
-            <hr class="my-1">
-            <div class="d-flex justify-content-between small"><span>Payment Method:</span><span>${method.toUpperCase()}</span></div>`;
         
-        // Add amount paid and change for cash payments
-        if (method === 'cash') {
-            return `<div class="text-center">
+        // Base receipt template
+        let receiptHTML = `
+            <div class="text-center">
                 <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
                 <h6 class="fw-bold mt-1">Connect Link Properties</h6>
                 <small>Hardware Supply</small>
                 <hr class="my-1">
                 <small>${new Date().toLocaleString()}</small>
                 <hr class="my-1">
-                ${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span></div>`).join('')}
+                ${items.map(item => `
+                    <div class="d-flex justify-content-between small">
+                        <span>${escapeHtml(item.name)} x${item.quantity}</span>
+                        <span>$${((i.sell_price || i.price || 0) * i.quantity).toFixed(2)}</span>
+                    </div>
+                `).join('')}
                 <hr class="my-1">
-                <div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div>
-                <div class="d-flex justify-content-between small"><span>Amount Paid:</span><span>$${paid.toFixed(2)}</span></div>
-                <div class="d-flex justify-content-between small"><span>Change:</span><span>$${change.toFixed(2)}</span></div>
+                <div class="d-flex justify-content-between small">
+                    <strong>Total:</strong>
+                    <strong>$${total.toFixed(2)}</strong>
+                </div>
+        `;
+        
+        // For cash payments, show amount tendered and change
+        if (method === 'cash') {
+            receiptHTML += `
+                <hr class="my-1">
+                <div class="d-flex justify-content-between small">
+                    <span>Amount Tendered:</span>
+                    <span>$${paid.toFixed(2)}</span>
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span>Change:</span>
+                    <span class="text-success">$${change.toFixed(2)}</span>
+                </div>
+            `;
+        }
+        
+        receiptHTML += `
                 <hr class="my-1">
                 <div class="small">Payment: ${method.toUpperCase()}</div>
                 <hr class="my-1">
-                <small>Thank you!</small>
-            </div>`;
-        }
+                <small>Thank you! Please come again</small>
+            </div>
+        `;
         
-        return `<div class="text-center">
-            <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
-            <h6 class="fw-bold mt-1">Connect Link Properties</h6>
-            <small>Hardware Supply</small>
-            <hr class="my-1">
-            <small>${new Date().toLocaleString()}</small>
-            <hr class="my-1">
-            ${items.map(item => `<div class="d-flex justify-content-between small"><span>${escapeHtml(item.name)} x${item.quantity}</span><span>$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span></div>`).join('')}
-            <hr class="my-1">
-            <div class="d-flex justify-content-between small"><strong>Total:</strong><strong>$${total.toFixed(2)}</strong></div>
-            <hr class="my-1">
-            <div class="small">Payment: ${method.toUpperCase()}</div>
-            <hr class="my-1">
-            <small>Thank you!</small>
-        </div>`;
+        return receiptHTML;
     }
     
     function printReceipt() {
@@ -2054,6 +2073,36 @@
             });
         }
         
+
+        const cashAmount = document.getElementById('cashAmount');
+        if (cashAmount) {
+            cashAmount.addEventListener('input', () => { 
+                const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); 
+                const cash = parseFloat(cashAmount.value); 
+                const changeDue = document.getElementById('changeDue'); 
+                if (!isNaN(cash) && cash >= total) { 
+                    if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; 
+                    
+                    // Also update the confirmation modal if it's open
+                    const confirmationModal = document.getElementById('confirmationModal');
+                    if (confirmationModal && confirmationModal.classList.contains('show')) {
+                        // Refresh the confirmation modal content
+                        const modal = bootstrap.Modal.getInstance(confirmationModal);
+                        if (modal) {
+                            // Temporarily hide and show to refresh content
+                            modal.hide();
+                            showPaymentConfirmation();
+                            modal.show();
+                        }
+                    }
+                } else if (!isNaN(cash)) { 
+                    if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; 
+                } else { 
+                    if (changeDue) changeDue.innerHTML = ''; 
+                } 
+            });
+        }
+
         document.querySelectorAll('.payment-method').forEach(el => {
             el.addEventListener('click', function() {
                 document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
@@ -2065,22 +2114,6 @@
                 }
             });
         });
-        
-        const cashAmount = document.getElementById('cashAmount');
-        if (cashAmount) {
-            cashAmount.addEventListener('input', () => { 
-                const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); 
-                const cash = parseFloat(cashAmount.value); 
-                const changeDue = document.getElementById('changeDue'); 
-                if (!isNaN(cash) && cash >= total) { 
-                    if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; 
-                } else if (!isNaN(cash)) { 
-                    if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; 
-                } else { 
-                    if (changeDue) changeDue.innerHTML = ''; 
-                } 
-            });
-        }
         
         document.querySelectorAll('.menu-item').forEach(item => { 
             item.addEventListener('click', () => { 
