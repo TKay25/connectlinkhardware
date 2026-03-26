@@ -991,13 +991,62 @@
             </div>
 
             <!-- Transactions Page -->
+            <!-- Transactions Page -->
             <div id="transactionsPage" style="display: none;">
                 <div class="section-card">
-                    <h5 class="fw-bold mb-2"><i class="fas fa-history me-1"></i>Transaction History</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-history me-1"></i>Transaction History</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-success" onclick="downloadTransactionsExcel()">
+                                <i class="fas fa-file-excel me-1"></i>Export Excel
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="downloadTransactionsPDF()">
+                                <i class="fas fa-file-pdf me-1"></i>Export PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3">
+                            <label class="small fw-bold">Start Date</label>
+                            <input type="date" class="form-control form-control-sm" id="filterStartDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small fw-bold">End Date</label>
+                            <input type="date" class="form-control form-control-sm" id="filterEndDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small fw-bold">Payment Method</label>
+                            <select class="form-select form-select-sm" id="filterPaymentMethod">
+                                <option value="all">All</option>
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-primary-dark btn-sm w-100" onclick="applyTransactionFilters()">
+                                <i class="fas fa-filter me-1"></i>Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">  <tr><th>Date</th><th>Items</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Payment</th> </tr></thead>
-                            <tbody id="transactionsList"><tr><td colspan="6" class="text-center">No transactions yet</td></tr></tbody>
+                        <table class="table table-hover" id="transactionsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Transaction #</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Payment</th>
+                                    <th>Cashier</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsList">
+                                <tr><td colspan="6" class="text-center">No transactions yet</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -1130,11 +1179,207 @@
 
     <div class="modal fade" id="receiptModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h6 class="modal-title"><i class="fas fa-receipt"></i> Receipt</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="receiptContent"></div><div class="modal-footer"><button class="btn btn-sm btn-primary-dark" onclick="printReceipt()">Print</button><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // API Base URL
     const API_BASE = window.location.origin;
     
+    // ==================== TRANSACTION FILTERS ====================
+
+    let filteredTransactions = [];
+
+    function applyTransactionFilters() {
+        const startDate = document.getElementById('filterStartDate').value;
+        const endDate = document.getElementById('filterEndDate').value;
+        const paymentMethod = document.getElementById('filterPaymentMethod').value;
+        
+        filteredTransactions = salesData.transactions.filter(t => {
+            let match = true;
+            
+            // Date filter
+            if (startDate && t.created_at) {
+                const transDate = new Date(t.created_at).toISOString().split('T')[0];
+                if (transDate < startDate) match = false;
+            }
+            if (endDate && t.created_at) {
+                const transDate = new Date(t.created_at).toISOString().split('T')[0];
+                if (transDate > endDate) match = false;
+            }
+            
+            // Payment method filter
+            if (paymentMethod !== 'all' && t.payment_method !== paymentMethod) {
+                match = false;
+            }
+            
+            return match;
+        });
+        
+        renderFilteredTransactions();
+        showToast(`Showing ${filteredTransactions.length} transactions`, 'info');
+    }
+
+    function renderFilteredTransactions() {
+        const tbody = document.getElementById('transactionsList');
+        if (!tbody) return;
+        
+        const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
+        
+        if (!transactionsToShow.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No transactions found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = transactionsToShow.map(t => `
+            <tr>
+                <td><small>${t.date || t.created_at || ''}</small></td>
+                <td><small class="text-muted">${t.transaction_number || 'N/A'}</small></td>
+                <td><small>${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0} items</small></td>
+                <td class="fw-bold text-success">$${(t.total || 0).toFixed(2)}</td>
+                <td><span class="badge ${t.payment_method === 'cash' ? 'bg-success' : t.payment_method === 'card' ? 'bg-info' : 'bg-warning'}">${t.payment_method || 'N/A'}</span></td>
+                <td><small>${t.cashier || 'Admin'}</small></td>
+            </tr>
+        `).join('');
+    }
+
+    // ==================== EXPORT FUNCTIONS ====================
+
+    function downloadTransactionsExcel() {
+        const transactionsToExport = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
+        
+        if (!transactionsToExport.length) {
+            showToast('No transactions to export', 'error');
+            return;
+        }
+        
+        // Prepare data for Excel
+        const excelData = transactionsToExport.map(t => ({
+            'Date': t.date || t.created_at || '',
+            'Transaction Number': t.transaction_number || '',
+            'Items': t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0,
+            'Total': (t.total || 0).toFixed(2),
+            'Payment Method': t.payment_method || '',
+            'Cashier': t.cashier || 'Admin'
+        }));
+        
+        // Convert to worksheet
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+        
+        // Generate filename with date range
+        let filename = 'transactions_';
+        const startDate = document.getElementById('filterStartDate').value;
+        const endDate = document.getElementById('filterEndDate').value;
+        if (startDate || endDate) {
+            filename += `${startDate || 'start'}_to_${endDate || 'end'}`;
+        } else {
+            filename += 'all';
+        }
+        filename += '.xlsx';
+        
+        // Download
+        XLSX.writeFile(wb, filename);
+        showToast('Excel export complete!', 'success');
+    }
+
+    async function downloadTransactionsPDF() {
+        const transactionsToExport = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
+        
+        if (!transactionsToExport.length) {
+            showToast('No transactions to export', 'error');
+            return;
+        }
+        
+        // Create a hidden div for PDF generation
+        const pdfContent = document.createElement('div');
+        pdfContent.style.padding = '20px';
+        pdfContent.style.fontFamily = 'Arial, sans-serif';
+        
+        // Header
+        pdfContent.innerHTML = `
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #0a2b3e;">Connect Link Properties</h2>
+                <p>Transaction History Report</p>
+                <p><small>Generated: ${new Date().toLocaleString()}</small></p>
+                ${document.getElementById('filterStartDate').value || document.getElementById('filterEndDate').value ? `
+                    <p><small>Date Range: ${document.getElementById('filterStartDate').value || 'Start'} to ${document.getElementById('filterEndDate').value || 'End'}</small></p>
+                ` : ''}
+                <hr>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #0a2b3e; color: white;">
+                        <th style="padding: 10px; border: 1px solid #ddd;">Date</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Transaction #</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Items</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Total</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Payment</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Cashier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${transactionsToExport.map(t => `
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${t.date || t.created_at || ''}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${t.transaction_number || 'N/A'}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">$${(t.total || 0).toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${t.payment_method || 'N/A'}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${t.cashier || 'Admin'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #f5f5f5;">
+                        <td colspan="3" style="padding: 10px; border: 1px solid #ddd;"><strong>Total Transactions:</strong></td>
+                        <td colspan="3" style="padding: 10px; border: 1px solid #ddd;"><strong>${transactionsToExport.length}</strong></td>
+                    </tr>
+                    <tr style="background-color: #f5f5f5;">
+                        <td colspan="3" style="padding: 10px; border: 1px solid #ddd;"><strong>Total Sales:</strong></td>
+                        <td colspan="3" style="padding: 10px; border: 1px solid #ddd;"><strong>$${transactionsToExport.reduce((sum, t) => sum + (t.total || 0), 0).toFixed(2)}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <div style="text-align: center; margin-top: 30px;">
+                <small>Connect Link Properties Hardware - Official Transaction Report</small>
+            </div>
+        `;
+        
+        document.body.appendChild(pdfContent);
+        
+        // Use html2pdf
+        const opt = {
+            margin: [0.5, 0.5, 0.5, 0.5],
+            filename: `transactions_${new Date().toISOString().split('T')[0]}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+        
+        html2pdf().set(opt).from(pdfContent).save()
+            .then(() => {
+                document.body.removeChild(pdfContent);
+                showToast('PDF export complete!', 'success');
+            })
+            .catch(err => {
+                console.error('PDF generation error:', err);
+                document.body.removeChild(pdfContent);
+                showToast('Error generating PDF', 'error');
+            });
+    }
+
+    // Update renderTransactions to use filtered view
+    function renderTransactions() {
+        // Reset filters
+        document.getElementById('filterStartDate').value = '';
+        document.getElementById('filterEndDate').value = '';
+        document.getElementById('filterPaymentMethod').value = 'all';
+        filteredTransactions = [];
+        renderFilteredTransactions();
+    }
+
     // Variables for stock editing
     let productToEdit = null;
     const EDIT_PASSCODE = "conlinkhardwareadmin01";
@@ -1319,7 +1564,8 @@
             const transactionsData = await transactionsResponse.json();
             if (transactionsData.success) {
                 salesData.transactions = transactionsData.transactions;
-                renderTransactions();
+                filteredTransactions = [];
+                renderFilteredTransactions();
             }
         } catch (error) { console.error('Error fetching transactions:', error); }
     }
