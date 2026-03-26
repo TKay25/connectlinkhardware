@@ -1353,14 +1353,13 @@
             
             console.log('Transaction response status:', transactionResponse.status);
             
-            // Check if response is OK (status 200-299)
             if (transactionResponse.ok) {
                 const transactionData = await transactionResponse.json();
                 console.log('Transaction data:', transactionData);
                 
-                // Backend returns success: True on success
                 if (transactionData.success === true) {
-                    showToast('Payment successful!', 'success');
+                    // REMOVE THIS TOAST - don't show here
+                    // showToast('Payment successful!', 'success');
                     return true;
                 } else {
                     showToast(transactionData.error || 'Payment failed', 'error');
@@ -1812,6 +1811,16 @@
         }
         
         const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
+        
+        // VALIDATE CASH AMOUNT BEFORE SHOWING CONFIRMATION
+        if (selectedPaymentMethod === 'cash') {
+            const cashAmount = parseFloat(document.getElementById('cashAmount').value);
+            if (isNaN(cashAmount) || cashAmount < total) {
+                showToast(`Insufficient cash! Amount tendered: $${cashAmount || 0} is less than total: $${total.toFixed(2)}`, 'error');
+                return;
+            }
+        }
+        
         const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
                                     selectedPaymentMethod === 'card' ? 'Card' : 'Bank Transfer';
         
@@ -1881,6 +1890,15 @@
         
         const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
         
+        // VALIDATE CASH AMOUNT
+        if (selectedPaymentMethod === 'cash') {
+            const cash = parseFloat(document.getElementById('cashAmount').value);
+            if (isNaN(cash) || cash < total) {
+                showToast(`Insufficient cash! Amount tendered: $${cash || 0} is less than total: $${total.toFixed(2)}`, 'error');
+                return;
+            }
+        }
+        
         // Hide confirmation modal
         const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
         if (confirmationModal) {
@@ -1900,11 +1918,6 @@
         try {
             if (selectedPaymentMethod === 'cash') {
                 const cash = parseFloat(document.getElementById('cashAmount').value);
-                if (isNaN(cash) || cash < total) {
-                    hidePaymentLoader();
-                    showToast('Insufficient cash!', 'error');
-                    return;
-                }
                 await processOrder(selectedPaymentMethod, cash, cash - total);
             } else {
                 await processOrder(selectedPaymentMethod, total, 0);
@@ -1914,7 +1927,7 @@
             showToast('Payment failed', 'error');
         }
     }
-    
+
     async function processOrder(method, paid, change) {
         updatePaymentLoaderMessage('Verifying payment...');
         
@@ -1952,10 +1965,11 @@
             if (currentPage === 'inventory') renderInventory();
             if (currentPage === 'analytics') renderAnalytics();
             
+            // ONLY ONE TOAST - SHOW SUCCESS HERE
             showToast('Payment successful!', 'success');
         } else {
             hidePaymentLoader();
-            // Don't show another toast here since createTransactionAPI already shows one
+            // Error toast already shown in createTransactionAPI
         }
     }
     
