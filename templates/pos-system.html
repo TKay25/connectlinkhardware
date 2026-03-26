@@ -1105,10 +1105,10 @@
                                 <tr>
                                     <th style="width: 12%">Date</th>
                                     <th style="width: 15%">Transaction #</th>
-                                    <th style="width: 35%">Items</th>
+                                    <th style="width: 30%">Items</th>
                                     <th style="width: 10%">Total</th>
                                     <th style="width: 10%">Payment</th>
-                                    <th style="width: 8%">Cashier</th>
+                                    <th style="width: 13%">Cashier</th>
                                     <th style="width: 10%">Actions</th>
                                 </thead>
                             <tbody id="transactionsList">
@@ -1284,7 +1284,6 @@
         new bootstrap.Modal(document.getElementById('receiptModal')).show();
     }
 
-    // Generate receipt for past transaction
     function generatePastReceiptHTML(transaction) {
         const total = transaction.total || 0;
         const items = transaction.items || [];
@@ -1303,9 +1302,13 @@
                 <small><strong>Transaction #:</strong> ${transaction.transaction_number || 'N/A'}</small>
                 <hr class="my-1">
                 ${items.map(item => `
-                    <div class="d-flex justify-content-between small">
-                        <span>${escapeHtml(item.product_name || item.name)} x${item.quantity}</span>
-                        <span>$${((item.price || item.price_at_time || 0) * item.quantity).toFixed(2)}</span>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <div class="text-start">
+                            <strong>${escapeHtml(item.product_name || item.name)}</strong>
+                            ${item.unit_type && item.unit_details ? `<div><small class="text-muted">${item.unit_type}: ${item.unit_details}</small></div>` : ''}
+                            <small>$${(item.price || item.price_at_time || 0).toFixed(2)} x ${item.quantity}</small>
+                        </div>
+                        <span class="fw-bold">$${((item.price || item.price_at_time || 0) * item.quantity).toFixed(2)}</span>
                     </div>
                 `).join('')}
                 <hr class="my-1">
@@ -2212,7 +2215,6 @@
         const product = products.find(p => p.id === productId);
         if (!product) return;
         
-        // Use sell_price, fallback to price, then default to 0
         const priceToUse = product.sell_price || product.price || 0;
         
         const existing = cart.find(i => i.id === productId);
@@ -2230,7 +2232,9 @@
             cart.push({ 
                 ...product, 
                 quantity: 1,
-                sell_price: priceToUse  // Ensure sell_price is set
+                sell_price: priceToUse,
+                unit_type: product.unit_type,
+                unit_details: product.unit_details
             });
         }
         updateCartDisplay();
@@ -2247,12 +2251,22 @@
             container.innerHTML = cart.map((item, idx) => `
                 <div class="cart-item">
                     <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="fw-bold mb-0">${escapeHtml(item.name)}</h6>
-                            <div class="small text-muted">$${(item.sell_price || item.price || 0).toFixed(2)} each</div>
+                        <div class="flex-grow-1">
+                            <div>
+                                <h6 class="fw-bold mb-0">${escapeHtml(item.name)}</h6>
+                                ${item.unit_type && item.unit_details ? `
+                                    <small class="text-muted d-block" style="font-size: 0.6rem;">
+                                        <i class="fas fa-ruler me-1"></i>${item.unit_type}: ${item.unit_details}
+                                    </small>
+                                ` : ''}
+                            </div>
+                            <div class="small text-muted mt-1">$${(item.sell_price || item.price || 0).toFixed(2)} each</div>
                             <div class="mt-1"><div class="qty-control"><button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button><span class="fw-bold small">${item.quantity}</span><button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button></div></div>
                         </div>
-                        <div class="text-end"><div class="fw-bold small" style="color:#0a2b3e;">$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</div><button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button></div>
+                        <div class="text-end">
+                            <div class="fw-bold small" style="color:#0a2b3e;">$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</div>
+                            <button class="btn btn-sm btn-link text-danger p-0 mt-1" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt fa-xs"></i></button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -2292,7 +2306,6 @@
         
         const total = parseFloat(document.getElementById('total').innerText.replace('$', ''));
         
-        // VALIDATE CASH AMOUNT BEFORE SHOWING CONFIRMATION
         if (selectedPaymentMethod === 'cash') {
             const cashAmount = parseFloat(document.getElementById('cashAmount').value);
             if (isNaN(cashAmount) || cashAmount < total) {
@@ -2311,8 +2324,9 @@
                     ${cart.map(item => `
                         <div class="d-flex justify-content-between py-1 border-bottom small">
                             <div>
-                                <strong>${escapeHtml(item.name)}</strong><br>
-                                <span class="text-muted">$${(item.sell_price || item.price || 0).toFixed(2)} x ${item.quantity}</span>
+                                <strong>${escapeHtml(item.name)}</strong>
+                                ${item.unit_type && item.unit_details ? `<br><small class="text-muted">${item.unit_type}: ${item.unit_details}</small>` : ''}
+                                <br><span class="text-muted">$${(item.sell_price || item.price || 0).toFixed(2)} x ${item.quantity}</span>
                             </div>
                             <span class="fw-bold">$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span>
                         </div>
@@ -2326,7 +2340,6 @@
                 </div>
         `;
         
-        // For cash payments, show amount tendered and change fields
         if (selectedPaymentMethod === 'cash') {
             const cashAmount = parseFloat(document.getElementById('cashAmount').value) || 0;
             const change = cashAmount - total;
@@ -2468,19 +2481,22 @@
     function generateReceiptHTML(items, method, paid, change) {
         const total = items.reduce((sum, item) => sum + ((item.sell_price || item.price || 0) * item.quantity), 0);
         
-        // Base receipt template
         let receiptHTML = `
             <div class="text-center">
-                <img src="/static/images/reqlogo.jpg" style="height: 40px; width: auto;" alt="ConnectLink Properties Logo">
-                <h6 class="fw-bold mt-1">ConnectLink Properties</h6>
+                <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
+                <h6 class="fw-bold mt-1">Connect Link Properties</h6>
                 <small>Hardware Supply</small>
                 <hr class="my-1">
                 <small>${new Date().toLocaleString()}</small>
                 <hr class="my-1">
                 ${items.map(item => `
-                    <div class="d-flex justify-content-between small">
-                        <span>${escapeHtml(item.name)} x${item.quantity}</span>
-                        <span>$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <div class="text-start">
+                            <strong>${escapeHtml(item.name)}</strong>
+                            ${item.unit_type && item.unit_details ? `<div><small class="text-muted">${item.unit_type}: ${item.unit_details}</small></div>` : ''}
+                            <small>$${(item.sell_price || item.price || 0).toFixed(2)} x ${item.quantity}</small>
+                        </div>
+                        <span class="fw-bold">$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span>
                     </div>
                 `).join('')}
                 <hr class="my-1">
@@ -2490,7 +2506,6 @@
                 </div>
         `;
         
-        // For cash payments, show amount tendered and change
         if (method === 'cash') {
             receiptHTML += `
                 <hr class="my-1">
