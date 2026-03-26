@@ -1293,7 +1293,7 @@
         
         let receiptHTML = `
             <div class="text-center">
-                <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
+                <img src="/static/images/reqlogo.jpg" style="height: 45px; width: auto;" alt="ConnectLink Properties Logo">
                 <h6 class="fw-bold mt-1">Connect Link Properties</h6>
                 <small>Hardware Supply</small>
                 <hr class="my-1">
@@ -1301,17 +1301,31 @@
                 <hr class="my-1">
                 <small><strong>Transaction #:</strong> ${transaction.transaction_number || 'N/A'}</small>
                 <hr class="my-1">
-                ${items.map(item => `
-                    <div class="d-flex justify-content-between small mb-2">
-                        <div class="text-start">
-                            <strong>${escapeHtml(item.product_name || item.name)}</strong>
-                            ${item.unit_type && item.unit_details ? `<div><small class="text-muted">${item.unit_type}: ${item.unit_details}</small></div>` : ''}
-                            <small>$${(item.price || item.price_at_time || 0).toFixed(2)} x ${item.quantity}</small>
-                        </div>
-                        <span class="fw-bold">$${((item.price || item.price_at_time || 0) * item.quantity).toFixed(2)}</span>
+        `;
+        
+        // Items list with proper layout
+        receiptHTML += items.map(item => {
+            const itemPrice = item.price || item.price_at_time || 0;
+            const itemTotal = itemPrice * item.quantity;
+            
+            return `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="text-start" style="width: 45%;">
+                        <strong>${escapeHtml(item.product_name || item.name)}</strong>
+                        ${item.unit_type && item.unit_details ? `<div><small class="text-muted">${item.unit_type}: ${item.unit_details}</small></div>` : ''}
                     </div>
-                `).join('')}
-                <hr class="my-1">
+                    <div class="text-center" style="width: 30%;">
+                        <small>$${itemPrice.toFixed(2)} x ${item.quantity}</small>
+                    </div>
+                    <div class="text-end" style="width: 20%;">
+                        <strong>$${itemTotal.toFixed(2)}</strong>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        receiptHTML += `
+                <hr class="my-2">
                 <div class="d-flex justify-content-between small">
                     <strong>Total:</strong>
                     <strong>$${total.toFixed(2)}</strong>
@@ -2483,23 +2497,37 @@
         
         let receiptHTML = `
             <div class="text-center">
-                <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
+                <img src="/static/images/reqlogo.jpg" style="height: 45px; width: auto;" alt="ConnectLink Properties Logo">
                 <h6 class="fw-bold mt-1">Connect Link Properties</h6>
                 <small>Hardware Supply</small>
                 <hr class="my-1">
                 <small>${new Date().toLocaleString()}</small>
                 <hr class="my-1">
-                ${items.map(item => `
-                    <div class="d-flex justify-content-between small mb-2">
-                        <div class="text-start">
-                            <strong>${escapeHtml(item.name)}</strong>
-                            ${item.unit_type && item.unit_details ? `<div><small class="text-muted">${item.unit_type}: ${item.unit_details}</small></div>` : ''}
-                            <small>$${(item.sell_price || item.price || 0).toFixed(2)} x ${item.quantity}</small>
-                        </div>
-                        <span class="fw-bold">$${((item.sell_price || item.price || 0) * item.quantity).toFixed(2)}</span>
+        `;
+        
+        // Items list with proper layout
+        receiptHTML += items.map(item => {
+            const itemPrice = item.sell_price || item.price || 0;
+            const itemTotal = itemPrice * item.quantity;
+            
+            return `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="text-start" style="width: 45%;">
+                        <strong>${escapeHtml(item.name)}</strong>
+                        ${item.unit_type && item.unit_details ? `<div><small class="text-muted">${item.unit_type}: ${item.unit_details}</small></div>` : ''}
                     </div>
-                `).join('')}
-                <hr class="my-1">
+                    <div class="text-center" style="width: 30%;">
+                        <small>$${itemPrice.toFixed(2)} x ${item.quantity}</small>
+                    </div>
+                    <div class="text-end" style="width: 20%;">
+                        <strong>$${itemTotal.toFixed(2)}</strong>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        receiptHTML += `
+                <hr class="my-2">
                 <div class="d-flex justify-content-between small">
                     <strong>Total:</strong>
                     <strong>$${total.toFixed(2)}</strong>
@@ -2530,7 +2558,6 @@
         
         return receiptHTML;
     }
-
     
     function printReceipt() {
         const content = document.getElementById('receiptContent').innerHTML;
