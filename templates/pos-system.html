@@ -1507,9 +1507,15 @@
 
     // Update renderTransactions to reset filters
     function renderTransactions() {
-        document.getElementById('filterStartDate').value = '';
-        document.getElementById('filterEndDate').value = '';
-        document.getElementById('filterPaymentMethod').value = 'all';
+        // Reset filters
+        const startDateInput = document.getElementById('filterStartDate');
+        const endDateInput = document.getElementById('filterEndDate');
+        const paymentMethodSelect = document.getElementById('filterPaymentMethod');
+        
+        if (startDateInput) startDateInput.value = '';
+        if (endDateInput) endDateInput.value = '';
+        if (paymentMethodSelect) paymentMethodSelect.value = 'all';
+        
         filteredTransactions = [];
         renderFilteredTransactions();
     }
@@ -2420,22 +2426,6 @@
         const ctx = canvas.getContext('2d');
         if (salesChart) salesChart.destroy();
         salesChart = new Chart(ctx, { type: 'line', data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Sales ($)', data: [1250, 1450, 1320, 1680, 1890, 2100, 1750], borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)', tension: 0.3, fill: true }] }, options: { responsive: true, maintainAspectRatio: true } });
-    }
-    
-    function renderTransactions() {
-        const tbody = document.getElementById('transactionsList');
-        if (!tbody) return;
-        if (!salesData.transactions.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center">No transactions yet</td></tr>'; return; }
-        tbody.innerHTML = salesData.transactions.map(t => `
-            <tr>
-                <td>${t.date || t.created_at || ''}</td>
-                <td>${t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0} items</td>
-                <td>$${t.subtotal.toFixed(2)}</td>
-                <td>$${t.tax.toFixed(2)}</td>
-                <td class="fw-bold">$${t.total.toFixed(2)}</td>
-                <td><span class="badge bg-info">${t.payment_method || t.paymentMethod}</span></td>
-            </tr>
-        `).join('');
     }
     
     function renderAnalytics() {
