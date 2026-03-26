@@ -38,7 +38,7 @@ def generate_transaction_number():
     """Generate unique transaction number"""
     date_str = datetime.now().strftime('%Y%m%d')
     random_part = secrets.token_hex(4).upper()
-    return f"INV-{date_str}-{random_part}"
+    return f"REC-{date_str}-{random_part}-CONLINK"
 
 def login_required(f):
     """Decorator to check if user is logged in"""
@@ -232,7 +232,7 @@ def init_database():
                 INSERT INTO categories (name, display_order)
                 VALUES (%s, %s)
             """, (cat_name, order), commit=True)
-            
+
 # ==================== PRODUCT FETCH FUNCTION ====================
 
 def run1():
