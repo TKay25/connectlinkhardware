@@ -2616,8 +2616,61 @@
     function printReceipt() {
         const content = document.getElementById('receiptContent').innerHTML;
         const win = window.open('', '_blank');
-        win.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;padding:10px;text-align:center;}</style></head><body>${content}</body></html>`);
+        win.document.write(`
+            <html>
+            <head>
+                <title>Receipt</title>
+                <style>
+                    body {
+                        font-family: monospace;
+                        padding: 10px;
+                        margin: 0;
+                        font-size: 12px;
+                    }
+                    .text-center {
+                        text-align: center;
+                    }
+                    .text-start {
+                        text-align: left;
+                    }
+                    .text-end {
+                        text-align: right;
+                    }
+                    hr {
+                        margin: 5px 0;
+                        border: none;
+                        border-top: 1px dashed #ccc;
+                    }
+                    table, .table-layout {
+                        width: 100%;
+                    }
+                    .item-row {
+                        margin: 5px 0;
+                    }
+                    .item-name {
+                        text-align: left;
+                        width: 45%;
+                        display: inline-block;
+                    }
+                    .item-price-qty {
+                        text-align: center;
+                        width: 30%;
+                        display: inline-block;
+                    }
+                    .item-total {
+                        text-align: right;
+                        width: 20%;
+                        display: inline-block;
+                    }
+                </style>
+            </head>
+            <body>
+                ${content}
+            </body>
+            </html>
+        `);
         win.print();
+        win.close();
     }
     
     // ==================== REPORT FUNCTIONS ====================
