@@ -779,6 +779,26 @@
             font-weight: 500;
         }
 
+        /* Receipt button styling */
+        .btn-view-receipt {
+            background: none;
+            border: none;
+            color: #0a2b3e;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-view-receipt:hover {
+            background: #eef2ff;
+            color: #1e6f9f;
+        }
+
+        .btn-view-receipt i {
+            font-size: 0.8rem;
+        }
+
     </style>
 </head>
 <body>
@@ -1083,16 +1103,16 @@
                         <table class="table table-hover" id="transactionsTable">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 15%">Date</th>
-                                    <th style="width: 20%">Transaction #</th>
-                                    <th style="width: 30%">Items</th>
+                                    <th style="width: 12%">Date</th>
+                                    <th style="width: 15%">Transaction #</th>
+                                    <th style="width: 35%">Items</th>
                                     <th style="width: 10%">Total</th>
                                     <th style="width: 10%">Payment</th>
-                                    <th style="width: 15%">Cashier</th>
-                                </tr>
-                            </thead>
+                                    <th style="width: 8%">Cashier</th>
+                                    <th style="width: 10%">Actions</th>
+                                </thead>
                             <tbody id="transactionsList">
-                                <tr><td colspan="6" class="text-center">No transactions yet</td></tr>
+                                bon<td colspan="7" class="text-center">No transactions yet</td>>
                             </tbody>
                         </table>
                     </div>
@@ -1224,7 +1244,21 @@
         </div>
     </div>
 
-    <div class="modal fade" id="receiptModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h6 class="modal-title"><i class="fas fa-receipt"></i> Receipt</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="receiptContent"></div><div class="modal-footer"><button class="btn btn-sm btn-primary-dark" onclick="printReceipt()">Print</button><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div></div>
+    <div class="modal fade" id="receiptModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#0a2b3e;color:white;">
+                    <h6 class="modal-title"><i class="fas fa-receipt"></i> Receipt</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="receiptContent"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm btn-primary-dark" onclick="printReceipt()">Print</button>
+                    <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -1234,6 +1268,79 @@
     const API_BASE = window.location.origin;
     
     // ==================== TRANSACTION FILTERS ====================
+
+    // View receipt for a specific transaction
+    function viewReceipt(transactionId) {
+        const transaction = salesData.transactions.find(t => t.id === transactionId || t.transaction_number === transactionId);
+        
+        if (!transaction) {
+            showToast('Transaction not found', 'error');
+            return;
+        }
+        
+        // Generate receipt HTML
+        const receiptHTML = generatePastReceiptHTML(transaction);
+        document.getElementById('receiptContent').innerHTML = receiptHTML;
+        new bootstrap.Modal(document.getElementById('receiptModal')).show();
+    }
+
+    // Generate receipt for past transaction
+    function generatePastReceiptHTML(transaction) {
+        const total = transaction.total || 0;
+        const items = transaction.items || [];
+        const method = transaction.payment_method || 'cash';
+        const paid = transaction.amount_paid || total;
+        const change = transaction.change_amount || 0;
+        
+        let receiptHTML = `
+            <div class="text-center">
+                <i class="fas fa-hard-hat" style="color:#0a2b3e;"></i>
+                <h6 class="fw-bold mt-1">Connect Link Properties</h6>
+                <small>Hardware Supply</small>
+                <hr class="my-1">
+                <small>${new Date(transaction.created_at || transaction.date).toLocaleString()}</small>
+                <hr class="my-1">
+                <small><strong>Transaction #:</strong> ${transaction.transaction_number || 'N/A'}</small>
+                <hr class="my-1">
+                ${items.map(item => `
+                    <div class="d-flex justify-content-between small">
+                        <span>${escapeHtml(item.product_name || item.name)} x${item.quantity}</span>
+                        <span>$${((item.price || item.price_at_time || 0) * item.quantity).toFixed(2)}</span>
+                    </div>
+                `).join('')}
+                <hr class="my-1">
+                <div class="d-flex justify-content-between small">
+                    <strong>Total:</strong>
+                    <strong>$${total.toFixed(2)}</strong>
+                </div>
+        `;
+        
+        if (method === 'cash') {
+            receiptHTML += `
+                <hr class="my-1">
+                <div class="d-flex justify-content-between small">
+                    <span>Amount Tendered:</span>
+                    <span>$${paid.toFixed(2)}</span>
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span>Change:</span>
+                    <span class="text-success">$${change.toFixed(2)}</span>
+                </div>
+            `;
+        }
+        
+        receiptHTML += `
+                <hr class="my-1">
+                <div class="small">Payment: ${method.toUpperCase()}</div>
+                <hr class="my-1">
+                <div class="small">Cashier: ${transaction.cashier || 'Admin'}</div>
+                <hr class="my-1">
+                <small>Thank you! Please come again</small>
+            </div>
+        `;
+        
+        return receiptHTML;
+    }
 
     let filteredTransactions = [];
 
@@ -1319,7 +1426,7 @@
         const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
         
         if (!transactionsToShow.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No transactions found</td></tr>';
+            tbody.innerHTML = '=<td colspan="7" class="text-center">No transactions found</td>='；
             return;
         }
         
@@ -1329,12 +1436,10 @@
             // Format the items list correctly
             let itemsHtml = '';
             if (t.items && t.items.length > 0) {
-                // Get item names for preview
                 const itemNames = t.items.map(item => item.product_name || item.name).slice(0, 2).join(', ');
                 const moreCount = t.items.length - 2;
                 const previewText = moreCount > 0 ? itemNames + ' + ' + moreCount + ' more' : itemNames;
                 
-                // Build full items list HTML
                 const itemsListHTML = t.items.map(item => {
                     const itemName = escapeHtml(item.product_name || item.name);
                     const itemPrice = item.price || item.price_at_time || 0;
@@ -1372,13 +1477,14 @@
                 dateStr = date.toLocaleString();
             }
             
-            return '<tr>' +
+            return '业' +
                 '<td><small>' + dateStr + '</small></td>' +
                 '<td><small class="text-muted">' + (t.transaction_number || 'N/A') + '</small></td>' +
                 '<td>' + itemsHtml + '</td>' +
                 '<td class="fw-bold text-success">$' + ((t.total || 0).toFixed(2)) + '</td>' +
                 '<td><span class="badge ' + (t.payment_method === 'cash' ? 'bg-success' : t.payment_method === 'card' ? 'bg-info' : 'bg-warning') + '">' + (t.payment_method || 'N/A') + '</span></td>' +
                 '<td><small>' + (t.cashier || 'Admin') + '</small></td>' +
+                '<td><button class="btn-view-receipt" onclick="viewReceipt(' + (t.id || t.transaction_number) + ')" title="View Receipt"><i class="fas fa-receipt"></i></button></td>' +
             '</tr>';
         }).join('');
     }
