@@ -114,6 +114,20 @@ def init_database():
         )
     """, commit=True)
 
+    # Add to init_database()
+    execute_query("""
+        CREATE TABLE IF NOT EXISTS stock_additions (
+            id SERIAL PRIMARY KEY,
+            product_id INTEGER REFERENCES products(id),
+            quantity INTEGER NOT NULL,
+            buy_price DECIMAL(10,2) NOT NULL,
+            total_cost DECIMAL(10,2) NOT NULL,
+            funding_source VARCHAR(20) NOT NULL,
+            user_id INTEGER REFERENCES users(id),
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """, commit=True)
+
     # Remove old columns if they exist
     execute_query("""
         ALTER TABLE products 
@@ -421,6 +435,7 @@ def create_product():
         'message': 'Product created successfully'
     }), 201
 
+# Add to your update_product endpoint
 @app.route('/api/products/<int:product_id>', methods=['PUT'])
 @login_required
 def update_product(product_id):
@@ -435,6 +450,22 @@ def update_product(product_id):
         if field in data:
             update_fields.append(f"{field} = %s")
             params.append(data[field])
+    
+    # If this is a stock addition, track funding source in a separate table
+    if 'funding_source' in data and 'total_cost' in data:
+        # Log this stock addition with funding source
+        stock_log_query = """
+            INSERT INTO stock_additions (product_id, quantity, buy_price, total_cost, funding_source, user_id, added_at)
+            VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+        """
+        execute_query(stock_log_query, (
+            product_id,
+            data.get('stock') - (execute_query("SELECT stock FROM products WHERE id = %s", (product_id,), fetch_one=True)[0] or 0),
+            data.get('buy_price'),
+            data.get('total_cost'),
+            data.get('funding_source'),
+            session['user_id']
+        ), commit=True)
     
     if not update_fields:
         return jsonify({'error': 'No fields to update'}), 400

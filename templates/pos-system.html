@@ -922,14 +922,47 @@
                             <div class="alert alert-info mb-3" style="font-size: 0.75rem;">
                                 <i class="fas fa-info-circle me-1"></i> 
                                 <strong>Product:</strong> <span id="editStockProductName">Loading...</span><br>
-                                <strong>Current Stock:</strong> <span id="currentStockValue">0</span>
+                                <strong>Current Stock:</strong> <span id="currentStockValue">0</span><br>
+                                <strong>Current Profit Available:</strong> <span id="currentAvailableProfit" class="text-success">$0.00</span>
                             </div>
+                            
                             <p class="mb-2">Enter admin passcode to add stock:</p>
                             <input type="password" class="form-control mb-2" id="editStockPasscode" placeholder="Enter passcode">
                             <div id="editPasscodeError" class="text-danger small mb-2"></div>
+                            
                             <label class="form-label">Quantity to ADD *</label>
-                            <input type="number" class="form-control" id="newStockQuantity" placeholder="Enter quantity to add" min="1" value="">
-                            <small class="text-muted">This will be added to the current stock</small>
+                            <input type="number" class="form-control mb-2" id="newStockQuantity" placeholder="Enter quantity to add" min="1" value="">
+                            
+                            <label class="form-label">Buying Price per Unit ($) *</label>
+                            <input type="number" step="0.01" class="form-control mb-2" id="stockBuyPrice" placeholder="Cost per unit" required>
+                            
+                            <div class="mb-2">
+                                <label class="form-label">Funding Source *</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="payment-method" id="fundingProfit" data-funding="profit" style="text-align: center; padding: 10px;">
+                                            <i class="fas fa-chart-line text-success"></i>
+                                            <div class="small">From Profits</div>
+                                            <div class="small text-muted">Reinvest earnings</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="payment-method" id="fundingCapital" data-funding="capital" style="text-align: center; padding: 10px;">
+                                            <i class="fas fa-building text-primary"></i>
+                                            <div class="small">New Capital</div>
+                                            <div class="small text-muted">Owner investment</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="profitWarning" class="alert alert-warning small" style="display: none;">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <strong>Insufficient Profit!</strong> Current available profit: <span id="warningProfitAmount">$0.00</span><br>
+                                This purchase will use <span id="warningCostAmount">$0.00</span> from profit, but only <span id="warningAvailableAmount">$0.00</span> is available.
+                            </div>
+                            
+                            <small class="text-muted">Total cost: <span id="totalCostPreview">$0.00</span></small>
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
@@ -1043,45 +1076,326 @@
                 </div>
             </div>
 
-            <!-- Sales Report Page -->
+            <!-- Sales Report Page - Enhanced with Profit Tracking & Reinvestment -->
             <div id="salesPage" style="display: none;">
+                <!-- Report Filters -->
+                <div class="section-card mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-chart-line me-1"></i>Sales & Profit Analytics</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-success" onclick="exportSalesReport('excel')">
+                                <i class="fas fa-file-excel me-1"></i>Export Excel
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="exportSalesReport('pdf')">
+                                <i class="fas fa-file-pdf me-1"></i>Export PDF
+                            </button>
+                            <button class="btn btn-sm btn-primary-dark" onclick="loadSalesReport()">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters Row -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3">
+                            <label class="small fw-bold">Period</label>
+                            <select class="form-select form-select-sm" id="reportPeriod" onchange="updateReportDateRange()">
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3" id="dateRangeStartDiv" style="display: none;">
+                            <label class="small fw-bold">Start Date</label>
+                            <input type="date" class="form-control form-control-sm" id="reportStartDate">
+                        </div>
+                        <div class="col-md-3" id="dateRangeEndDiv" style="display: none;">
+                            <label class="small fw-bold">End Date</label>
+                            <input type="date" class="form-control form-control-sm" id="reportEndDate">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-primary-dark btn-sm w-100" onclick="loadSalesReport()">
+                                <i class="fas fa-chart-bar me-1"></i>Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KPI Cards Row 1 - Revenue & Profit -->
                 <div class="row g-2 mb-3">
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div><small class="text-muted">Today's Sales</small><h3 class="mb-0 fw-bold" id="todaySales">$0.00</h3></div>
-                                <i class="fas fa-dollar-sign text-muted opacity-50"></i>
+                                <div>
+                                    <small class="text-muted">Total Revenue</small>
+                                    <h3 class="mb-0 fw-bold" id="reportTotalSales">$0.00</h3>
+                                    <small class="text-muted" id="revenueTrend"></small>
+                                </div>
+                                <i class="fas fa-dollar-sign fa-2x text-muted opacity-50"></i>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div><small class="text-muted">Items Sold</small><h3 class="mb-0 fw-bold" id="itemsSold">0</h3></div>
-                                <i class="fas fa-shopping-cart text-muted opacity-50"></i>
+                                <div>
+                                    <small class="text-muted">Gross Profit</small>
+                                    <h3 class="mb-0 fw-bold text-success" id="reportGrossProfit">$0.00</h3>
+                                    <small class="text-muted">Revenue - COGS</small>
+                                </div>
+                                <i class="fas fa-chart-line fa-2x text-muted opacity-50"></i>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div><small class="text-muted">Low Stock</small><h3 class="mb-0 fw-bold" id="lowStockCount">0</h3></div>
-                                <i class="fas fa-exclamation-triangle text-muted opacity-50"></i>
+                                <div>
+                                    <small class="text-muted">Gross Margin</small>
+                                    <h3 class="mb-0 fw-bold" id="reportGrossMargin">0%</h3>
+                                    <small class="text-muted">Profitability ratio</small>
+                                </div>
+                                <i class="fas fa-percent fa-2x text-muted opacity-50"></i>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div><small class="text-muted">Products</small><h3 class="mb-0 fw-bold" id="totalProducts">0</h3></div>
-                                <i class="fas fa-box text-muted opacity-50"></i>
+                                <div>
+                                    <small class="text-muted">Average Order Value</small>
+                                    <h3 class="mb-0 fw-bold" id="reportAvgOrder">$0.00</h3>
+                                    <small class="text-muted">Per transaction</small>
+                                </div>
+                                <i class="fas fa-cart-shopping fa-2x text-muted opacity-50"></i>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- KPI Cards Row 2 - Profit Tracking & Reinvestment -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Total Profit Earned</small>
+                                    <h3 class="mb-0 fw-bold text-success" id="reportTotalProfitEarned">$0.00</h3>
+                                    <small class="text-muted">From all sales</small>
+                                </div>
+                                <i class="fas fa-chart-line fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Profit Reinvested</small>
+                                    <h3 class="mb-0 fw-bold text-warning" id="reportProfitReinvested">$0.00</h3>
+                                    <small class="text-muted">Used to buy stock</small>
+                                </div>
+                                <i class="fas fa-undo-alt fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Available Profit</small>
+                                    <h3 class="mb-0 fw-bold" id="reportAvailableProfit">$0.00</h3>
+                                    <small class="text-muted">For reinvestment</small>
+                                </div>
+                                <i class="fas fa-coins fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Reinvestment Rate</small>
+                                    <h3 class="mb-0 fw-bold" id="reportReinvestmentRate">0%</h3>
+                                    <small class="text-muted">Profit reinvested %</small>
+                                </div>
+                                <i class="fas fa-chart-pie fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KPI Cards Row 3 - Operational Metrics -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Transactions</small>
+                                    <h3 class="mb-0 fw-bold" id="reportTransactionCount">0</h3>
+                                    <small class="text-muted">Total orders</small>
+                                </div>
+                                <i class="fas fa-receipt fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Items Sold</small>
+                                    <h3 class="mb-0 fw-bold" id="reportItemsSold">0</h3>
+                                    <small class="text-muted">Total quantity</small>
+                                </div>
+                                <i class="fas fa-box-open fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Cost of Goods Sold</small>
+                                    <h3 class="mb-0 fw-bold" id="reportCOGS">$0.00</h3>
+                                    <small class="text-muted">Cost of items SOLD</small>
+                                </div>
+                                <i class="fas fa-boxes fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Return on Sales</small>
+                                    <h3 class="mb-0 fw-bold" id="reportROS">0%</h3>
+                                    <small class="text-muted">Profit per $1 sales</small>
+                                </div>
+                                <i class="fas fa-chart-simple fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row 1 - Trends & Category -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0"><i class="fas fa-chart-line me-1"></i>Sales & Profit Trend</h6>
+                            </div>
+                            <canvas id="salesTrendChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Revenue by Category</h6>
+                            <canvas id="categorySalesChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row 2 - Top Products & Margin -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i>Top 10 Products by Revenue</h6>
+                            <canvas id="topProductsChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Profit Margin by Category</h6>
+                            <canvas id="categoryMarginChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row 3 - Hourly & Profit Reinvestment -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Hourly Sales Distribution</h6>
+                            <canvas id="hourlySalesChart" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Profit Utilization</h6>
+                            <canvas id="profitUtilizationChart" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Category Performance Table -->
+                <div class="section-card mb-3">
+                    <h6 class="fw-bold mb-2"><i class="fas fa-chart-simple me-1"></i>Category Performance Breakdown</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Units Sold</th>
+                                    <th>Revenue</th>
+                                    <th>COGS</th>
+                                    <th>Gross Profit</th>
+                                    <th>Margin %</th>
+                                    <th>Contribution</th>
+                                </thead>
+                            <tbody id="categoryBreakdownList"></tbody>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top Products Lists -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-trophy me-1"></i>🏆 Top Selling Products</h6>
+                            <div id="topProductsListReport" style="max-height: 300px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i>💰 Most Profitable Products</h6>
+                            <div id="topProfitProductsList" style="max-height: 300px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Profit Reinvestment History Table -->
                 <div class="section-card">
-                    <h5 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Sales Report</h5>
-                    <canvas id="salesChart" style="max-height: 350px;"></canvas>
+                    <h6 class="fw-bold mb-2"><i class="fas fa-history me-1"></i>Profit Reinvestment History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Cost</th>
+                                    <th>Funding Source</th>
+                                    <th>User</th>
+                                </thead>
+                            <tbody id="reinvestmentHistoryList"></tbody>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Accounting Note -->
+                <div class="alert alert-info small mt-2">
+                    <i class="fas fa-info-circle me-1"></i> 
+                    <strong>Profit Calculation Note:</strong> 
+                    <ul class="mb-0 mt-1">
+                        <li><strong>Gross Profit</strong> = Revenue - COGS (Cost of Goods Sold of items SOLD during the period)</li>
+                        <li><strong>Profit Reinvested</strong> = Profits used to purchase new inventory</li>
+                        <li><strong>Available Profit</strong> = Total Profit Earned - Profit Reinvested</li>
+                        <li>Stock purchases funded by profits reduce available profit for future reinvestment</li>
+                    </ul>
                 </div>
             </div>
 
@@ -1305,6 +1619,187 @@
     // API Base URL
     const API_BASE = window.location.origin;
     
+    let selectedFundingSource = "profit"; // Default to profit
+    let currentTotalProfit = 0;
+
+    function renderSalesReport(transactions) {
+        // Calculate totals
+        let totalRevenue = 0;
+        let totalCOGS = 0;
+        let totalGrossProfit = 0;
+        let totalItemsSold = 0;
+        
+        const dailyData = {};
+        const categoryData = {};
+        const productSales = {};
+        const productProfit = {};
+        const hourlyData = Array(24).fill(0);
+        
+        // You need to fetch these from your backend or maintain globally
+        let totalProfitEarned = 0; // From all-time sales
+        let profitReinvested = 0; // From stock additions funded by profit
+        let reinvestmentHistory = []; // From stock_additions table
+        
+        transactions.forEach(t => {
+            totalRevenue += t.total;
+            const profit = t.profit || 0;
+            totalGrossProfit += profit;
+            totalProfitEarned += profit;
+            totalItemsSold += t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0;
+            
+            // Hourly aggregation
+            const hour = new Date(t.created_at).getHours();
+            hourlyData[hour] += t.total;
+            
+            // Daily aggregation
+            const date = new Date(t.created_at).toISOString().split('T')[0];
+            if (!dailyData[date]) {
+                dailyData[date] = { sales: 0, profit: 0, count: 0 };
+            }
+            dailyData[date].sales += t.total;
+            dailyData[date].profit += profit;
+            dailyData[date].count++;
+            
+            // Category and product aggregation
+            if (t.items) {
+                t.items.forEach(item => {
+                    const itemProfit = item.profit || ((item.price || 0) - (item.buy_price || 0)) * item.quantity;
+                    totalCOGS += (item.buy_price || 0) * item.quantity;
+                    
+                    const category = item.category || 'Other';
+                    if (!categoryData[category]) {
+                        categoryData[category] = { sales: 0, profit: 0, quantity: 0, cogs: 0 };
+                    }
+                    categoryData[category].sales += item.subtotal;
+                    categoryData[category].profit += itemProfit;
+                    categoryData[category].quantity += item.quantity;
+                    categoryData[category].cogs += (item.buy_price || 0) * item.quantity;
+                    
+                    const productName = item.product_name || item.name;
+                    if (!productSales[productName]) {
+                        productSales[productName] = { sales: 0, quantity: 0 };
+                        productProfit[productName] = { profit: 0, quantity: 0 };
+                    }
+                    productSales[productName].sales += item.subtotal;
+                    productSales[productName].quantity += item.quantity;
+                    productProfit[productName].profit += itemProfit;
+                    productProfit[productName].quantity += item.quantity;
+                });
+            }
+        });
+        
+        const grossMargin = totalRevenue > 0 ? (totalGrossProfit / totalRevenue * 100) : 0;
+        const avgOrderValue = transactions.length > 0 ? totalRevenue / transactions.length : 0;
+        const ros = totalRevenue > 0 ? (totalGrossProfit / totalRevenue * 100) : 0;
+        const availableProfit = totalProfitEarned - profitReinvested;
+        const reinvestmentRate = totalProfitEarned > 0 ? (profitReinvested / totalProfitEarned * 100) : 0;
+        
+        // Update KPI cards
+        document.getElementById('reportTotalSales').innerText = `$${totalRevenue.toFixed(2)}`;
+        document.getElementById('reportGrossProfit').innerText = `$${totalGrossProfit.toFixed(2)}`;
+        document.getElementById('reportCOGS').innerText = `$${totalCOGS.toFixed(2)}`;
+        document.getElementById('reportGrossMargin').innerText = `${grossMargin.toFixed(1)}%`;
+        document.getElementById('reportTransactionCount').innerText = transactions.length;
+        document.getElementById('reportItemsSold').innerText = totalItemsSold;
+        document.getElementById('reportAvgOrder').innerText = `$${avgOrderValue.toFixed(2)}`;
+        document.getElementById('reportROS').innerText = `${ros.toFixed(1)}%`;
+        
+        // Update profit tracking cards
+        document.getElementById('reportTotalProfitEarned').innerText = `$${totalProfitEarned.toFixed(2)}`;
+        document.getElementById('reportProfitReinvested').innerText = `$${profitReinvested.toFixed(2)}`;
+        document.getElementById('reportAvailableProfit').innerText = `$${availableProfit.toFixed(2)}`;
+        document.getElementById('reportReinvestmentRate').innerText = `${reinvestmentRate.toFixed(1)}%`;
+        
+        // Render profit utilization chart
+        const profitUtilizationCtx = document.getElementById('profitUtilizationChart').getContext('2d');
+        if (window.profitUtilizationChart) window.profitUtilizationChart.destroy();
+        window.profitUtilizationChart = new Chart(profitUtilizationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Profit Reinvested', 'Available Profit'],
+                datasets: [{ data: [profitReinvested, availableProfit], backgroundColor: ['#f59e0b', '#10b981'], borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: $${ctx.raw.toFixed(2)} (${((ctx.raw / (profitReinvested + availableProfit)) * 100).toFixed(1)}%)` } } } }
+        });
+        
+        // Render rest of charts (same as before)
+        const sortedDates = Object.keys(dailyData).sort();
+        if (salesTrendChart) salesTrendChart.destroy();
+        const ctx1 = document.getElementById('salesTrendChart').getContext('2d');
+        salesTrendChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: sortedDates,
+                datasets: [
+                    { label: 'Revenue ($)', data: sortedDates.map(d => dailyData[d].sales), borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)', tension: 0.3, fill: true },
+                    { label: 'Profit ($)', data: sortedDates.map(d => dailyData[d].profit), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.3, fill: true }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+        
+        const categoryLabels = Object.keys(categoryData);
+        if (categorySalesChart) categorySalesChart.destroy();
+        const ctx2 = document.getElementById('categorySalesChart').getContext('2d');
+        categorySalesChart = new Chart(ctx2, {
+            type: 'pie',
+            data: { labels: categoryLabels, datasets: [{ data: categoryLabels.map(c => categoryData[c].sales), backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'] }] },
+            options: { responsive: true }
+        });
+        
+        const topProducts = Object.entries(productSales).sort((a, b) => b[1].sales - a[1].sales).slice(0, 10);
+        if (topProductsChart) topProductsChart.destroy();
+        const ctx3 = document.getElementById('topProductsChart').getContext('2d');
+        topProductsChart = new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: topProducts.map(p => p[0].length > 20 ? p[0].substring(0, 20) + '...' : p[0]),
+                datasets: [{ label: 'Revenue ($)', data: topProducts.map(p => p[1].sales), backgroundColor: '#0a2b3e', borderRadius: 4 }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
+        });
+        
+        const categoryMargins = categoryLabels.map(c => (categoryData[c].profit / categoryData[c].sales * 100) || 0);
+        if (categoryMarginChart) categoryMarginChart.destroy();
+        const ctx4 = document.getElementById('categoryMarginChart').getContext('2d');
+        categoryMarginChart = new Chart(ctx4, {
+            type: 'bar',
+            data: { labels: categoryLabels, datasets: [{ label: 'Margin %', data: categoryMargins, backgroundColor: '#10b981', borderRadius: 4 }] },
+            options: { responsive: true, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } } } }
+        });
+        
+        if (hourlySalesChart) hourlySalesChart.destroy();
+        const ctx5 = document.getElementById('hourlySalesChart').getContext('2d');
+        hourlySalesChart = new Chart(ctx5, {
+            type: 'bar',
+            data: { labels: Array.from({ length: 24 }, (_, i) => `${i}:00`), datasets: [{ label: 'Sales ($)', data: hourlyData, backgroundColor: '#0a2b3e', borderRadius: 4 }] },
+            options: { responsive: true }
+        });
+        
+        // Category breakdown table
+        const totalRevenueForContribution = totalRevenue;
+        document.getElementById('categoryBreakdownList').innerHTML = categoryLabels.map(cat => {
+            const data = categoryData[cat];
+            const margin = data.sales > 0 ? (data.profit / data.sales * 100).toFixed(1) : 0;
+            const contribution = totalRevenueForContribution > 0 ? (data.sales / totalRevenueForContribution * 100).toFixed(1) : 0;
+            return ` <tr><td><strong>${cat}</strong></td><td>${data.quantity}</td><td>$${data.sales.toFixed(2)}</td><td>$${data.cogs.toFixed(2)}</td><td class="text-success">$${data.profit.toFixed(2)}</td><td><span class="badge ${margin >= 30 ? 'bg-success' : margin >= 15 ? 'bg-warning' : 'bg-secondary'}">${margin}%</span></td><td><div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${contribution}%"></div></div><small>${contribution}%</small></td></tr>`;
+        }).join('');
+        
+        // Top products lists
+        const topSelling = Object.entries(productSales).sort((a, b) => b[1].sales - a[1].sales).slice(0, 10);
+        const topProfitable = Object.entries(productProfit).sort((a, b) => b[1].profit - a[1].profit).slice(0, 10);
+        
+        document.getElementById('topProductsListReport').innerHTML = topSelling.map((p, idx) => `<div class="d-flex justify-content-between align-items-center p-2 border-bottom"><div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div><div class="text-end"><div class="fw-bold">$${p[1].sales.toFixed(2)}</div><small class="text-muted">revenue</small></div></div>`).join('');
+        
+        document.getElementById('topProfitProductsList').innerHTML = topProfitable.map((p, idx) => {
+            const margin = (p[1].profit / (productSales[p[0]]?.sales || 1) * 100).toFixed(0);
+            return `<div class="d-flex justify-content-between align-items-center p-2 border-bottom"><div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div><div class="text-end"><div class="fw-bold text-success">$${p[1].profit.toFixed(2)}</div><small class="text-muted">${margin}% margin</small></div></div>`;
+        }).join('');
+        
+        // Reinvestment history table
+        document.getElementById('reinvestmentHistoryList').innerHTML = reinvestmentHistory.length ? reinvestmentHistory.map(h => ` <tr><td>${h.date}</td><td>${h.product_name}</td><td>${h.quantity}</td><td>$${h.total_cost.toFixed(2)}</td><td><span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span></td><td>${h.user}</td></tr>`).join('') : ' <tr><td colspan="6" class="text-center">No reinvestment history</td></tr>';
+    }
+
     // ==================== ZIMBABWE TIME FUNCTIONS ====================
 
     function getZimbabweTime() {
@@ -2003,6 +2498,8 @@
             if (statsData.success) {
                 salesData.todaySales = statsData.stats.today_sales;
                 salesData.itemsSold = statsData.stats.items_sold;
+                // Track total profit from all time
+                currentTotalProfit = statsData.stats.total_profit || 0;
                 updateStats();
             }
         } catch (error) { console.error('Error fetching stats:', error); }
@@ -2185,21 +2682,104 @@
     
     // ==================== EDIT STOCK FUNCTIONS ====================
     
+    // Update showEditStockModal to show current profit
     function showEditStockModal(productId) {
         productToEdit = products.find(p => p.id === productId);
         if (!productToEdit) return;
         
         document.getElementById('editStockProductName').innerText = productToEdit.name;
         document.getElementById('currentStockValue').innerText = productToEdit.stock;
+        document.getElementById('currentAvailableProfit').innerText = `$${currentTotalProfit.toFixed(2)}`;
         document.getElementById('editStockPasscode').value = '';
         document.getElementById('newStockQuantity').value = 1;
+        document.getElementById('stockBuyPrice').value = productToEdit.buy_price || 0;
         document.getElementById('editPasscodeError').innerHTML = '';
+        
+        // Reset funding selection
+        selectedFundingSource = "profit";
+        document.getElementById('fundingProfit').classList.add('active');
+        document.getElementById('fundingCapital').classList.remove('active');
+        
+        // Add event listeners for funding selection
+        setupFundingSelection();
+        
+        // Add input listeners for cost calculation
+        const quantityInput = document.getElementById('newStockQuantity');
+        const priceInput = document.getElementById('stockBuyPrice');
+        
+        const updateCostPreview = () => {
+            const quantity = parseInt(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            const totalCost = quantity * price;
+            document.getElementById('totalCostPreview').innerText = `$${totalCost.toFixed(2)}`;
+            
+            // Check if profit is sufficient if using profit funding
+            if (selectedFundingSource === "profit" && totalCost > currentTotalProfit) {
+                const warningDiv = document.getElementById('profitWarning');
+                warningDiv.style.display = 'block';
+                document.getElementById('warningProfitAmount').innerText = `$${currentTotalProfit.toFixed(2)}`;
+                document.getElementById('warningCostAmount').innerText = `$${totalCost.toFixed(2)}`;
+                document.getElementById('warningAvailableAmount').innerText = `$${currentTotalProfit.toFixed(2)}`;
+            } else {
+                document.getElementById('profitWarning').style.display = 'none';
+            }
+        };
+        
+        quantityInput.removeEventListener('input', updateCostPreview);
+        priceInput.removeEventListener('input', updateCostPreview);
+        quantityInput.addEventListener('input', updateCostPreview);
+        priceInput.addEventListener('input', updateCostPreview);
+        updateCostPreview();
+        
         new bootstrap.Modal(document.getElementById('editStockModal')).show();
     }
+
+    function setupFundingSelection() {
+        const profitOption = document.getElementById('fundingProfit');
+        const capitalOption = document.getElementById('fundingCapital');
+        
+        const removeListeners = () => {
+            const newProfit = profitOption.cloneNode(true);
+            const newCapital = capitalOption.cloneNode(true);
+            profitOption.parentNode.replaceChild(newProfit, profitOption);
+            capitalOption.parentNode.replaceChild(newCapital, capitalOption);
+            return { profit: newProfit, capital: newCapital };
+        };
+        
+        const { profit: newProfit, capital: newCapital } = removeListeners();
+        
+        newProfit.addEventListener('click', () => {
+            document.querySelectorAll('#fundingProfit, #fundingCapital').forEach(el => el.classList.remove('active'));
+            newProfit.classList.add('active');
+            selectedFundingSource = "profit";
+            // Trigger cost preview update
+            const quantity = parseInt(document.getElementById('newStockQuantity').value) || 0;
+            const price = parseFloat(document.getElementById('stockBuyPrice').value) || 0;
+            const totalCost = quantity * price;
+            if (totalCost > currentTotalProfit) {
+                document.getElementById('profitWarning').style.display = 'block';
+            } else {
+                document.getElementById('profitWarning').style.display = 'none';
+            }
+        });
+        
+        newCapital.addEventListener('click', () => {
+            document.querySelectorAll('#fundingProfit, #fundingCapital').forEach(el => el.classList.remove('active'));
+            newCapital.classList.add('active');
+            selectedFundingSource = "capital";
+            document.getElementById('profitWarning').style.display = 'none';
+        });
+        
+        document.getElementById('fundingProfit') = newProfit;
+        document.getElementById('fundingCapital') = newCapital;
+    }
+
     
+    // Update confirmAddStock to track funding source
     async function confirmAddStock() {
         const passcode = document.getElementById('editStockPasscode').value;
         const quantityToAdd = parseInt(document.getElementById('newStockQuantity').value);
+        const buyPrice = parseFloat(document.getElementById('stockBuyPrice').value);
         
         if (passcode !== EDIT_PASSCODE) {
             document.getElementById('editPasscodeError').innerHTML = 'Invalid passcode!';
@@ -2211,32 +2791,59 @@
             return;
         }
         
+        if (isNaN(buyPrice) || buyPrice <= 0) {
+            document.getElementById('editPasscodeError').innerHTML = 'Please enter a valid buying price!';
+            return;
+        }
+        
         if (!productToEdit) return;
+        
+        const totalCost = quantityToAdd * buyPrice;
+        
+        // Check if using profit and have sufficient profit
+        if (selectedFundingSource === "profit" && totalCost > currentTotalProfit) {
+            document.getElementById('editPasscodeError').innerHTML = `Insufficient profit! Available: $${currentTotalProfit.toFixed(2)}, Required: $${totalCost.toFixed(2)}`;
+            return;
+        }
         
         const newStock = productToEdit.stock + quantityToAdd;
         
-        showLoader(`Adding ${quantityToAdd} units to "${productToEdit.name}"...`);
+        showLoader(`Adding ${quantityToAdd} units to "${productToEdit.name}" using ${selectedFundingSource === "profit" ? 'profits' : 'new capital'}...`);
         
         try {
             const updateResponse = await fetch(`${API_BASE}/api/products/${productToEdit.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ ...productToEdit, stock: newStock })
+                body: JSON.stringify({ 
+                    ...productToEdit, 
+                    stock: newStock,
+                    buy_price: buyPrice,
+                    funding_source: selectedFundingSource,
+                    total_cost: totalCost
+                })
             });
             const updateData = await updateResponse.json();
             
             if (updateData.success) {
+                // Update local profit tracking
+                if (selectedFundingSource === "profit") {
+                    currentTotalProfit -= totalCost;
+                    showToast(`Added ${quantityToAdd} units using $${totalCost.toFixed(2)} from profits. Remaining profit: $${currentTotalProfit.toFixed(2)}`, 'success');
+                } else {
+                    showToast(`Added ${quantityToAdd} units using $${totalCost.toFixed(2)} new capital investment`, 'success');
+                }
+                
                 await fetchProductsFromAPI();
+                await fetchDashboardStats();
                 bootstrap.Modal.getInstance(document.getElementById('editStockModal')).hide();
-                showToast(`Added ${quantityToAdd} units to ${productToEdit.name}. New stock: ${newStock}`, 'success');
             } else {
                 showToast('Failed to update stock', 'error');
             }
         } catch (error) {
             showToast('Connection error', 'error');
         } finally {
-            hideLoader(); // ALWAYS hide loader
+            hideLoader();
             productToEdit = null;
         }
     }
