@@ -1437,6 +1437,10 @@
                                 <option value="transfer">Bank Transfer</option>
                             </select>
                         </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold" for="filterCashier">Cashier</label>
+                            <input type="text" class="form-control form-control-sm" id="filterCashier" placeholder="Search cashier...">
+                        </div>
                         <div class="col-md-3">
                             <label class="small fw-bold" for="filterProductName">Search by Product</label>
                             <input type="text" class="form-control form-control-sm" id="filterProductName" placeholder="Search product name...">
@@ -2242,6 +2246,7 @@ function renderSalesReport(transactions) {
         const startDate = document.getElementById('filterStartDate').value;
         const endDate = document.getElementById('filterEndDate').value;
         const paymentMethod = document.getElementById('filterPaymentMethod').value;
+        const cashierFilter = document.getElementById('filterCashier').value.toLowerCase().trim();
         const searchProduct = document.getElementById('filterProductName').value.toLowerCase().trim();
         const searchReceipt = document.getElementById('filterReceiptNumber').value.toLowerCase().trim();
         
@@ -2272,6 +2277,13 @@ function renderSalesReport(transactions) {
                 if (!hasProduct) match = false;
             }
             
+            // Cashier search
+            if (cashierFilter && t.cashier) {
+                if (!t.cashier.toLowerCase().includes(cashierFilter)) {
+                    match = false;
+                }
+            }
+
             // Receipt number search
             if (searchReceipt && t.transaction_number) {
                 if (!t.transaction_number.toLowerCase().includes(searchReceipt)) {
@@ -2299,6 +2311,7 @@ function renderSalesReport(transactions) {
         document.getElementById('filterStartDate').value = '';
         document.getElementById('filterEndDate').value = '';
         document.getElementById('filterPaymentMethod').value = 'all';
+        document.getElementById('filterCashier').value = '';
         document.getElementById('filterProductName').value = '';
         document.getElementById('filterReceiptNumber').value = '';
         
@@ -3999,6 +4012,24 @@ function navigateTo(page) {
                 if (page) navigateTo(page); 
             }); 
         });
+
+        // Auto-apply transaction filters on field change
+        const quickFilterIds = ['filterStartDate','filterEndDate','filterPaymentMethod','filterCashier','filterProductName','filterReceiptNumber'];
+        quickFilterIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', () => {
+                    if (currentPage === 'transactions') applyTransactionFilters();
+                });
+            }
+        });
+
+        const paymentMethodSelect = document.getElementById('filterPaymentMethod');
+        if (paymentMethodSelect) {
+            paymentMethodSelect.addEventListener('change', () => {
+                if (currentPage === 'transactions') applyTransactionFilters();
+            });
+        }
 
         // Accessibility fix: ensure receipt modal does not hide focused element
         const receiptModalEl = document.getElementById('receiptModal');
