@@ -2174,7 +2174,6 @@ async function loadSalesReport(message = 'Loading sales report...') {
     }
 }
 
-
 function renderSalesReport(transactions, reinvestmentHistory = []) {
     // Store for export
     currentReportData = transactions;
@@ -2270,30 +2269,6 @@ function renderSalesReport(transactions, reinvestmentHistory = []) {
             });
         }
     });
-
-    // In the reinvestment history table section of renderSalesReport
-    if (reinvestmentHistoryList) {
-        if (reinvestmentHistory && reinvestmentHistory.length > 0) {
-            reinvestmentHistoryList.innerHTML = reinvestmentHistory.map(h => {
-                // Format date properly
-                let dateStr = '';
-                if (h.date) {
-                    const date = new Date(h.date);
-                    dateStr = date.toLocaleString();
-                }
-                return `<tr>
-                    <td>${dateStr}</td>
-                    <td>${escapeHtml(h.product_name)} <small class="text-muted">(ID: ${h.product_id})</small></td>
-                    <td><strong id="qty-${h.id}">${h.quantity}</strong> <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit"><i class="fas fa-edit"></i></button></td>
-                    <td><strong id="cost-${h.id}">$${h.total_cost.toFixed(2)}</strong> (<span id="price-${h.id}">$${(h.total_cost / h.quantity).toFixed(2)}</span>/unit) <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit"><i class="fas fa-edit"></i></button></td>
-                    <td><span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}" id="funding-${h.id}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span> <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit"><i class="fas fa-edit"></i></button></td>
-                    <td>${escapeHtml(h.user)} <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit"><i class="fas fa-edit"></i></button> \\n
-                </div>`;
-            }).join('');
-        } else {
-            reinvestmentHistoryList.innerHTML = '=<td colspan="6" class="text-center">No reinvestment history</td>=';
-        }
-    }
     
     const grossMargin = totalRevenue > 0 ? (totalGrossProfit / totalRevenue * 100) : 0;
     const avgOrderValue = transactions.length > 0 ? totalRevenue / transactions.length : 0;
@@ -2454,12 +2429,12 @@ function renderSalesReport(transactions, reinvestmentHistory = []) {
             const contribution = totalRevenueForContribution > 0 ? (data.sales / totalRevenueForContribution * 100).toFixed(1) : 0;
             return `<tr>
                 <td><strong>${escapeHtml(cat)}</strong></td>
-                <td>${data.quantity}</td>
-                <td>$${data.sales.toFixed(2)}</td>
-                <td>$${data.cogs.toFixed(2)}</td>
-                <td class="text-success">$${data.profit.toFixed(2)}</td>
-                <td><span class="badge ${margin >= 30 ? 'bg-success' : margin >= 15 ? 'bg-warning' : 'bg-secondary'}">${margin}%</span></td>
-                <td><div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${contribution}%"></div></div><small>${contribution}%</small></td>
+                <td>${data.quantity}）,
+                <td>$${data.sales.toFixed(2)}）,
+                <td>$${data.cogs.toFixed(2)}）,
+                <td class="text-success">$${data.profit.toFixed(2)}）,
+                <td><span class="badge ${margin >= 30 ? 'bg-success' : margin >= 15 ? 'bg-warning' : 'bg-secondary'}">${margin}%</span>）,
+                <td><div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${contribution}%"></div></div><small>${contribution}%</small>）,
              </div>`;
         }).join('');
     }
@@ -2500,16 +2475,16 @@ function renderSalesReport(transactions, reinvestmentHistory = []) {
                     dateStr = date.toLocaleString();
                 }
                 return `<tr>
-                    <td>${dateStr}</td>
-                    <td>${escapeHtml(h.product_name)}</td>
-                    <td>${h.quantity}</td>
-                    <td>$${h.total_cost.toFixed(2)}</td>
-                    <td><span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span></td>
-                    <td>${escapeHtml(h.user)}</td>
+                    <td>${dateStr}）,
+                     how${escapeHtml(h.product_name)}）,
+                     how${h.quantity}）,
+                     how$${h.total_cost.toFixed(2)}）,
+                     how<span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span>）,
+                     how${escapeHtml(h.user)}）,
                  </div>`;
             }).join('');
         } else {
-            reinvestmentHistoryList.innerHTML = '<tr><td colspan="6" class="text-center">No reinvestment history</td></tr>';
+            reinvestmentHistoryList.innerHTML = '=<td colspan="6" class="text-center">No reinvestment history</td>=';
         }
     }
 }
