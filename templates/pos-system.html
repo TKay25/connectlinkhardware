@@ -1528,6 +1528,66 @@
         </div>
     </div>
 
+<!-- Edit Stock Addition Modal -->
+<div class="modal fade" id="editStockAdditionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#0a2b3e;color:white;">
+                <h5 class="modal-title"><i class="fas fa-edit me-1"></i>Edit Stock Addition</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editAdditionId">
+                <input type="hidden" id="editProductId">
+                
+                <div class="alert alert-info mb-3" style="font-size: 0.75rem;">
+                    <i class="fas fa-info-circle me-1"></i> 
+                    <strong>Product:</strong> <span id="editAdditionProductName">Loading...</span><br>
+                    <strong>Current Stock:</strong> <span id="editAdditionCurrentStock">0</span>
+                </div>
+                
+                <label class="form-label">Quantity *</label>
+                <input type="number" class="form-control mb-2" id="editAdditionQuantity" placeholder="Quantity" min="1" required>
+                
+                <label class="form-label">Cost per Unit ($) *</label>
+                <input type="number" step="0.01" class="form-control mb-2" id="editAdditionCost" placeholder="Cost per unit" required>
+                
+                <div class="mb-2">
+                    <label class="form-label">Funding Source *</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="payment-method" id="editAdditionFundingProfit" data-funding="profit" style="text-align: center; padding: 10px;">
+                                <i class="fas fa-chart-line text-success"></i>
+                                <div class="small">From Profits</div>
+                                <div class="small text-muted">Reinvest earnings</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="payment-method" id="editAdditionFundingCapital" data-funding="capital" style="text-align: center; padding: 10px;">
+                                <i class="fas fa-building text-primary"></i>
+                                <div class="small">New Capital</div>
+                                <div class="small text-muted">Owner investment</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="editAdditionProfitWarning" class="alert alert-warning small" style="display: none;">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>Profit Impact:</strong> Changing from capital to profit will reduce available profit by <span id="editAdditionProfitImpact">$0.00</span>
+                </div>
+                
+                <small class="text-muted">Total cost: <span id="editAdditionTotalCost">$0.00</span></small>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteStockAddition()">Delete</button>
+                <button class="btn btn-primary-dark btn-sm" onclick="updateStockAddition()">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Modals -->
     <div class="modal fade" id="confirmationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-receipt me-1"></i>Order Confirmation</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="confirmationContent"></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="processPayment()">Confirm & Pay</button></div></div></div></div>
 
@@ -1683,6 +1743,262 @@
 <script>
     // API Base URL
     const API_BASE = window.location.origin;
+
+
+// Store current editing addition data
+let currentEditingAddition = null;
+let editFundingSource = "profit";
+
+// Open edit modal for stock addition
+async function openEditStockAddition(additionId) {
+    try {
+        showLoader('Loading addition details...');
+        
+        // Fetch the specific stock addition details
+        const response = await fetch(`${API_BASE}/api/stock-additions/${additionId}`, { 
+            credentials: 'include' 
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            currentEditingAddition = data.addition;
+            
+            // Populate modal
+            document.getElementById('editAdditionId').value = additionId;
+            document.getElementById('editProductId').value = currentEditingAddition.product_id;
+            document.getElementById('editAdditionProductName').innerText = currentEditingAddition.product_name;
+            document.getElementById('editAdditionCurrentStock').innerText = currentEditingAddition.current_stock;
+            document.getElementById('editAdditionQuantity').value = currentEditingAddition.quantity;
+            document.getElementById('editAdditionCost').value = currentEditingAddition.cost_per_unit;
+            
+            // Set funding source
+            editFundingSource = currentEditingAddition.funding_source;
+            const profitOption = document.getElementById('editAdditionFundingProfit');
+            const capitalOption = document.getElementById('editAdditionFundingCapital');
+            
+            if (editFundingSource === 'profit') {
+                profitOption.classList.add('active');
+                capitalOption.classList.remove('active');
+            } else {
+                capitalOption.classList.add('active');
+                profitOption.classList.remove('active');
+            }
+            
+            // Update total cost preview
+            updateEditTotalCost();
+            
+            // Setup funding selection for edit modal
+            setupEditFundingSelection();
+            
+            // Add input listeners
+            const quantityInput = document.getElementById('editAdditionQuantity');
+            const costInput = document.getElementById('editAdditionCost');
+            quantityInput.removeEventListener('input', updateEditTotalCost);
+            costInput.removeEventListener('input', updateEditTotalCost);
+            quantityInput.addEventListener('input', updateEditTotalCost);
+            costInput.addEventListener('input', updateEditTotalCost);
+            
+            new bootstrap.Modal(document.getElementById('editStockAdditionModal')).show();
+        } else {
+            showToast('Failed to load addition details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading addition:', error);
+        showToast('Error loading addition details', 'error');
+    } finally {
+        hideLoader();
+    }
+}
+
+// Update total cost preview
+function updateEditTotalCost() {
+    const quantity = parseInt(document.getElementById('editAdditionQuantity').value) || 0;
+    const cost = parseFloat(document.getElementById('editAdditionCost').value) || 0;
+    const totalCost = quantity * cost;
+    document.getElementById('editAdditionTotalCost').innerText = `$${totalCost.toFixed(2)}`;
+    
+    // Show warning if changing funding source to profit
+    const profitWarning = document.getElementById('editAdditionProfitWarning');
+    if (editFundingSource === 'profit' && currentEditingAddition) {
+        const oldTotalCost = currentEditingAddition.total_cost;
+        const costDifference = totalCost - oldTotalCost;
+        
+        if (costDifference > 0 && currentTotalProfit < costDifference) {
+            profitWarning.style.display = 'block';
+            document.getElementById('editAdditionProfitImpact').innerText = `$${costDifference.toFixed(2)}`;
+        } else {
+            profitWarning.style.display = 'none';
+        }
+    } else {
+        profitWarning.style.display = 'none';
+    }
+}
+
+// Setup funding selection for edit modal
+function setupEditFundingSelection() {
+    const profitOption = document.getElementById('editAdditionFundingProfit');
+    const capitalOption = document.getElementById('editAdditionFundingCapital');
+    
+    if (!profitOption || !capitalOption) return;
+    
+    // Remove existing listeners by cloning and replacing
+    const newProfit = profitOption.cloneNode(true);
+    const newCapital = capitalOption.cloneNode(true);
+    profitOption.parentNode.replaceChild(newProfit, profitOption);
+    capitalOption.parentNode.replaceChild(newCapital, capitalOption);
+    
+    newProfit.addEventListener('click', () => {
+        document.querySelectorAll('#editAdditionFundingProfit, #editAdditionFundingCapital').forEach(el => {
+            if (el) el.classList.remove('active');
+        });
+        newProfit.classList.add('active');
+        editFundingSource = "profit";
+        updateEditTotalCost();
+    });
+    
+    newCapital.addEventListener('click', () => {
+        document.querySelectorAll('#editAdditionFundingProfit, #editAdditionFundingCapital').forEach(el => {
+            if (el) el.classList.remove('active');
+        });
+        newCapital.classList.add('active');
+        editFundingSource = "capital";
+        const profitWarning = document.getElementById('editAdditionProfitWarning');
+        if (profitWarning) profitWarning.style.display = 'none';
+    });
+}
+
+// Update stock addition
+async function updateStockAddition() {
+    const additionId = parseInt(document.getElementById('editAdditionId').value);
+    const productId = parseInt(document.getElementById('editProductId').value);
+    const newQuantity = parseInt(document.getElementById('editAdditionQuantity').value);
+    const newCostPerUnit = parseFloat(document.getElementById('editAdditionCost').value);
+    const newTotalCost = newQuantity * newCostPerUnit;
+    const oldTotalCost = currentEditingAddition.total_cost;
+    const costDifference = newTotalCost - oldTotalCost;
+    
+    if (!newQuantity || newQuantity <= 0) {
+        showToast('Please enter a valid quantity', 'error');
+        return;
+    }
+    
+    if (!newCostPerUnit || newCostPerUnit <= 0) {
+        showToast('Please enter a valid cost', 'error');
+        return;
+    }
+    
+    // Check profit sufficiency if changing to profit funding
+    if (editFundingSource === 'profit' && costDifference > 0 && currentTotalProfit < costDifference) {
+        showToast(`Insufficient profit! Available: $${currentTotalProfit.toFixed(2)}, Additional needed: $${costDifference.toFixed(2)}`, 'error');
+        return;
+    }
+    
+    showLoader('Updating stock addition...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/stock-additions/${additionId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: newQuantity,
+                cost_per_unit: newCostPerUnit,
+                total_cost: newTotalCost,
+                funding_source: editFundingSource,
+                old_total_cost: oldTotalCost,
+                old_funding_source: currentEditingAddition.funding_source
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update local profit tracking
+            if (editFundingSource === 'profit') {
+                if (currentEditingAddition.funding_source === 'profit') {
+                    // Both profit: adjust by difference
+                    currentTotalProfit -= costDifference;
+                } else {
+                    // Was capital, now profit: deduct full cost
+                    currentTotalProfit -= newTotalCost;
+                }
+            } else if (currentEditingAddition.funding_source === 'profit') {
+                // Was profit, now capital: add back old cost
+                currentTotalProfit += oldTotalCost;
+            }
+            
+            showToast('Stock addition updated successfully', 'success');
+            
+            // Refresh data
+            await fetchProductsFromAPI();
+            await fetchDashboardStats();
+            await loadSalesReport();
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('editStockAdditionModal')).hide();
+        } else {
+            showToast(data.error || 'Failed to update', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating addition:', error);
+        showToast('Connection error', 'error');
+    } finally {
+        hideLoader();
+    }
+}
+
+// Delete stock addition
+async function deleteStockAddition() {
+    if (!confirm('Are you sure you want to delete this stock addition? This will also remove the stock from inventory.')) {
+        return;
+    }
+    
+    const additionId = parseInt(document.getElementById('editAdditionId').value);
+    const oldTotalCost = currentEditingAddition.total_cost;
+    const oldFundingSource = currentEditingAddition.funding_source;
+    
+    showLoader('Deleting stock addition...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/stock-additions/${additionId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            body: JSON.stringify({
+                product_id: currentEditingAddition.product_id,
+                quantity: currentEditingAddition.quantity,
+                total_cost: oldTotalCost,
+                funding_source: oldFundingSource
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update profit tracking
+            if (oldFundingSource === 'profit') {
+                currentTotalProfit += oldTotalCost;
+            }
+            
+            showToast('Stock addition deleted successfully', 'success');
+            
+            // Refresh data
+            await fetchProductsFromAPI();
+            await fetchDashboardStats();
+            await loadSalesReport();
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('editStockAdditionModal')).hide();
+        } else {
+            showToast(data.error || 'Failed to delete', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting addition:', error);
+        showToast('Connection error', 'error');
+    } finally {
+        hideLoader();
+    }
+}
 
     let currentReportData = []; // Add this line
     let salesTrendChart = null;
@@ -1954,6 +2270,30 @@ function renderSalesReport(transactions, reinvestmentHistory = []) {
             });
         }
     });
+
+    // In the reinvestment history table section of renderSalesReport
+    if (reinvestmentHistoryList) {
+        if (reinvestmentHistory && reinvestmentHistory.length > 0) {
+            reinvestmentHistoryList.innerHTML = reinvestmentHistory.map(h => {
+                // Format date properly
+                let dateStr = '';
+                if (h.date) {
+                    const date = new Date(h.date);
+                    dateStr = date.toLocaleString();
+                }
+                return `<tr>
+                    <td>${dateStr}</td>
+                    <td>${escapeHtml(h.product_name)} <small class="text-muted">(ID: ${h.product_id})</small></td>
+                    <td><strong id="qty-${h.id}">${h.quantity}</strong> <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit"><i class="fas fa-edit"></i></button></td>
+                    <td><strong id="cost-${h.id}">$${h.total_cost.toFixed(2)}</strong> (<span id="price-${h.id}">$${(h.total_cost / h.quantity).toFixed(2)}</span>/unit) <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit"><i class="fas fa-edit"></i></button></td>
+                    <td><span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}" id="funding-${h.id}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span> <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit"><i class="fas fa-edit"></i></button></td>
+                    <td>${escapeHtml(h.user)} <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit"><i class="fas fa-edit"></i></button> \\n
+                </div>`;
+            }).join('');
+        } else {
+            reinvestmentHistoryList.innerHTML = '=<td colspan="6" class="text-center">No reinvestment history</td>=';
+        }
+    }
     
     const grossMargin = totalRevenue > 0 ? (totalGrossProfit / totalRevenue * 100) : 0;
     const avgOrderValue = transactions.length > 0 ? totalRevenue / transactions.length : 0;

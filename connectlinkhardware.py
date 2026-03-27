@@ -287,6 +287,101 @@ def run1():
     
     return products
 
+
+# Get specific stock addition
+@app.route('/api/stock-additions/<int:addition_id>', methods=['GET'])
+@login_required
+def get_stock_addition(addition_id):
+    query = """
+        SELECT sa.id, sa.product_id, p.name as product_name, sa.quantity, 
+               sa.buy_price, sa.total_cost, sa.funding_source, 
+               p.stock as current_stock,
+               sa.buy_price as cost_per_unit
+        FROM stock_additions sa
+        LEFT JOIN products p ON sa.product_id = p.id
+        WHERE sa.id = %s
+    """
+    result = execute_query(query, (addition_id,), fetch_one=True)
+    
+    if not result:
+        return jsonify({'error': 'Stock addition not found'}), 404
+    
+    return jsonify({
+        'success': True,
+        'addition': {
+            'id': result[0],
+            'product_id': result[1],
+            'product_name': result[2],
+            'quantity': result[3],
+            'total_cost': float(result[5]),
+            'cost_per_unit': float(result[8]),
+            'funding_source': result[6],
+            'current_stock': result[7]
+        }
+    })
+
+# Update stock addition
+@app.route('/api/stock-additions/<int:addition_id>', methods=['PUT'])
+@login_required
+def update_stock_addition(addition_id):
+    data = request.json
+    
+    # Calculate stock difference
+    old_stock = execute_query("SELECT quantity FROM stock_additions WHERE id = %s", (addition_id,), fetch_one=True)
+    if not old_stock:
+        return jsonify({'error': 'Stock addition not found'}), 404
+    
+    stock_difference = data['quantity'] - old_stock[0]
+    
+    # Update stock addition record
+    update_query = """
+        UPDATE stock_additions 
+        SET quantity = %s, buy_price = %s, total_cost = %s, funding_source = %s
+        WHERE id = %s
+    """
+    execute_query(update_query, (
+        data['quantity'],
+        data['cost_per_unit'],
+        data['total_cost'],
+        data['funding_source'],
+        addition_id
+    ), commit=True)
+    
+    # Update product stock
+    update_stock_query = """
+        UPDATE products 
+        SET stock = stock + %s, updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+    """
+    execute_query(update_stock_query, (stock_difference, data['product_id']), commit=True)
+    
+    return jsonify({'success': True, 'message': 'Stock addition updated successfully'})
+
+# Delete stock addition
+@app.route('/api/stock-additions/<int:addition_id>', methods=['DELETE'])
+@login_required
+def delete_stock_addition(addition_id):
+    data = request.json
+    
+    # Get the addition details
+    addition = execute_query("SELECT product_id, quantity FROM stock_additions WHERE id = %s", (addition_id,), fetch_one=True)
+    if not addition:
+        return jsonify({'error': 'Stock addition not found'}), 404
+    
+    # Remove stock from product
+    update_stock_query = """
+        UPDATE products 
+        SET stock = stock - %s, updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+    """
+    execute_query(update_stock_query, (addition[1], addition[0]), commit=True)
+    
+    # Delete the addition record
+    delete_query = "DELETE FROM stock_additions WHERE id = %s"
+    execute_query(delete_query, (addition_id,), commit=True)
+    
+    return jsonify({'success': True, 'message': 'Stock addition deleted successfully'})
+
 # ==================== USER AUTHENTICATION ====================
 
 @app.route('/api/stock-additions', methods=['GET'])
