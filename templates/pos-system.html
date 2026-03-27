@@ -930,10 +930,10 @@
                             <input type="password" class="form-control mb-2" id="editStockPasscode" placeholder="Enter passcode">
                             <div id="editPasscodeError" class="text-danger small mb-2"></div>
                             
-                            <label class="form-label">Quantity to ADD *</label>
+                            <label class="form-label" for="newStockQuantity">Quantity to ADD *</label>
                             <input type="number" class="form-control mb-2" id="newStockQuantity" placeholder="Enter quantity to add" min="1" value="">
                             
-                            <label class="form-label">Buying Price per Unit ($) *</label>
+                            <label class="form-label" for="stockBuyPrice">Buying Price per Unit ($) *</label>
                             <input type="number" step="0.01" class="form-control mb-2" id="stockBuyPrice" placeholder="Cost per unit" required>
                             
                             <div class="mb-2">
@@ -1029,7 +1029,7 @@
                                 </div>
 
                                 <div id="cashInputDiv" style="display: none;">
-                                    <label class="small fw-bold">Cash Amount</label>
+                                    <label class="small fw-bold" for="cashAmount">Cash Amount</label>
                                     <input type="number" class="form-control mb-1" id="cashAmount" placeholder="Enter amount" style="font-size: 0.7rem;">
                                     <small id="changeDue" class="text-success small"></small>
                                 </div>
@@ -1098,7 +1098,7 @@
                     <!-- Filters Row -->
                     <div class="row g-2 mb-3">
                         <div class="col-md-3">
-                            <label class="small fw-bold">Period</label>
+                            <label class="small fw-bold" for="reportPeriod">Period</label>
                             <select class="form-select form-select-sm" id="reportPeriod" onchange="updateReportDateRange()">
                                 <option value="today">Today</option>
                                 <option value="yesterday">Yesterday</option>
@@ -1110,11 +1110,11 @@
                             </select>
                         </div>
                         <div class="col-md-3" id="dateRangeStartDiv" style="display: none;">
-                            <label class="small fw-bold">Start Date</label>
+                            <label class="small fw-bold" for="reportStartDate">Start Date</label>
                             <input type="date" class="form-control form-control-sm" id="reportStartDate">
                         </div>
                         <div class="col-md-3" id="dateRangeEndDiv" style="display: none;">
-                            <label class="small fw-bold">End Date</label>
+                            <label class="small fw-bold" for="reportEndDate">End Date</label>
                             <input type="date" class="form-control form-control-sm" id="reportEndDate">
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
@@ -1417,15 +1417,15 @@
                     <!-- Filters -->
                     <div class="row g-2 mb-3">
                         <div class="col-md-2">
-                            <label class="small fw-bold">Start Date</label>
+                            <label class="small fw-bold" for="filterStartDate">Start Date</label>
                             <input type="date" class="form-control form-control-sm" id="filterStartDate" placeholder="dd/mm/yyyy">
                         </div>
                         <div class="col-md-2">
-                            <label class="small fw-bold">End Date</label>
+                            <label class="small fw-bold" for="filterEndDate">End Date</label>
                             <input type="date" class="form-control form-control-sm" id="filterEndDate" placeholder="dd/mm/yyyy">
                         </div>
                         <div class="col-md-2">
-                            <label class="small fw-bold">Payment Method</label>
+                            <label class="small fw-bold" for="filterPaymentMethod">Payment Method</label>
                             <select class="form-select form-select-sm" id="filterPaymentMethod">
                                 <option value="all">All</option>
                                 <option value="cash">Cash</option>
@@ -1434,11 +1434,11 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="small fw-bold">Search by Product</label>
+                            <label class="small fw-bold" for="filterProductName">Search by Product</label>
                             <input type="text" class="form-control form-control-sm" id="filterProductName" placeholder="Search product name...">
                         </div>
                         <div class="col-md-3">
-                            <label class="small fw-bold">Search by Receipt #</label>
+                            <label class="small fw-bold" for="filterReceiptNumber">Search by Receipt #</label>
                             <input type="text" class="form-control form-control-sm" id="filterReceiptNumber" placeholder="Search receipt number...">
                         </div>
                         <div class="col-md-3 d-flex align-items-end gap-2">
@@ -1505,12 +1505,12 @@
                     <form id="addProductForm">
                         <div class="row g-2">
                             <div class="col-md-6 position-relative">
-                                <label class="form-label">Product Name *</label>
+                                <label class="form-label" for="productName">Product Name *</label>
                                 <input type="text" class="form-control" id="productName" autocomplete="off" required>
                                 <div id="productNameSuggestions" class="autocomplete-items"></div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Category *</label>
+                                <label class="form-label" for="productCategory">Category *</label>
                                 <select class="form-select" id="productCategory">
                                     <option value="Hand Tools">Hand Tools</option>
                                     <option value="Power Tools">Power Tools</option>
@@ -1523,7 +1523,7 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Unit Type *</label>
+                                <label class="form-label" for="unitType">Unit Type *</label>
                                 <select class="form-select" id="unitType">
                                     <option value="piece">Piece</option>
                                     <option value="length">Length</option>
@@ -1533,19 +1533,19 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Unit Detail *</label>
+                                <label class="form-label" for="unitDetails">Unit Detail *</label>
                                 <input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Initial Stock *</label>
+                                <label class="form-label" for="productStock">Initial Stock *</label>
                                 <input type="number" class="form-control" id="productStock" required min="0">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Buying Price ($) *</label>
+                                <label class="form-label" for="buyPrice">Buying Price ($) *</label>
                                 <input type="number" step="0.01" class="form-control" id="buyPrice" placeholder="Cost price" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Selling Price ($) *</label>
+                                <label class="form-label" for="sellPrice">Selling Price ($) *</label>
                                 <input type="number" step="0.01" class="form-control" id="sellPrice" placeholder="Retail price" required>
                             </div>
                             <div class="col-12">
@@ -1555,7 +1555,7 @@
                                 </div>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label">Description</label>
+                                <label class="form-label" for="productDescription">Description</label>
                                 <input type="text" class="form-control" id="productDescription" placeholder="Optional description">
                             </div>
                         </div>
@@ -2356,10 +2356,9 @@ function toggleItemsDetail(elementId) {
 function renderFilteredTransactions() {
     console.log('renderFilteredTransactions called');
     
-    // Check if transactions page is currently visible
-    const transactionsPage = document.getElementById('transactionsPage');
-    if (!transactionsPage || transactionsPage.style.display !== 'block') {
-        console.log('Transactions page is not visible, skipping render');
+    // Check if we are on the transactions page
+    if (currentPage !== 'transactions') {
+        console.log('Not on transactions page, skipping render');
         return;
     }
     
