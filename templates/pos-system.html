@@ -1334,22 +1334,6 @@
                     </div>
                 </div>
                 
-                <!-- Top Products Lists -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-trophy me-1"></i>🏆 Top Selling Products</h6>
-                            <div id="topProductsListReport" style="max-height: 300px; overflow-y: auto;"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i>💰 Most Profitable Products</h6>
-                            <div id="topProfitProductsList" style="max-height: 300px; overflow-y: auto;"></div>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- Profit Reinvestment History Table -->
                 <div class="section-card">
                     <h6 class="fw-bold mb-2"><i class="fas fa-history me-1"></i>Profit Reinvestment History</h6>
@@ -1460,6 +1444,22 @@
 
             <!-- Analytics Page -->
             <div id="analyticsPage" style="display: none;">
+                <!-- Top Products Lists - MOVED HERE -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-trophy me-1"></i>🏆 Top Selling Products</h6>
+                            <div id="topProductsListReport" style="max-height: 300px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i>💰 Most Profitable Products</h6>
+                            <div id="topProfitProductsList" style="max-height: 300px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="section-card">
@@ -1469,20 +1469,13 @@
                     </div>
                     <div class="col-md-6">
                         <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-trophy me-1"></i>Top Selling Products</h6>
-                            <div id="topProductsList"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Advanced Analytics Row 1 - Trends -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <div class="section-card">
                             <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Sales & Profit Trend</h6>
                             <canvas id="salesTrendChart" style="max-height: 280px;"></canvas>
                         </div>
                     </div>
+                </div>
+                
+                <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="section-card">
                             <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Hourly Sales Distribution</h6>
@@ -1515,15 +1508,11 @@
                             <canvas id="salesForecastChart" style="max-height: 280px;"></canvas>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-gauge me-1"></i>Performance Metrics Dashboard</h6>
-                            <div id="performanceMetrics" style="max-height: 280px; overflow-y: auto;">
-                                <div class="alert alert-info">Advanced metrics loading...</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
+            
+            
+            
+            
             </div>
         </div>
     </div>
@@ -4407,19 +4396,94 @@ function setupAddProductFundingSelection() {
         });
     }
     
-    function renderAnalytics() {
-        const categoryCount = {};
-        products.forEach(p => { if (!categoryCount[p.category]) categoryCount[p.category] = 0; categoryCount[p.category] += p.stock * p.sell_price; });
-        const canvas = document.getElementById('categoryChart');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            if (categoryChart) categoryChart.destroy();
-            categoryChart = new Chart(ctx, { type: 'pie', data: { labels: Object.keys(categoryCount), datasets: [{ data: Object.values(categoryCount), backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'] }] }, options: { responsive: true } });
-        }
-        const topProducts = [...products].sort((a, b) => b.stock * b.sell_price - a.stock * a.sell_price).slice(0, 5);
-        const topList = document.getElementById('topProductsList');
-        if (topList) topList.innerHTML = topProducts.map((p, idx) => `<div class="d-flex justify-content-between align-items-center p-1 border-bottom small"><span><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</span><span class="fw-bold">$${(p.stock * p.sell_price).toFixed(0)}</span></div>`).join('');
+function renderAnalytics() {
+    // Calculate category distribution for stock value
+    const categoryCount = {};
+    products.forEach(p => { 
+        if (!categoryCount[p.category]) categoryCount[p.category] = 0; 
+        categoryCount[p.category] += p.stock * p.sell_price; 
+    });
+    
+    const canvas = document.getElementById('categoryChart');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (categoryChart) categoryChart.destroy();
+        categoryChart = new Chart(ctx, { 
+            type: 'pie', 
+            data: { 
+                labels: Object.keys(categoryCount), 
+                datasets: [{ 
+                    data: Object.values(categoryCount), 
+                    backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'] 
+                }] 
+            }, 
+            options: { responsive: true } 
+        });
     }
+    
+    // Top Selling Products - from sales data
+    const topSellingProducts = document.getElementById('topProductsListReport');
+    if (topSellingProducts && currentReportData && currentReportData.length) {
+        // Aggregate product sales from transaction data
+        const productSales = {};
+        currentReportData.forEach(transaction => {
+            if (transaction.items) {
+                transaction.items.forEach(item => {
+                    const productName = item.product_name || item.name;
+                    if (!productSales[productName]) {
+                        productSales[productName] = { sales: 0, quantity: 0 };
+                    }
+                    productSales[productName].sales += item.subtotal || (item.price * item.quantity);
+                    productSales[productName].quantity += item.quantity;
+                });
+            }
+        });
+        
+        const topSelling = Object.entries(productSales).sort((a, b) => b[1].sales - a[1].sales).slice(0, 10);
+        topSellingProducts.innerHTML = topSelling.map((p, idx) => 
+            `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div>
+                <div class="text-end"><div class="fw-bold">$${p[1].sales.toFixed(2)}</div><small class="text-muted">revenue</small></div>
+            </div>`
+        ).join('');
+    } else if (topSellingProducts) {
+        topSellingProducts.innerHTML = '<div class="text-center text-muted py-3">No sales data available</div>';
+    }
+    
+    // Most Profitable Products
+    const topProfitProducts = document.getElementById('topProfitProductsList');
+    if (topProfitProducts && currentReportData && currentReportData.length) {
+        // Aggregate product profits from transaction data
+        const productProfits = {};
+        currentReportData.forEach(transaction => {
+            if (transaction.items) {
+                transaction.items.forEach(item => {
+                    const productName = item.product_name || item.name;
+                    const buyPrice = item.buy_price || 0;
+                    const sellPrice = item.price || item.price_at_time || 0;
+                    const profit = (sellPrice - buyPrice) * item.quantity;
+                    if (!productProfits[productName]) {
+                        productProfits[productName] = { profit: 0, quantity: 0, revenue: 0 };
+                    }
+                    productProfits[productName].profit += profit;
+                    productProfits[productName].quantity += item.quantity;
+                    productProfits[productName].revenue += item.subtotal || (sellPrice * item.quantity);
+                });
+            }
+        });
+        
+        const topProfitable = Object.entries(productProfits).sort((a, b) => b[1].profit - a[1].profit).slice(0, 10);
+        topProfitProducts.innerHTML = topProfitable.map((p, idx) => {
+            const margin = (p[1].profit / p[1].revenue * 100).toFixed(0);
+            return `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                        <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div>
+                        <div class="text-end"><div class="fw-bold text-success">$${p[1].profit.toFixed(2)}</div><small class="text-muted">${margin}% margin</small></div>
+                    </div>`;
+        }).join('');
+    } else if (topProfitProducts) {
+        topProfitProducts.innerHTML = '<div class="text-center text-muted py-3">No profit data available</div>';
+    }
+}
     
     function updateStats() {
         const todaySalesEl = document.getElementById('todaySales');
@@ -4462,12 +4526,7 @@ function navigateTo(page) {
     const targetPage = document.getElementById(page + 'Page');
     if (targetPage) {
         targetPage.style.display = 'block';
-        console.log(`Showing page: ${page}, element:`, targetPage);
-    } else {
-        console.error(`Page element '${page}Page' not found!`);
     }
-    
-    console.log(`Navigating to page: ${page}`);
     
     if (page === 'inventory') {
         renderInventory();
@@ -4476,14 +4535,15 @@ function navigateTo(page) {
         loadSalesReport();
     }
     if (page === 'transactions') {
-        console.log('Calling fetchTransactionsData for transactions page');
-        // Show existing data immediately
-        renderFilteredTransactions();
-        // Then fetch fresh data
         fetchTransactionsData();
     }
     if (page === 'analytics') {
-        loadSalesReport();
+        // If we have sales data, use it; otherwise load it
+        if (currentReportData && currentReportData.length) {
+            renderAnalytics();
+        } else {
+            loadSalesReport('Loading analytics...');
+        }
     }
 }
     
