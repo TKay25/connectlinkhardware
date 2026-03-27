@@ -1845,7 +1845,10 @@ async function loadSalesReport(message = 'Loading sales report...') {
                 const transDate = new Date(t.created_at).toISOString().split('T')[0];
                 return transDate >= startDate && transDate <= endDate;
             });
-            renderSalesReport(filtered);
+            // Pass reinvestment data to renderSalesReport
+            const reinvestmentHistory = reinvestmentData.success ? reinvestmentData.additions : [];
+            console.log('Reinvestment history loaded:', reinvestmentHistory.length); // Debug
+            renderSalesReport(filtered, reinvestmentHistory);
         }
     } catch (error) {
         console.error('Error loading sales report:', error);
@@ -1856,7 +1859,7 @@ async function loadSalesReport(message = 'Loading sales report...') {
 }
 
 
-function renderSalesReport(transactions) {
+function renderSalesReport(transactions, reinvestmentHistory = []) {
     // Store for export
     currentReportData = transactions;
     
@@ -1872,10 +1875,19 @@ function renderSalesReport(transactions) {
     const productProfit = {};
     const hourlyData = Array(24).fill(0);
     
-    // Fetch reinvestment history from backend (you'll need to add this endpoint)
-    let totalProfitEarned = 0;
+    // Calculate profit reinvested from history
     let profitReinvested = 0;
-    let reinvestmentHistory = [];
+    if (reinvestmentHistory && reinvestmentHistory.length) {
+        profitReinvested = reinvestmentHistory.reduce((sum, item) => {
+            if (item.funding_source === 'profit') {
+                return sum + (item.total_cost || 0);
+            }
+            return sum;
+        }, 0);
+    }
+    
+    // Calculate total profit earned from transactions
+    let totalProfitEarned = 0;
     
     // Add profit calculation for each transaction
     transactions.forEach(t => {
@@ -1949,7 +1961,7 @@ function renderSalesReport(transactions) {
     const availableProfit = totalProfitEarned - profitReinvested;
     const reinvestmentRate = totalProfitEarned > 0 ? (profitReinvested / totalProfitEarned * 100) : 0;
     
-    // Update KPI cards (add null checks)
+    // Update KPI cards
     const reportTotalSales = document.getElementById('reportTotalSales');
     const reportGrossProfit = document.getElementById('reportGrossProfit');
     const reportCOGS = document.getElementById('reportCOGS');
@@ -1978,7 +1990,7 @@ function renderSalesReport(transactions) {
     if (reportAvailableProfit) reportAvailableProfit.innerText = `$${availableProfit.toFixed(2)}`;
     if (reportReinvestmentRate) reportReinvestmentRate.innerText = `${reinvestmentRate.toFixed(1)}%`;
     
-    // Render profit utilization chart with safe check
+    // Render profit utilization chart
     const profitUtilizationCtx = document.getElementById('profitUtilizationChart');
     if (profitUtilizationCtx) {
         const ctx = profitUtilizationCtx.getContext('2d');
@@ -1995,7 +2007,7 @@ function renderSalesReport(transactions) {
         });
     }
     
-    // Category sales chart with safe check
+    // Category sales chart
     const categorySalesCtx = document.getElementById('categorySalesChart');
     if (categorySalesCtx) {
         const categoryLabels = Object.keys(categoryData);
@@ -2016,7 +2028,7 @@ function renderSalesReport(transactions) {
         });
     }
     
-    // Top products chart with safe check
+    // Top products chart
     const topProductsCtx = document.getElementById('topProductsChart');
     if (topProductsCtx) {
         const topProducts = Object.entries(productSales).sort((a, b) => b[1].sales - a[1].sales).slice(0, 10);
@@ -2034,7 +2046,7 @@ function renderSalesReport(transactions) {
         });
     }
     
-    // Category margin chart with safe check
+    // Category margin chart
     const categoryMarginCtx = document.getElementById('categoryMarginChart');
     if (categoryMarginCtx) {
         const categoryLabels = Object.keys(categoryData);
@@ -2053,7 +2065,7 @@ function renderSalesReport(transactions) {
         });
     }
     
-    // Sales trend chart with safe check
+    // Sales trend chart
     const salesTrendCtx = document.getElementById('salesTrendChart');
     if (salesTrendCtx) {
         const sortedDates = Object.keys(dailyData).sort();
@@ -2074,7 +2086,7 @@ function renderSalesReport(transactions) {
         });
     }
     
-    // Hourly sales chart with safe check
+    // Hourly sales chart
     const hourlySalesCtx = document.getElementById('hourlySalesChart');
     if (hourlySalesCtx) {
         const ctx = hourlySalesCtx.getContext('2d');
@@ -2091,7 +2103,7 @@ function renderSalesReport(transactions) {
         });
     }
     
-    // Category breakdown table with safe check
+    // Category breakdown table
     const categoryBreakdownList = document.getElementById('categoryBreakdownList');
     if (categoryBreakdownList) {
         const categoryLabels = Object.keys(categoryData);
@@ -2100,18 +2112,19 @@ function renderSalesReport(transactions) {
             const data = categoryData[cat];
             const margin = data.sales > 0 ? (data.profit / data.sales * 100).toFixed(1) : 0;
             const contribution = totalRevenueForContribution > 0 ? (data.sales / totalRevenueForContribution * 100).toFixed(1) : 0;
-            return `<td><strong>${escapeHtml(cat)}</strong></td>
-                        <td>${data.quantity}</td>
-                        <td>$${data.sales.toFixed(2)}</td>
-                        <td>$${data.cogs.toFixed(2)}</td>
-                        <td class="text-success">$${data.profit.toFixed(2)}</td>
-                        <td><span class="badge ${margin >= 30 ? 'bg-success' : margin >= 15 ? 'bg-warning' : 'bg-secondary'}">${margin}%</span></td>
-                        <td><div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${contribution}%"></div></div><small>${contribution}%</small></td>
-                     </tr>`;
+            return `<tr>
+                <td><strong>${escapeHtml(cat)}</strong></td>
+                <td>${data.quantity}</td>
+                <td>$${data.sales.toFixed(2)}</td>
+                <td>$${data.cogs.toFixed(2)}</td>
+                <td class="text-success">$${data.profit.toFixed(2)}</td>
+                <td><span class="badge ${margin >= 30 ? 'bg-success' : margin >= 15 ? 'bg-warning' : 'bg-secondary'}">${margin}%</span></td>
+                <td><div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${contribution}%"></div></div><small>${contribution}%</small></td>
+             </div>`;
         }).join('');
     }
     
-    // Top products lists with safe checks
+    // Top products lists
     const topProductsListReport = document.getElementById('topProductsListReport');
     if (topProductsListReport) {
         const topSelling = Object.entries(productSales).sort((a, b) => b[1].sales - a[1].sales).slice(0, 10);
@@ -2135,18 +2148,29 @@ function renderSalesReport(transactions) {
         }).join('');
     }
     
-    // Reinvestment history table with safe check
+    // Reinvestment history table
     const reinvestmentHistoryList = document.getElementById('reinvestmentHistoryList');
     if (reinvestmentHistoryList) {
-        reinvestmentHistoryList.innerHTML = reinvestmentHistory.length ? 
-            reinvestmentHistory.map(h => `<td>${h.date}</td>
-                <td>${escapeHtml(h.product_name)}</td>
-                <td>${h.quantity}</td>
-                <td>$${h.total_cost.toFixed(2)}</td>
-                <td><span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span></td>
-                <td>${escapeHtml(h.user)}</td>
-             </tr>`).join('') : 
-            '<td colspan="6" class="text-center">No reinvestment history</td> </tr>';
+        if (reinvestmentHistory && reinvestmentHistory.length > 0) {
+            reinvestmentHistoryList.innerHTML = reinvestmentHistory.map(h => {
+                // Format date properly
+                let dateStr = '';
+                if (h.date) {
+                    const date = new Date(h.date);
+                    dateStr = date.toLocaleString();
+                }
+                return `<tr>
+                    <td>${dateStr}</td>
+                    <td>${escapeHtml(h.product_name)}</td>
+                    <td>${h.quantity}</td>
+                    <td>$${h.total_cost.toFixed(2)}</td>
+                    <td><span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span></td>
+                    <td>${escapeHtml(h.user)}</td>
+                 </div>`;
+            }).join('');
+        } else {
+            reinvestmentHistoryList.innerHTML = '<tr><td colspan="6" class="text-center">No reinvestment history</td></tr>';
+        }
     }
 }
 
