@@ -1749,8 +1749,16 @@
 let currentEditingAddition = null;
 let editFundingSource = "profit";
 
-// Open edit modal for stock addition
+// Open edit modal for stock addition with passcode check
 async function openEditStockAddition(additionId) {
+    // First, verify admin passcode
+    const passcode = prompt('Enter admin passcode to edit stock addition:');
+    
+    if (passcode !== EDIT_PASSCODE) {
+        showToast('Invalid passcode! Access denied.', 'error');
+        return;
+    }
+    
     try {
         showLoader('Loading addition details...');
         
@@ -1810,6 +1818,7 @@ async function openEditStockAddition(additionId) {
     }
 }
 
+
 // Update total cost preview
 function updateEditTotalCost() {
     const quantity = parseInt(document.getElementById('editAdditionQuantity').value) || 0;
@@ -1867,8 +1876,17 @@ function setupEditFundingSelection() {
     });
 }
 
-// Update stock addition
+
+// Update stock addition with passcode check
 async function updateStockAddition() {
+    // Verify passcode again before saving
+    const passcode = prompt('Enter admin passcode to confirm changes:');
+    
+    if (passcode !== EDIT_PASSCODE) {
+        showToast('Invalid passcode! Changes not saved.', 'error');
+        return;
+    }
+    
     const additionId = parseInt(document.getElementById('editAdditionId').value);
     const productId = parseInt(document.getElementById('editProductId').value);
     const newQuantity = parseInt(document.getElementById('editAdditionQuantity').value);
@@ -1905,9 +1923,7 @@ async function updateStockAddition() {
                 quantity: newQuantity,
                 cost_per_unit: newCostPerUnit,
                 total_cost: newTotalCost,
-                funding_source: editFundingSource,
-                old_total_cost: oldTotalCost,
-                old_funding_source: currentEditingAddition.funding_source
+                funding_source: editFundingSource
             })
         });
         
@@ -1928,15 +1944,17 @@ async function updateStockAddition() {
                 currentTotalProfit += oldTotalCost;
             }
             
-            showToast('Stock addition updated successfully', 'success');
+            showToast(`Stock updated successfully! Stock changed by ${data.stock_change} units.`, 'success');
             
-            // Refresh data
+            // Refresh all data
             await fetchProductsFromAPI();
             await fetchDashboardStats();
             await loadSalesReport();
+            await fetchTransactionsData(); // Refresh transactions if needed
             
             // Close modal
-            bootstrap.Modal.getInstance(document.getElementById('editStockAdditionModal')).hide();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editStockAdditionModal'));
+            if (modal) modal.hide();
         } else {
             showToast(data.error || 'Failed to update', 'error');
         }
@@ -1948,9 +1966,17 @@ async function updateStockAddition() {
     }
 }
 
-// Delete stock addition
+// Delete stock addition with passcode check
 async function deleteStockAddition() {
-    if (!confirm('Are you sure you want to delete this stock addition? This will also remove the stock from inventory.')) {
+    // Verify passcode
+    const passcode = prompt('Enter admin passcode to delete this stock addition:');
+    
+    if (passcode !== EDIT_PASSCODE) {
+        showToast('Invalid passcode! Deletion cancelled.', 'error');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to delete this stock addition? This will remove the stock from inventory and cannot be undone.')) {
         return;
     }
     
@@ -1964,6 +1990,7 @@ async function deleteStockAddition() {
         const response = await fetch(`${API_BASE}/api/stock-additions/${additionId}`, {
             method: 'DELETE',
             credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 product_id: currentEditingAddition.product_id,
                 quantity: currentEditingAddition.quantity,
@@ -1980,15 +2007,17 @@ async function deleteStockAddition() {
                 currentTotalProfit += oldTotalCost;
             }
             
-            showToast('Stock addition deleted successfully', 'success');
+            showToast(`Stock addition deleted successfully! ${data.stock_removed} units removed from inventory.`, 'success');
             
-            // Refresh data
+            // Refresh all data
             await fetchProductsFromAPI();
             await fetchDashboardStats();
             await loadSalesReport();
+            await fetchTransactionsData();
             
             // Close modal
-            bootstrap.Modal.getInstance(document.getElementById('editStockAdditionModal')).hide();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editStockAdditionModal'));
+            if (modal) modal.hide();
         } else {
             showToast(data.error || 'Failed to delete', 'error');
         }
@@ -1999,6 +2028,7 @@ async function deleteStockAddition() {
         hideLoader();
     }
 }
+
 
     let currentReportData = []; // Add this line
     let salesTrendChart = null;
