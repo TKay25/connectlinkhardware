@@ -7,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -863,13 +862,13 @@
                     <i class="fas fa-boxes"></i>
                     <span class="menu-text">Inventory</span>
                 </div>
-                <div class="menu-item" data-page="transactions">
-                    <i class="fas fa-history"></i>
-                    <span class="menu-text">Transactions</span>
-                </div>
                 <div class="menu-item" data-page="sales">
                     <i class="fas fa-chart-line"></i>
                     <span class="menu-text">Sales Report</span>
+                </div>
+                <div class="menu-item" data-page="transactions">
+                    <i class="fas fa-history"></i>
+                    <span class="menu-text">Transactions</span>
                 </div>
                 <div class="menu-item" data-page="analytics">
                     <i class="fas fa-chart-pie"></i>
@@ -1461,17 +1460,6 @@
 
             <!-- Analytics Page -->
             <div id="analyticsPage" style="display: none;">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0"><i class="fas fa-chart-pie me-1"></i>Advanced Analytics Dashboard</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-success" onclick="requestRealtimeAnalytics()">
-                            <i class="fas fa-sync-alt me-1"></i>Real-time Update
-                        </button>
-                        <button class="btn btn-sm btn-primary-dark" onclick="loadSalesReport('Loading analytics...')">
-                            <i class="fas fa-refresh me-1"></i>Refresh Analytics
-                        </button>
-                    </div>
-                </div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="section-card">
@@ -1678,27 +1666,6 @@
     let selectedFundingSource = "profit"; // Default to profit
     let currentTotalProfit = 0;
 
-    // Initialize Socket.IO for real-time analytics
-    const socket = io(API_BASE);
-
-    socket.on('connect', function() {
-        console.log('Connected to real-time analytics server');
-    });
-
-    socket.on('disconnect', function() {
-        console.log('Disconnected from real-time analytics server');
-    });
-
-    socket.on('analytics_update', function(data) {
-        console.log('Received real-time analytics update');
-        updateAnalyticsCharts(data);
-    });
-
-    socket.on('analytics_error', function(error) {
-        console.error('Analytics error:', error);
-        showToast('Failed to update analytics: ' + error.error, 'error');
-    });
-
     async function exportSalesReport(type) {
         if (!currentReportData || !currentReportData.length) {
             showToast('No data to export', 'error');
@@ -1817,7 +1784,7 @@ async function loadSalesReport(message = 'Loading sales report...') {
         const period = document.getElementById('reportPeriod').value;
         let startDate = '', endDate = '';
         const today = new Date();
-
+        
         if (period === 'custom') {
             startDate = document.getElementById('reportStartDate').value;
             endDate = document.getElementById('reportEndDate').value;
@@ -1836,48 +1803,232 @@ async function loadSalesReport(message = 'Loading sales report...') {
             startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
             endDate = today.toISOString().split('T')[0];
         }
-
-        // Use new analytics endpoint
-        const analyticsUrl = `${API_BASE}/api/analytics?period=${period}&start_date=${startDate}&end_date=${endDate}`;
-        const response = await fetch(analyticsUrl, { credentials: 'include' });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const analyticsData = await response.json();
-
-        if (analyticsData.success) {
-            renderAnalyticsReport(analyticsData.analytics);
-        } else {
-            throw new Error(analyticsData.error || 'Failed to load analytics');
+        
+        const [transactionsRes, reinvestmentRes] = await Promise.all([
+            fetch(`${API_BASE}/api/transactions?limit=2000`, { credentials: 'include' }),
+            fetch(`${API_BASE}/api/stock-additions`, { credentials: 'include' })
+        ]);
+        
+        const transactionsData = await transactionsRes.json();
+        const reinvestmentData = await reinvestmentRes.json();
+        
+        if (transactionsData.success) {
+            const filtered = transactionsData.transactions.filter(t => {
+                const transDate = new Date(t.created_at).toISOString().split('T')[0];
+                return transDate >= startDate && transDate <= endDate;
+            });
+            renderSalesReport(filtered);
         }
     } catch (error) {
-        console.error('Error loading analytics report:', error);
-        showToast('Error loading analytics: ' + error.message, 'error');
+        console.error('Error loading sales report:', error);
+        showToast('Error loading report', 'error');
     } finally {
         hideLoader();
     }
 }
 
 
-function renderAnalyticsReport(analytics) {
-    // Update KPI cards with performance metrics
-    const metrics = analytics.performance_metrics;
-    if (metrics) {
-        document.getElementById('reportTotalSales').textContent = `$${metrics.total_revenue.toFixed(2)}`;
-        document.getElementById('reportGrossProfit').textContent = `$${metrics.total_profit.toFixed(2)}`;
-        document.getElementById('reportGrossMargin').textContent = `${metrics.profit_margin.toFixed(1)}%`;
-        document.getElementById('reportAvgOrder').textContent = `$${metrics.avg_order_value.toFixed(2)}`;
-        document.getElementById('reportTransactionCount').textContent = metrics.total_transactions;
-        document.getElementById('reportItemsSold').textContent = analytics.sales_trend.reduce((sum, day) => sum + day.items_sold, 0);
-        document.getElementById('reportCOGS').textContent = `$${(metrics.total_revenue - metrics.total_profit).toFixed(2)}`;
-        document.getElementById('reportROS').textContent = `${metrics.profit_margin.toFixed(1)}%`;
+function renderSalesReport(transactions) {
+    // Store for export
+    currentReportData = transactions;
+    
+    // Calculate totals
+    let totalRevenue = 0;
+    let totalCOGS = 0;
+    let totalGrossProfit = 0;
+    let totalItemsSold = 0;
+    
+    const dailyData = {};
+    const categoryData = {};
+    const productSales = {};
+    const productProfit = {};
+    const hourlyData = Array(24).fill(0);
+    
+    // Fetch reinvestment history from backend (you'll need to add this endpoint)
+    let totalProfitEarned = 0;
+    let profitReinvested = 0;
+    let reinvestmentHistory = [];
+    
+    // Add profit calculation for each transaction
+    transactions.forEach(t => {
+        totalRevenue += t.total;
+        
+        // Calculate profit for this transaction
+        let transactionProfit = 0;
+        if (t.items) {
+            t.items.forEach(item => {
+                const buyPrice = item.buy_price || 0;
+                const sellPrice = item.price || item.price_at_time || 0;
+                const itemProfit = (sellPrice - buyPrice) * item.quantity;
+                transactionProfit += itemProfit;
+                totalCOGS += buyPrice * item.quantity;
+            });
+        }
+        
+        const profit = transactionProfit;
+        totalGrossProfit += profit;
+        totalProfitEarned += profit;
+        totalItemsSold += t.items ? t.items.reduce((s, i) => s + i.quantity, 0) : 0;
+        
+        // Add profit to transaction object for export
+        t.profit = profit;
+        
+        // Hourly aggregation
+        const hour = new Date(t.created_at).getHours();
+        hourlyData[hour] += t.total;
+        
+        // Daily aggregation
+        const date = new Date(t.created_at).toISOString().split('T')[0];
+        if (!dailyData[date]) {
+            dailyData[date] = { sales: 0, profit: 0, count: 0 };
+        }
+        dailyData[date].sales += t.total;
+        dailyData[date].profit += profit;
+        dailyData[date].count++;
+        
+        // Category and product aggregation
+        if (t.items) {
+            t.items.forEach(item => {
+                const buyPrice = item.buy_price || 0;
+                const sellPrice = item.price || item.price_at_time || 0;
+                const itemProfit = (sellPrice - buyPrice) * item.quantity;
+                
+                const category = item.category || 'Other';
+                if (!categoryData[category]) {
+                    categoryData[category] = { sales: 0, profit: 0, quantity: 0, cogs: 0 };
+                }
+                categoryData[category].sales += item.subtotal || (sellPrice * item.quantity);
+                categoryData[category].profit += itemProfit;
+                categoryData[category].quantity += item.quantity;
+                categoryData[category].cogs += buyPrice * item.quantity;
+                
+                const productName = item.product_name || item.name;
+                if (!productSales[productName]) {
+                    productSales[productName] = { sales: 0, quantity: 0 };
+                    productProfit[productName] = { profit: 0, quantity: 0 };
+                }
+                productSales[productName].sales += item.subtotal || (sellPrice * item.quantity);
+                productSales[productName].quantity += item.quantity;
+                productProfit[productName].profit += itemProfit;
+                productProfit[productName].quantity += item.quantity;
+            });
+        }
+    });
+    
+    const grossMargin = totalRevenue > 0 ? (totalGrossProfit / totalRevenue * 100) : 0;
+    const avgOrderValue = transactions.length > 0 ? totalRevenue / transactions.length : 0;
+    const ros = totalRevenue > 0 ? (totalGrossProfit / totalRevenue * 100) : 0;
+    const availableProfit = totalProfitEarned - profitReinvested;
+    const reinvestmentRate = totalProfitEarned > 0 ? (profitReinvested / totalProfitEarned * 100) : 0;
+    
+    // Update KPI cards (add null checks)
+    const reportTotalSales = document.getElementById('reportTotalSales');
+    const reportGrossProfit = document.getElementById('reportGrossProfit');
+    const reportCOGS = document.getElementById('reportCOGS');
+    const reportGrossMargin = document.getElementById('reportGrossMargin');
+    const reportTransactionCount = document.getElementById('reportTransactionCount');
+    const reportItemsSold = document.getElementById('reportItemsSold');
+    const reportAvgOrder = document.getElementById('reportAvgOrder');
+    const reportROS = document.getElementById('reportROS');
+    const reportTotalProfitEarned = document.getElementById('reportTotalProfitEarned');
+    const reportProfitReinvested = document.getElementById('reportProfitReinvested');
+    const reportAvailableProfit = document.getElementById('reportAvailableProfit');
+    const reportReinvestmentRate = document.getElementById('reportReinvestmentRate');
+    
+    if (reportTotalSales) reportTotalSales.innerText = `$${totalRevenue.toFixed(2)}`;
+    if (reportGrossProfit) reportGrossProfit.innerText = `$${totalGrossProfit.toFixed(2)}`;
+    if (reportCOGS) reportCOGS.innerText = `$${totalCOGS.toFixed(2)}`;
+    if (reportGrossMargin) reportGrossMargin.innerText = `${grossMargin.toFixed(1)}%`;
+    if (reportTransactionCount) reportTransactionCount.innerText = transactions.length;
+    if (reportItemsSold) reportItemsSold.innerText = totalItemsSold;
+    if (reportAvgOrder) reportAvgOrder.innerText = `$${avgOrderValue.toFixed(2)}`;
+    if (reportROS) reportROS.innerText = `${ros.toFixed(1)}%`;
+    
+    // Update profit tracking cards
+    if (reportTotalProfitEarned) reportTotalProfitEarned.innerText = `$${totalProfitEarned.toFixed(2)}`;
+    if (reportProfitReinvested) reportProfitReinvested.innerText = `$${profitReinvested.toFixed(2)}`;
+    if (reportAvailableProfit) reportAvailableProfit.innerText = `$${availableProfit.toFixed(2)}`;
+    if (reportReinvestmentRate) reportReinvestmentRate.innerText = `${reinvestmentRate.toFixed(1)}%`;
+    
+    // Render profit utilization chart with safe check
+    const profitUtilizationCtx = document.getElementById('profitUtilizationChart');
+    if (profitUtilizationCtx) {
+        const ctx = profitUtilizationCtx.getContext('2d');
+        if (window.profitUtilizationChart && typeof window.profitUtilizationChart.destroy === 'function') {
+            window.profitUtilizationChart.destroy();
+        }
+        window.profitUtilizationChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Profit Reinvested', 'Available Profit'],
+                datasets: [{ data: [profitReinvested, availableProfit], backgroundColor: ['#f59e0b', '#10b981'], borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
+        });
     }
-
-    // Sales Trend Chart
+    
+    // Category sales chart with safe check
+    const categorySalesCtx = document.getElementById('categorySalesChart');
+    if (categorySalesCtx) {
+        const categoryLabels = Object.keys(categoryData);
+        const ctx = categorySalesCtx.getContext('2d');
+        if (categorySalesChart && typeof categorySalesChart.destroy === 'function') {
+            categorySalesChart.destroy();
+        }
+        categorySalesChart = new Chart(ctx, {
+            type: 'pie',
+            data: { 
+                labels: categoryLabels, 
+                datasets: [{ 
+                    data: categoryLabels.map(c => categoryData[c].sales), 
+                    backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'] 
+                }] 
+            },
+            options: { responsive: true }
+        });
+    }
+    
+    // Top products chart with safe check
+    const topProductsCtx = document.getElementById('topProductsChart');
+    if (topProductsCtx) {
+        const topProducts = Object.entries(productSales).sort((a, b) => b[1].sales - a[1].sales).slice(0, 10);
+        const ctx = topProductsCtx.getContext('2d');
+        if (topProductsChart && typeof topProductsChart.destroy === 'function') {
+            topProductsChart.destroy();
+        }
+        topProductsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: topProducts.map(p => p[0].length > 20 ? p[0].substring(0, 20) + '...' : p[0]),
+                datasets: [{ label: 'Revenue ($)', data: topProducts.map(p => p[1].sales), backgroundColor: '#0a2b3e', borderRadius: 4 }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
+        });
+    }
+    
+    // Category margin chart with safe check
+    const categoryMarginCtx = document.getElementById('categoryMarginChart');
+    if (categoryMarginCtx) {
+        const categoryLabels = Object.keys(categoryData);
+        const categoryMargins = categoryLabels.map(c => (categoryData[c].profit / categoryData[c].sales * 100) || 0);
+        const ctx = categoryMarginCtx.getContext('2d');
+        if (categoryMarginChart && typeof categoryMarginChart.destroy === 'function') {
+            categoryMarginChart.destroy();
+        }
+        categoryMarginChart = new Chart(ctx, {
+            type: 'bar',
+            data: { 
+                labels: categoryLabels, 
+                datasets: [{ label: 'Margin %', data: categoryMargins, backgroundColor: '#10b981', borderRadius: 4 }] 
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } } } }
+        });
+    }
+    
+    // Sales trend chart with safe check
     const salesTrendCtx = document.getElementById('salesTrendChart');
     if (salesTrendCtx) {
+        const sortedDates = Object.keys(dailyData).sort();
         const ctx = salesTrendCtx.getContext('2d');
         if (salesTrendChart && typeof salesTrendChart.destroy === 'function') {
             salesTrendChart.destroy();
@@ -1885,369 +2036,92 @@ function renderAnalyticsReport(analytics) {
         salesTrendChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: analytics.sales_trend.map(d => new Date(d.date).toLocaleDateString()),
+                labels: sortedDates,
                 datasets: [
-                    {
-                        label: 'Revenue ($)',
-                        data: analytics.sales_trend.map(d => d.revenue),
-                        borderColor: '#0a2b3e',
-                        backgroundColor: 'rgba(10,43,62,0.1)',
-                        tension: 0.3,
-                        fill: true
-                    },
-                    {
-                        label: 'Profit ($)',
-                        data: analytics.sales_trend.map(d => d.profit),
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16,185,129,0.1)',
-                        tension: 0.3,
-                        fill: true
-                    }
+                    { label: 'Revenue ($)', data: sortedDates.map(d => dailyData[d].sales), borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)', tension: 0.3, fill: true },
+                    { label: 'Profit ($)', data: sortedDates.map(d => dailyData[d].profit), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.3, fill: true }
                 ]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Sales & Profit Trend'
-                    }
-                }
-            }
+            options: { responsive: true, maintainAspectRatio: true }
         });
     }
-
-    // Category Sales Chart
-    const categoryChartCtx = document.getElementById('categorySalesChart');
-    if (categoryChartCtx) {
-        const ctx = categoryChartCtx.getContext('2d');
-        if (categorySalesChart && typeof categorySalesChart.destroy === 'function') {
-            categorySalesChart.destroy();
-        }
-        categorySalesChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: analytics.category_performance.map(c => c.category),
-                datasets: [{
-                    data: analytics.category_performance.map(c => c.revenue),
-                    backgroundColor: [
-                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-                        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Revenue by Category'
-                    }
-                }
-            }
-        });
-    }
-
-    // Top Products Chart
-    const topProductsChartCtx = document.getElementById('topProductsChart');
-    if (topProductsChartCtx) {
-        const ctx = topProductsChartCtx.getContext('2d');
-        if (topProductsChart && typeof topProductsChart.destroy === 'function') {
-            topProductsChart.destroy();
-        }
-        topProductsChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: analytics.top_products.slice(0, 10).map(p => p.name.substring(0, 20) + (p.name.length > 20 ? '...' : '')),
-                datasets: [{
-                    label: 'Revenue ($)',
-                    data: analytics.top_products.slice(0, 10).map(p => p.revenue),
-                    backgroundColor: '#0a2b3e'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Top 10 Products by Revenue'
-                    }
-                }
-            }
-        });
-    }
-
-    // Category Margin Chart
-    const categoryMarginChartCtx = document.getElementById('categoryMarginChart');
-    if (categoryMarginChartCtx) {
-        const ctx = categoryMarginChartCtx.getContext('2d');
-        if (categoryMarginChart && typeof categoryMarginChart.destroy === 'function') {
-            categoryMarginChart.destroy();
-        }
-        categoryMarginChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: analytics.category_performance.map(c => c.category),
-                datasets: [{
-                    label: 'Profit Margin (%)',
-                    data: analytics.category_performance.map(c => c.margin),
-                    backgroundColor: '#10b981'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Profit Margin by Category'
-                    }
-                }
-            }
-        });
-    }
-
-    // Hourly Sales Chart
-    const hourlySalesChartCtx = document.getElementById('hourlySalesChart');
-    if (hourlySalesChartCtx) {
-        const ctx = hourlySalesChartCtx.getContext('2d');
+    
+    // Hourly sales chart with safe check
+    const hourlySalesCtx = document.getElementById('hourlySalesChart');
+    if (hourlySalesCtx) {
+        const ctx = hourlySalesCtx.getContext('2d');
         if (hourlySalesChart && typeof hourlySalesChart.destroy === 'function') {
             hourlySalesChart.destroy();
         }
         hourlySalesChart = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: analytics.hourly_distribution.map(h => `${h.hour}:00`),
-                datasets: [{
-                    label: 'Sales ($)',
-                    data: analytics.hourly_distribution.map(h => h.sales),
-                    backgroundColor: '#0a2b3e',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Hourly Sales Distribution'
-                    }
-                }
-            }
-        });
-    }
-
-    // Update category breakdown table
-    const categoryBreakdownList = document.getElementById('categoryBreakdownList');
-    if (categoryBreakdownList) {
-        categoryBreakdownList.innerHTML = analytics.category_performance.map(cat => {
-            const contribution = metrics.total_revenue > 0 ? (cat.revenue / metrics.total_revenue * 100).toFixed(1) : 0;
-            return `<tr>
-                <td><strong>${escapeHtml(cat.category)}</strong></td>
-                <td>${cat.items_sold}</td>
-                <td>$${cat.revenue.toFixed(2)}</td>
-                <td>$${(cat.revenue - cat.profit).toFixed(2)}</td>
-                <td class="text-success">$${cat.profit.toFixed(2)}</td>
-                <td><span class="badge ${cat.margin >= 30 ? 'bg-success' : cat.margin >= 15 ? 'bg-warning' : 'bg-secondary'}">${cat.margin.toFixed(1)}%</span></td>
-                <td><div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${contribution}%"></div></div><small>${contribution}%</small></td>
-            </tr>`;
-        }).join('');
-    }
-
-    // Update top products lists
-    const topProductsListReport = document.getElementById('topProductsListReport');
-    if (topProductsListReport) {
-        topProductsListReport.innerHTML = analytics.top_products.slice(0, 10).map((p, idx) =>
-            `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}<small class="text-muted ms-2">(${p.quantity} units)</small></div>
-                <div class="text-end"><div class="fw-bold">$${p.revenue.toFixed(2)}</div><small class="text-muted">revenue</small></div>
-            </div>`
-        ).join('');
-    }
-
-    const topProfitProductsList = document.getElementById('topProfitProductsList');
-    if (topProfitProductsList) {
-        topProfitProductsList.innerHTML = analytics.top_products.slice(0, 10).map((p, idx) => {
-            const margin = p.revenue > 0 ? (p.profit / p.revenue * 100).toFixed(0) : 0;
-            return `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}<small class="text-muted ms-2">(${p.quantity} units)</small></div>
-                <div class="text-end"><div class="fw-bold text-success">$${p.profit.toFixed(2)}</div><small class="text-muted">${margin}% margin</small></div>
-            </div>`;
-        }).join('');
-    }
-
-    // Update analytics-specific charts
-    updateAnalyticsCharts(analytics);
-}
-
-// Function to update analytics charts for real-time updates
-function updateAnalyticsCharts(analytics) {
-    // Update category chart
-    const categoryChartCanvas = document.getElementById('categoryChart');
-    if (categoryChartCanvas) {
-        const ctx = categoryChartCanvas.getContext('2d');
-        if (window.categoryChart && typeof window.categoryChart.destroy === 'function') {
-            window.categoryChart.destroy();
-        }
-        window.categoryChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: analytics.category_performance.map(c => c.category),
-                datasets: [{
-                    data: analytics.category_performance.map(c => c.revenue),
-                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
-                }]
+            data: { 
+                labels: Array.from({ length: 24 }, (_, i) => `${i}:00`), 
+                datasets: [{ label: 'Sales ($)', data: hourlyData, backgroundColor: '#0a2b3e', borderRadius: 4 }] 
             },
             options: { responsive: true }
         });
     }
-
-    // Update top products list
-    const topProductsList = document.getElementById('topProductsList');
-    if (topProductsList) {
-        topProductsList.innerHTML = analytics.top_products.slice(0, 10).map((p, idx) =>
+    
+    // Category breakdown table with safe check
+    const categoryBreakdownList = document.getElementById('categoryBreakdownList');
+    if (categoryBreakdownList) {
+        const categoryLabels = Object.keys(categoryData);
+        const totalRevenueForContribution = totalRevenue;
+        categoryBreakdownList.innerHTML = categoryLabels.map(cat => {
+            const data = categoryData[cat];
+            const margin = data.sales > 0 ? (data.profit / data.sales * 100).toFixed(1) : 0;
+            const contribution = totalRevenueForContribution > 0 ? (data.sales / totalRevenueForContribution * 100).toFixed(1) : 0;
+            return `<td><strong>${escapeHtml(cat)}</strong></td>
+                        <td>${data.quantity}</td>
+                        <td>$${data.sales.toFixed(2)}</td>
+                        <td>$${data.cogs.toFixed(2)}</td>
+                        <td class="text-success">$${data.profit.toFixed(2)}</td>
+                        <td><span class="badge ${margin >= 30 ? 'bg-success' : margin >= 15 ? 'bg-warning' : 'bg-secondary'}">${margin}%</span></td>
+                        <td><div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${contribution}%"></div></div><small>${contribution}%</small></td>
+                     </tr>`;
+        }).join('');
+    }
+    
+    // Top products lists with safe checks
+    const topProductsListReport = document.getElementById('topProductsListReport');
+    if (topProductsListReport) {
+        const topSelling = Object.entries(productSales).sort((a, b) => b[1].sales - a[1].sales).slice(0, 10);
+        topProductsListReport.innerHTML = topSelling.map((p, idx) => 
             `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p.name)}</div>
-                <div class="text-end fw-bold">$${p.revenue.toFixed(2)}</div>
+                <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div>
+                <div class="text-end"><div class="fw-bold">$${p[1].sales.toFixed(2)}</div><small class="text-muted">revenue</small></div>
             </div>`
         ).join('');
     }
-
-    // Update advanced analytics charts
-    updateAdvancedAnalyticsCharts(analytics);
-}
-
-// Function to request real-time analytics update
-function requestRealtimeAnalytics() {
-    showToast('Requesting real-time analytics update...', 'info');
-    socket.emit('request_analytics_update', {});
-}
-
-// Function to update advanced analytics charts
-function updateAdvancedAnalyticsCharts(analytics) {
-    // Inventory Turnover Chart
-    const inventoryTurnoverCtx = document.getElementById('inventoryTurnoverChart');
-    if (inventoryTurnoverCtx) {
-        const ctx = inventoryTurnoverCtx.getContext('2d');
-        if (window.inventoryTurnoverChart && typeof window.inventoryTurnoverChart.destroy === 'function') {
-            window.inventoryTurnoverChart.destroy();
-        }
-        window.inventoryTurnoverChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: analytics.inventory_turnover.map(i => i.category),
-                datasets: [{
-                    label: 'Turnover Ratio',
-                    data: analytics.inventory_turnover.map(i => i.turnover_ratio),
-                    backgroundColor: '#17a2b8'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Inventory Turnover Analysis'
-                    }
-                }
-            }
-        });
+    
+    const topProfitProductsList = document.getElementById('topProfitProductsList');
+    if (topProfitProductsList) {
+        const topProfitable = Object.entries(productProfit).sort((a, b) => b[1].profit - a[1].profit).slice(0, 10);
+        topProfitProductsList.innerHTML = topProfitable.map((p, idx) => {
+            const margin = (p[1].profit / (productSales[p[0]]?.sales || 1) * 100).toFixed(0);
+            return `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                        <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div>
+                        <div class="text-end"><div class="fw-bold text-success">$${p[1].profit.toFixed(2)}</div><small class="text-muted">${margin}% margin</small></div>
+                    </div>`;
+        }).join('');
     }
-
-    // Customer Segmentation Chart
-    const customerSegmentationCtx = document.getElementById('customerSegmentationChart');
-    if (customerSegmentationCtx) {
-        const ctx = customerSegmentationCtx.getContext('2d');
-        if (window.customerSegmentationChart && typeof window.customerSegmentationChart.destroy === 'function') {
-            window.customerSegmentationChart.destroy();
-        }
-        window.customerSegmentationChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: analytics.customer_segments.map(s => s.segment),
-                datasets: [{
-                    data: analytics.customer_segments.map(s => s.customers),
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545']
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Customer Segmentation'
-                    }
-                }
-            }
-        });
-    }
-
-    // Sales Forecasting Chart
-    const salesForecastCtx = document.getElementById('salesForecastChart');
-    if (salesForecastCtx) {
-        const ctx = salesForecastCtx.getContext('2d');
-        if (window.salesForecastChart && typeof window.salesForecastChart.destroy === 'function') {
-            window.salesForecastChart.destroy();
-        }
-        window.salesForecastChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: analytics.forecast.map(f => new Date(f.date).toLocaleDateString()),
-                datasets: [{
-                    label: 'Predicted Sales ($)',
-                    data: analytics.forecast.map(f => f.predicted_sales),
-                    borderColor: '#6f42c1',
-                    backgroundColor: 'rgba(111, 66, 193, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Sales Forecasting (7 days)'
-                    }
-                }
-            }
-        });
-    }
-
-    // Performance Metrics Dashboard
-    const performanceMetricsDiv = document.getElementById('performanceMetrics');
-    if (performanceMetricsDiv && analytics.performance_metrics) {
-        const metrics = analytics.performance_metrics;
-        performanceMetricsDiv.innerHTML = `
-            <div class="row g-2">
-                <div class="col-6">
-                    <div class="p-2 border rounded">
-                        <small class="text-muted">Avg Order Value</small>
-                        <div class="fw-bold">$${metrics.avg_order_value.toFixed(2)}</div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="p-2 border rounded">
-                        <small class="text-muted">Profit Margin</small>
-                        <div class="fw-bold text-success">${metrics.profit_margin.toFixed(1)}%</div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="p-2 border rounded">
-                        <small class="text-muted">Total Transactions</small>
-                        <div class="fw-bold">${metrics.total_transactions}</div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="p-2 border rounded">
-                        <small class="text-muted">Period Days</small>
-                        <div class="fw-bold">${metrics.period_days}</div>
-                    </div>
-                </div>
-            </div>
-        `;
+    
+    // Reinvestment history table with safe check
+    const reinvestmentHistoryList = document.getElementById('reinvestmentHistoryList');
+    if (reinvestmentHistoryList) {
+        reinvestmentHistoryList.innerHTML = reinvestmentHistory.length ? 
+            reinvestmentHistory.map(h => `<td>${h.date}</td>
+                <td>${escapeHtml(h.product_name)}</td>
+                <td>${h.quantity}</td>
+                <td>$${h.total_cost.toFixed(2)}</td>
+                <td><span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span></td>
+                <td>${escapeHtml(h.user)}</td>
+             </tr>`).join('') : 
+            '<td colspan="6" class="text-center">No reinvestment history</td> </tr>';
     }
 }
+
 
     function getZimbabweTime() {
         // Zimbabwe is UTC+2 (no daylight savings)
@@ -4104,7 +3978,7 @@ function navigateTo(page) {
         fetchTransactionsData();
     }
     if (page === 'analytics') {
-        loadSalesReport('Loading analytics...');
+        loadSalesReport();
     }
 }
     
