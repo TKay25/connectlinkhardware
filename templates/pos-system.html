@@ -1581,12 +1581,13 @@
                             <select class="form-select" id="productCategory">
                                 <option value="Hand Tools">Hand Tools</option>
                                 <option value="Power Tools">Power Tools</option>
-                                <option value="Fasteners">Fasteners</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Building">Building</option>
+                                <option value="Plumbing">Plumbing</option>
                                 <option value="Paint">Paint</option>
                                 <option value="Lumber">Lumber</option>
-                                <option value="Electrical">Electrical</option>
-                                <option value="Plumbing">Plumbing</option>
                                 <option value="Safety">Safety</option>
+                                <option value="Fasteners">Fasteners</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -3407,9 +3408,15 @@ async function fetchTransactionsData() {
     
     function getCategoryIcon(category) {
         const icons = {
-            'Hand Tools': 'fa-tools', 'Power Tools': 'fa-bolt', 'Fasteners': 'fa-link',
-            'Paint': 'fa-palette', 'Lumber': 'fa-tree', 'Electrical': 'fa-plug',
-            'Plumbing': 'fa-water', 'Safety': 'fa-shield-alt'
+            'Hand Tools': 'fa-tools',
+            'Power Tools': 'fa-bolt',
+            'Fasteners': 'fa-link',
+            'Paint': 'fa-palette',
+            'Lumber': 'fa-tree',
+            'Electrical': 'fa-plug',
+            'Plumbing': 'fa-water',
+            'Safety': 'fa-shield-alt',
+            'Building': 'fa-building'  // Added Building category with building icon
         };
         return icons[category] || 'fa-box';
     }
