@@ -2233,6 +2233,8 @@ function renderSalesReport(transactions) {
     let filteredTransactions = [];
 
     function applyTransactionFilters() {
+        if (currentPage !== 'transactions') return;
+        
         const startDate = document.getElementById('filterStartDate').value;
         const endDate = document.getElementById('filterEndDate').value;
         const paymentMethod = document.getElementById('filterPaymentMethod').value;
@@ -2287,6 +2289,9 @@ function renderSalesReport(transactions) {
     }
 
     function resetTransactionFilters() {
+
+        if (currentPage !== 'transactions') return;
+
         document.getElementById('filterStartDate').value = '';
         document.getElementById('filterEndDate').value = '';
         document.getElementById('filterPaymentMethod').value = 'all';
@@ -2349,6 +2354,12 @@ function toggleItemsDetail(elementId) {
 }
 
 function renderFilteredTransactions() {
+    // Only render if we're on the transactions page
+    const transactionsPage = document.getElementById('transactionsPage');
+    if (currentPage !== 'transactions' || !transactionsPage || transactionsPage.style.display === 'none') {
+        return;
+    }
+    
     const tbody = document.getElementById('transactionsList');
     if (!tbody) return;
     
@@ -2801,9 +2812,14 @@ function renderFilteredTransactions() {
             if (transactionsData.success) {
                 salesData.transactions = transactionsData.transactions;
                 filteredTransactions = [];
-                renderFilteredTransactions();
+                // Only render if we're on the transactions page
+                if (currentPage === 'transactions') {
+                    renderFilteredTransactions();
+                }
             }
-        } catch (error) { console.error('Error fetching transactions:', error); }
+        } catch (error) { 
+            console.error('Error fetching transactions:', error); 
+        }
     }
     
     async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
