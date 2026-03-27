@@ -2354,19 +2354,18 @@ function toggleItemsDetail(elementId) {
 }
 
 function renderFilteredTransactions() {
-    // Only render if we're on the transactions page
-    const transactionsPage = document.getElementById('transactionsPage');
-    if (currentPage !== 'transactions' || !transactionsPage || transactionsPage.style.display === 'none') {
+    const tbody = document.getElementById('transactionsList');
+    if (!tbody) {
+        console.error('transactionsList element not found!');
         return;
     }
     
-    const tbody = document.getElementById('transactionsList');
-    if (!tbody) return;
-    
     const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
     
-    if (!transactionsToShow.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No transactions found</td></tr>';
+    console.log('Rendering transactions, count:', transactionsToShow.length);
+    
+    if (!transactionsToShow || !transactionsToShow.length) {
+        tbody.innerHTML = '=<td colspan="7" class="text-center">No transactions found<\/td>=';
         return;
     }
     
@@ -2376,7 +2375,7 @@ function renderFilteredTransactions() {
         const t = transactionsToShow[i];
         const transactionId = t.id || i;
         
-        // Format date in dd/mm/yyyy hh:mm:ss format
+        // Format date
         let dateStr = '';
         if (t.created_at) {
             const date = new Date(t.created_at);
@@ -2392,7 +2391,7 @@ function renderFilteredTransactions() {
         // Build items HTML
         let itemsHtml = '';
         if (t.items && t.items.length > 0) {
-            // Preview text - first 2 items
+            // Preview text
             let previewText = '';
             const firstTwo = t.items.slice(0, 2);
             const itemNames = [];
@@ -2408,7 +2407,7 @@ function renderFilteredTransactions() {
                 previewText = previewText + ' + ' + (t.items.length - 2) + ' more';
             }
             
-            // Build items list HTML for dropdown
+            // Items list HTML
             let itemsListHTML = '';
             for (let j = 0; j < t.items.length; j++) {
                 const item = t.items[j];
@@ -2457,7 +2456,7 @@ function renderFilteredTransactions() {
             itemsHtml = '<span class="text-muted">No items</span>';
         }
         
-        // Build payment badge class
+        // Payment badge
         let paymentBadgeClass = 'bg-warning';
         let paymentDisplay = (t.payment_method || 'N/A').toUpperCase();
         if (t.payment_method === 'cash') {
@@ -2469,13 +2468,13 @@ function renderFilteredTransactions() {
             paymentDisplay = 'Transfer';
         }
         
-        // Format transaction number
+        // Transaction number
         let transNum = t.transaction_number || 'N/A';
         if (transNum.length > 20) {
             transNum = transNum.substring(0, 17) + '...';
         }
         
-        // Build row - FIXED: removed stray backslashes and newlines
+        // Build row
         htmlString += 
             '<tr>' +
                 '<td><small>' + dateStr + '</small></td>' +
@@ -2489,8 +2488,8 @@ function renderFilteredTransactions() {
     }
     
     tbody.innerHTML = htmlString;
+    console.log('Transactions rendered successfully');
 }
-    // ==================== EXPORT FUNCTIONS ====================
 
     function downloadTransactionsExcel() {
         const transactionsToExport = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
@@ -2612,20 +2611,66 @@ function renderFilteredTransactions() {
             });
     }
 
-    // Update renderTransactions to reset filters
-    function renderTransactions() {
-        // Reset filters
-        const startDateInput = document.getElementById('filterStartDate');
-        const endDateInput = document.getElementById('filterEndDate');
-        const paymentMethodSelect = document.getElementById('filterPaymentMethod');
-        
-        if (startDateInput) startDateInput.value = '';
-        if (endDateInput) endDateInput.value = '';
-        if (paymentMethodSelect) paymentMethodSelect.value = 'all';
-        
-        filteredTransactions = [];
-        renderFilteredTransactions();
+function renderTransactions() {
+    console.log('Rendering transactions page...');
+    
+    // Reset filters
+    const startDateInput = document.getElementById('filterStartDate');
+    const endDateInput = document.getElementById('filterEndDate');
+    const paymentMethodSelect = document.getElementById('filterPaymentMethod');
+    const productNameInput = document.getElementById('filterProductName');
+    const receiptNumberInput = document.getElementById('filterReceiptNumber');
+    
+    if (startDateInput) startDateInput.value = '';
+    if (endDateInput) endDateInput.value = '';
+    if (paymentMethodSelect) paymentMethodSelect.value = 'all';
+    if (productNameInput) productNameInput.value = '';
+    if (receiptNumberInput) receiptNumberInput.value = '';
+    
+    filteredTransactions = [];
+    
+    // Fetch fresh transaction data
+    fetchTransactionsData();
+}
+
+// Replace the old fetchTransactions with this simpler version
+async function fetchTransactions() {
+    // This is now handled by fetchTransactionsData when needed
+    // Keep this for backward compatibility but don't auto-render
+    try {
+        const response = await fetch(`${API_BASE}/api/transactions`, { credentials: 'include' });
+        const data = await response.json();
+        if (data.success) {
+            salesData.transactions = data.transactions;
+            filteredTransactions = [];
+        }
+    } catch (error) { 
+        console.error('Error fetching transactions:', error); 
     }
+}
+
+async function fetchTransactionsData() {
+    showLoader('Loading transactions...');
+    try {
+        const response = await fetch(`${API_BASE}/api/transactions?limit=2000`, { credentials: 'include' });
+        const data = await response.json();
+        
+        if (data.success) {
+            salesData.transactions = data.transactions;
+            filteredTransactions = [];
+            renderFilteredTransactions();
+            console.log('Transactions loaded:', data.transactions.length);
+        } else {
+            console.error('Failed to load transactions');
+            showToast('Failed to load transactions', 'error');
+        }
+    } catch (error) {
+        console.error('Error fetching transactions:', error);
+        showToast('Error loading transactions', 'error');
+    } finally {
+        hideLoader();
+    }
+}
 
     // Variables for stock editing
     let productToEdit = null;
@@ -2805,22 +2850,6 @@ function renderFilteredTransactions() {
         } catch (error) { console.error('Error fetching stats:', error); }
     }
     
-    async function fetchTransactions() {
-        try {
-            const transactionsResponse = await fetch(`${API_BASE}/api/transactions`, { credentials: 'include' });
-            const transactionsData = await transactionsResponse.json();
-            if (transactionsData.success) {
-                salesData.transactions = transactionsData.transactions;
-                filteredTransactions = [];
-                // Only render if we're on the transactions page
-                if (currentPage === 'transactions') {
-                    renderFilteredTransactions();
-                }
-            }
-        } catch (error) { 
-            console.error('Error fetching transactions:', error); 
-        }
-    }
     
     async function createTransactionAPI(items, paymentMethod, amountPaid, change) {
         try {
@@ -3866,11 +3895,11 @@ function navigateTo(page) {
         renderInventory();
     }
     if (page === 'sales') {
-        // Load the actual sales report data instead of using placeholder chart
         loadSalesReport();
     }
     if (page === 'transactions') {
-        renderTransactions();
+        // Call the new function to fetch and render transactions
+        fetchTransactionsData();
     }
     if (page === 'analytics') {
         renderAnalytics();
