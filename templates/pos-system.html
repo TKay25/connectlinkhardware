@@ -3878,17 +3878,21 @@ function navigateTo(page) {
         if (item.dataset.page === page) item.classList.add('active'); 
     });
     
-    const pages = { 
-        'pos': document.getElementById('posPage'), 
-        'inventory': document.getElementById('inventoryPage'), 
-        'sales': document.getElementById('salesPage'), 
-        'transactions': document.getElementById('transactionsPage'), 
-        'analytics': document.getElementById('analyticsPage') 
-    };
-    
-    Object.keys(pages).forEach(p => { 
-        if (pages[p]) pages[p].style.display = p === page ? 'block' : 'none'; 
+    // Hide all pages first
+    document.querySelectorAll('[id$="Page"]').forEach(p => {
+        p.style.display = 'none';
     });
+    
+    // Show the selected page
+    const targetPage = document.getElementById(page + 'Page');
+    if (targetPage) {
+        targetPage.style.display = 'block';
+        console.log(`Showing page: ${page}`);
+    } else {
+        console.error(`Page element '${page}Page' not found!`);
+    }
+    
+    console.log(`Navigating to page: ${page}`);
     
     if (page === 'inventory') {
         renderInventory();
@@ -3897,6 +3901,7 @@ function navigateTo(page) {
         loadSalesReport();
     }
     if (page === 'transactions') {
+        console.log('Calling fetchTransactionsData for transactions page');
         // Call the new function to fetch and render transactions
         fetchTransactionsData();
     }
