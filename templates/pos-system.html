@@ -937,7 +937,7 @@
                             <input type="number" step="0.01" class="form-control mb-2" id="stockBuyPrice" placeholder="Cost per unit" required>
                             
                             <div class="mb-2">
-                                <label class="form-label">Funding Source *</label>
+                                <div class="form-label">Funding Source *</div>
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <div class="payment-method" id="fundingProfit" data-funding="profit" style="text-align: center; padding: 10px;">
@@ -1020,7 +1020,7 @@
                                 </div>
                                 <!-- REST OF CART CODE CONTINUES -->
                                 <div class="mb-2">
-                                    <label class="small fw-bold mb-1">Payment Method</label>
+                                    <div class="small fw-bold mb-1">Payment Method</div>
                                     <div class="row g-1">
                                         <div class="col-4"><div class="payment-method" data-method="cash"><i class="fas fa-money-bill-wave"></i><div class="small">Cash</div></div></div>
                                         <div class="col-4"><div class="payment-method" data-method="card"><i class="fas fa-credit-card"></i><div class="small">Card</div></div></div>
@@ -2140,7 +2140,7 @@ function renderSalesReport(transactions) {
 
     // View receipt for a specific transaction
     function viewReceipt(transactionId) {
-        const transaction = salesData.transactions.find(t => t.id === transactionId || t.transaction_number === transactionId);
+        const transaction = transactionsData.transactions.find(t => t.id === transactionId || t.transaction_number === transactionId);
         
         if (!transaction) {
             showToast('Transaction not found', 'error');
@@ -2241,7 +2241,7 @@ function renderSalesReport(transactions) {
         const searchProduct = document.getElementById('filterProductName').value.toLowerCase().trim();
         const searchReceipt = document.getElementById('filterReceiptNumber').value.toLowerCase().trim();
         
-        filteredTransactions = salesData.transactions.filter(t => {
+        filteredTransactions = transactionsData.transactions.filter(t => {
             let match = true;
             
             // Date filter
@@ -2284,7 +2284,7 @@ function renderSalesReport(transactions) {
         if (filteredTransactions.length === 0) {
             showToast('No transactions found matching your filters', 'info');
         } else {
-            showToast(`Showing ${filteredTransactions.length} of ${salesData.transactions.length} transactions`, 'info');
+            showToast(`Showing ${filteredTransactions.length} of ${transactionsData.transactions.length} transactions`, 'info');
         }
     }
 
@@ -2369,10 +2369,10 @@ function renderFilteredTransactions() {
         return;
     }
     
-    const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
+    const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : transactionsData.transactions;
     console.log('transactionsToShow:', transactionsToShow);
     console.log('filteredTransactions length:', filteredTransactions.length);
-    console.log('salesData.transactions length:', salesData.transactions ? salesData.transactions.length : 'undefined');
+    console.log('transactionsData.transactions length:', transactionsData.transactions ? transactionsData.transactions.length : 'undefined');
     
     console.log('Rendering transactions, count:', transactionsToShow.length);
     
@@ -2503,7 +2503,7 @@ function renderFilteredTransactions() {
 }
 
     function downloadTransactionsExcel() {
-        const transactionsToExport = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
+        const transactionsToExport = filteredTransactions.length > 0 ? filteredTransactions : transactionsData.transactions;
         
         if (!transactionsToExport.length) {
             showToast('No transactions to export', 'error');
@@ -2539,7 +2539,7 @@ function renderFilteredTransactions() {
     }
 
     async function downloadTransactionsPDF() {
-        const transactionsToExport = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
+        const transactionsToExport = filteredTransactions.length > 0 ? filteredTransactions : transactionsData.transactions;
         
         if (!transactionsToExport.length) {
             showToast('No transactions to export', 'error');
@@ -2655,9 +2655,9 @@ async function fetchTransactions() {
         const data = await response.json();
         console.log('fetchTransactions data:', data);
         if (data.success) {
-            salesData.transactions = data.transactions;
+            transactionsData.transactions = data.transactions;
             filteredTransactions = [];
-            console.log('salesData.transactions set with', data.transactions.length, 'transactions');
+            console.log('transactionsData.transactions set with', data.transactions.length, 'transactions');
         } else {
             console.error('fetchTransactions failed:', data);
         }
@@ -2677,7 +2677,7 @@ async function fetchTransactionsData() {
         console.log('Response data:', data);
         
         if (data.success) {
-            salesData.transactions = data.transactions;
+            transactionsData.transactions = data.transactions;
             filteredTransactions = [];
             console.log('Transactions loaded:', data.transactions.length);
             renderFilteredTransactions();
@@ -2703,7 +2703,7 @@ async function fetchTransactionsData() {
     let selectedCategory = "all";
     let searchTerm = "";
     let selectedPaymentMethod = "";
-    let salesData = { todaySales: 0, itemsSold: 0, transactions: [] };
+    let transactionsData = { todaySales: 0, itemsSold: 0, transactions: [] };
     let currentPage = "pos";
     let salesChart = null;
     let categoryChart = null;
@@ -2863,8 +2863,8 @@ async function fetchTransactionsData() {
             const statsResponse = await fetch(`${API_BASE}/api/dashboard/stats`, { credentials: 'include' });
             const statsData = await statsResponse.json();
             if (statsData.success) {
-                salesData.todaySales = statsData.stats.today_sales;
-                salesData.itemsSold = statsData.stats.items_sold;
+                transactionsData.todaySales = statsData.stats.today_sales;
+                transactionsData.itemsSold = statsData.stats.items_sold;
                 // Track total profit from all time
                 currentTotalProfit = statsData.stats.total_profit || 0;
             }
@@ -3626,8 +3626,8 @@ function setupFundingSelection() {
             });
             
             const transactionTotal = parseFloat(document.getElementById('total').innerText.replace('$', ''));
-            salesData.todaySales += transactionTotal;
-            salesData.itemsSold += cart.reduce((sum, i) => sum + i.quantity, 0);
+            transactionsData.todaySales += transactionTotal;
+            transactionsData.itemsSold += cart.reduce((sum, i) => sum + i.quantity, 0);
             
             updateStats();
             hidePaymentLoader();
@@ -3876,8 +3876,8 @@ function setupFundingSelection() {
         const lowStockCountEl = document.getElementById('lowStockCount');
         const totalProductsEl = document.getElementById('totalProducts');
         
-        if (todaySalesEl) todaySalesEl.innerText = `$${salesData.todaySales.toFixed(2)}`;
-        if (itemsSoldEl) itemsSoldEl.innerText = salesData.itemsSold;
+        if (todaySalesEl) todaySalesEl.innerText = `$${transactionsData.todaySales.toFixed(2)}`;
+        if (itemsSoldEl) itemsSoldEl.innerText = transactionsData.itemsSold;
         if (lowStockCountEl) lowStockCountEl.innerText = products.filter(p => p.stock < (p.min_stock_level || 10)).length;
         if (totalProductsEl) totalProductsEl.innerText = products.length;
     }
@@ -3901,10 +3901,11 @@ function navigateTo(page) {
     });
     
     // Hide all pages first
-    document.querySelectorAll('[id$="Page"]').forEach(p => {
-        console.log('Hiding page:', p.id);
-        p.style.display = 'none';
-    });
+    document.getElementById('posPage').style.display = 'none';
+    document.getElementById('inventoryPage').style.display = 'none';
+    document.getElementById('salesPage').style.display = 'none';
+    document.getElementById('transactionsPage').style.display = 'none';
+    document.getElementById('analyticsPage').style.display = 'none';
     
     // Show the selected page
     const targetPage = document.getElementById(page + 'Page');
@@ -3912,8 +3913,7 @@ function navigateTo(page) {
         targetPage.style.display = 'block';
         console.log(`Showing page: ${page}, element:`, targetPage);
     } else {
-        console.error(`Page element '${page}Page' not found! Available pages:`, 
-            Array.from(document.querySelectorAll('[id$="Page"]')).map(p => p.id));
+        console.error(`Page element '${page}Page' not found!`);
     }
     
     console.log(`Navigating to page: ${page}`);
