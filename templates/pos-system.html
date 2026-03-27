@@ -1778,8 +1778,8 @@
         }
     }
 
-async function loadSalesReport() {
-    showLoader('Loading sales report...');
+async function loadSalesReport(message = 'Loading sales report...') {
+    showLoader(message);
     try {
         const period = document.getElementById('reportPeriod').value;
         let startDate = '', endDate = '';
@@ -2022,6 +2022,44 @@ function renderSalesReport(transactions) {
                 datasets: [{ label: 'Margin %', data: categoryMargins, backgroundColor: '#10b981', borderRadius: 4 }] 
             },
             options: { responsive: true, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } } } }
+        });
+    }
+    
+    // Sales trend chart with safe check
+    const salesTrendCtx = document.getElementById('salesTrendChart');
+    if (salesTrendCtx) {
+        const sortedDates = Object.keys(dailyData).sort();
+        const ctx = salesTrendCtx.getContext('2d');
+        if (salesTrendChart && typeof salesTrendChart.destroy === 'function') {
+            salesTrendChart.destroy();
+        }
+        salesTrendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sortedDates,
+                datasets: [
+                    { label: 'Revenue ($)', data: sortedDates.map(d => dailyData[d].sales), borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)', tension: 0.3, fill: true },
+                    { label: 'Profit ($)', data: sortedDates.map(d => dailyData[d].profit), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.3, fill: true }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+    }
+    
+    // Hourly sales chart with safe check
+    const hourlySalesCtx = document.getElementById('hourlySalesChart');
+    if (hourlySalesCtx) {
+        const ctx = hourlySalesCtx.getContext('2d');
+        if (hourlySalesChart && typeof hourlySalesChart.destroy === 'function') {
+            hourlySalesChart.destroy();
+        }
+        hourlySalesChart = new Chart(ctx, {
+            type: 'bar',
+            data: { 
+                labels: Array.from({ length: 24 }, (_, i) => `${i}:00`), 
+                datasets: [{ label: 'Sales ($)', data: hourlyData, backgroundColor: '#0a2b3e', borderRadius: 4 }] 
+            },
+            options: { responsive: true }
         });
     }
     
@@ -3940,7 +3978,7 @@ function navigateTo(page) {
         fetchTransactionsData();
     }
     if (page === 'analytics') {
-        loadSalesReport();
+        loadSalesReport('Loading analytics...');
     }
 }
     
