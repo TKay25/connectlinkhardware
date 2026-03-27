@@ -2365,7 +2365,7 @@ function renderFilteredTransactions() {
     console.log('Rendering transactions, count:', transactionsToShow.length);
     
     if (!transactionsToShow || !transactionsToShow.length) {
-        tbody.innerHTML = '=<td colspan="7" class="text-center">No transactions found<\/td>=';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No transactions found</td></tr>';
         return;
     }
     
@@ -2474,21 +2474,20 @@ function renderFilteredTransactions() {
             transNum = transNum.substring(0, 17) + '...';
         }
         
-        // Build row
-        htmlString += 
-            '<tr>' +
-                '<td><small>' + dateStr + '</small></td>' +
-                '<td><small class="text-muted">' + escapeHtml(transNum) + '</small></td>' +
-                '<td>' + itemsHtml + '</td>' +
-                '<td class="fw-bold text-success">$' + (t.total || 0).toFixed(2) + '</td>' +
-                '<td><span class="badge ' + paymentBadgeClass + '">' + paymentDisplay + '</span></td>' +
-                '<td><small>' + escapeHtml(t.cashier || 'Admin') + '</small></td>' +
-                '<td><button class="btn-view-receipt" onclick="viewReceipt(\'' + (t.transaction_number || t.id) + '\')"><i class="fas fa-receipt me-1"></i>View Receipt</button></td>' +
-            '</tr>';
+        // Build row - FIXED: No stray characters
+        htmlString += '<tr>' +
+            '<td><small>' + dateStr + '</small></td>' +
+            '<td><small class="text-muted">' + escapeHtml(transNum) + '</small></td>' +
+            '<td>' + itemsHtml + '</td>' +
+            '<td class="fw-bold text-success">$' + (t.total || 0).toFixed(2) + '</td>' +
+            '<td><span class="badge ' + paymentBadgeClass + '">' + paymentDisplay + '</span></td>' +
+            '<td><small>' + escapeHtml(t.cashier || 'Admin') + '</small></td>' +
+            '<td><button class="btn-view-receipt" onclick="viewReceipt(\'' + (t.transaction_number || t.id) + '\')"><i class="fas fa-receipt me-1"></i>View Receipt</button></td>' +
+        '</tr>';
     }
     
     tbody.innerHTML = htmlString;
-    console.log('Transactions rendered successfully');
+    console.log('Transactions rendered successfully, rows:', transactionsToShow.length);
 }
 
     function downloadTransactionsExcel() {
