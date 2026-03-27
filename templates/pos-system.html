@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Connect Link Properties | Hardware POS System</title>
+    <title>Connect Link Hardware | POS System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -890,7 +890,7 @@
                     <!-- Center - Logo and Company Name (using auto margins) -->
                     <div class="d-flex align-items-center gap-2" style="margin: 0 auto;">
                         <img src="/static/images/reqlogo.jpg" style="height: 28px; width: auto;" alt="ConnectLink Properties Logo">
-                        <span class="fw-semibold" style="color: #0a2b3e; font-size: 0.85rem;">ConnectLink Properties Hardware</span>
+                        <span class="fw-semibold" style="color: #0a2b3e; font-size: 0.85rem;">ConnectLink Hardware</span>
                     </div>
                     
                     <!-- Right side - Date/Time and User Info -->
@@ -2046,7 +2046,7 @@ async function deleteStockAddition() {
             
             pdfContent.innerHTML = `
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <h2 style="color: #0a2b3e;">Connect Link Properties</h2>
+                    <h2 style="color: #0a2b3e;">ConnectLink Hardware</h2>
                     <p>Sales Report</p>
                     <p><small>Generated: ${new Date().toLocaleString()}</small></p>
                     <hr>
@@ -2592,7 +2592,7 @@ function renderSalesReport(transactions, reinvestmentHistory = []) {
         let receiptHTML = `
             <div class="text-center">
                 <img src="/static/images/reqlogo.jpg" style="height: 45px; width: auto;" alt="ConnectLink Properties Logo">
-                <h6 class="fw-bold mt-1">Connect Link Properties</h6>
+                <h6 class="fw-bold mt-1">ConnectLink Hardware</h6>
                 <small>Hardware Supply</small>
                 <hr class="my-1">
                 <small>${new Date(transaction.created_at || transaction.date).toLocaleString()}</small>
@@ -2991,7 +2991,7 @@ function renderFilteredTransactions() {
         // Header
         pdfContent.innerHTML = `
             <div style="text-align: center; margin-bottom: 30px;">
-                <h2 style="color: #0a2b3e;">Connect Link Properties</h2>
+                <h2 style="color: #0a2b3e;">ConnectLink Hardware</h2>
                 <p>Transaction History Report</p>
                 <p><small>Generated: ${new Date().toLocaleString()}</small></p>
                 ${document.getElementById('filterStartDate').value || document.getElementById('filterEndDate').value ? `
@@ -3034,7 +3034,7 @@ function renderFilteredTransactions() {
                 </tfoot>
             </table>
             <div style="text-align: center; margin-top: 30px;">
-                <small>Connect Link Properties Hardware - Official Transaction Report</small>
+                <small>ConnectLink Hardware - Official Transaction Report</small>
             </div>
         `;
         
@@ -4179,7 +4179,7 @@ function setupAddProductFundingSelection() {
         let receiptHTML = `
             <div class="text-center">
                 <img src="/static/images/reqlogo.jpg" style="height: 45px; width: auto;" alt="ConnectLink Properties Logo">
-                <h6 class="fw-bold mt-1">Connect Link Properties</h6>
+                <h6 class="fw-bold mt-1">ConnectLink Hardware</h6>
                 <small>Hardware Supply</small>
                 <hr class="my-1">
                 <small>${new Date().toLocaleString()}</small>
