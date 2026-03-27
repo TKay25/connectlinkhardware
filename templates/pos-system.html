@@ -1531,81 +1531,109 @@
     <!-- Modals -->
     <div class="modal fade" id="confirmationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-receipt me-1"></i>Order Confirmation</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="confirmationContent"></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="processPayment()">Confirm & Pay</button></div></div></div></div>
 
-    <div class="modal fade" id="addInventoryModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header" style="background:#0a2b3e;color:white;">
-                    <h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addProductForm">
-                        <div class="row g-2">
-                            <div class="col-md-6 position-relative">
-                                <label class="form-label" for="productName">Product Name *</label>
-                                <input type="text" class="form-control" id="productName" autocomplete="off" required>
-                                <div id="productNameSuggestions" class="autocomplete-items"></div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="productCategory">Category *</label>
-                                <select class="form-select" id="productCategory">
-                                    <option value="Hand Tools">Hand Tools</option>
-                                    <option value="Power Tools">Power Tools</option>
-                                    <option value="Fasteners">Fasteners</option>
-                                    <option value="Paint">Paint</option>
-                                    <option value="Lumber">Lumber</option>
-                                    <option value="Electrical">Electrical</option>
-                                    <option value="Plumbing">Plumbing</option>
-                                    <option value="Safety">Safety</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label" for="unitType">Unit Type *</label>
-                                <select class="form-select" id="unitType">
-                                    <option value="piece">Piece</option>
-                                    <option value="length">Length</option>
-                                    <option value="weight">Weight</option>
-                                    <option value="volume">Volume</option>
-                                    <option value="pack">Pack</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label" for="unitDetails">Unit Detail *</label>
-                                <input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label" for="productStock">Initial Stock *</label>
-                                <input type="number" class="form-control" id="productStock" required min="0">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="buyPrice">Buying Price ($) *</label>
-                                <input type="number" step="0.01" class="form-control" id="buyPrice" placeholder="Cost price" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="sellPrice">Selling Price ($) *</label>
-                                <input type="number" step="0.01" class="form-control" id="sellPrice" placeholder="Retail price" required>
-                            </div>
-                            <div class="col-12">
-                                <div class="alert alert-info small py-2 mb-0">
-                                    <i class="fas fa-chart-line me-1"></i> 
-                                    <strong>Profit Margin:</strong> <span id="profitPreview">$0.00</span> per unit
+<div class="modal fade" id="addInventoryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#0a2b3e;color:white;">
+                <h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Product</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addProductForm">
+                    <div class="row g-2">
+                        <div class="col-md-6 position-relative">
+                            <label class="form-label" for="productName">Product Name *</label>
+                            <input type="text" class="form-control" id="productName" autocomplete="off" required>
+                            <div id="productNameSuggestions" class="autocomplete-items"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="productCategory">Category *</label>
+                            <select class="form-select" id="productCategory">
+                                <option value="Hand Tools">Hand Tools</option>
+                                <option value="Power Tools">Power Tools</option>
+                                <option value="Fasteners">Fasteners</option>
+                                <option value="Paint">Paint</option>
+                                <option value="Lumber">Lumber</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Plumbing">Plumbing</option>
+                                <option value="Safety">Safety</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="unitType">Unit Type *</label>
+                            <select class="form-select" id="unitType">
+                                <option value="piece">Piece</option>
+                                <option value="length">Length</option>
+                                <option value="weight">Weight</option>
+                                <option value="volume">Volume</option>
+                                <option value="pack">Pack</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="unitDetails">Unit Detail *</label>
+                            <input type="text" class="form-control" id="unitDetails" placeholder="e.g., 2x4x8ft" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="productStock">Initial Stock *</label>
+                            <input type="number" class="form-control" id="productStock" required min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="buyPrice">Buying Price ($) *</label>
+                            <input type="number" step="0.01" class="form-control" id="buyPrice" placeholder="Cost price" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="sellPrice">Selling Price ($) *</label>
+                            <input type="number" step="0.01" class="form-control" id="sellPrice" placeholder="Retail price" required>
+                        </div>
+                        
+                        <!-- Add Funding Source Section -->
+                        <div class="col-12">
+                            <label class="form-label">Funding Source *</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="payment-method" id="addProductFundingProfit" data-funding="profit" style="text-align: center; padding: 10px;">
+                                        <i class="fas fa-chart-line text-success"></i>
+                                        <div class="small">From Profits</div>
+                                        <div class="small text-muted">Reinvest earnings</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="payment-method" id="addProductFundingCapital" data-funding="capital" style="text-align: center; padding: 10px;">
+                                        <i class="fas fa-building text-primary"></i>
+                                        <div class="small">New Capital</div>
+                                        <div class="small text-muted">Owner investment</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-12">
-                                <label class="form-label" for="productDescription">Description</label>
-                                <input type="text" class="form-control" id="productDescription" placeholder="Optional description">
+                        </div>
+                        
+                        <!-- Profit Warning for Add Product -->
+                        <div id="addProductProfitWarning" class="alert alert-warning small" style="display: none;">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>Insufficient Profit!</strong> Current available profit: <span id="addProductWarningProfitAmount">$0.00</span><br>
+                            This purchase will use <span id="addProductWarningCostAmount">$0.00</span> from profit, but only <span id="addProductWarningAvailableAmount">$0.00</span> is available.
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="alert alert-info small py-2 mb-0">
+                                <i class="fas fa-chart-line me-1"></i> 
+                                <strong>Profit Margin:</strong> <span id="profitPreview">$0.00</span> per unit
                             </div>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-primary-dark btn-sm" onclick="addNewProduct()">Add Product</button>
-                </div>
+                        <div class="col-md-12">
+                            <label class="form-label" for="productDescription">Description</label>
+                            <input type="text" class="form-control" id="productDescription" placeholder="Optional description">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary-dark btn-sm" onclick="addNewProduct()">Add Product</button>
             </div>
         </div>
     </div>
-
+</div>
 
     <div class="modal fade" id="deletePasscodeModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
