@@ -2354,13 +2354,18 @@ function toggleItemsDetail(elementId) {
 }
 
 function renderFilteredTransactions() {
+    console.log('renderFilteredTransactions called');
     const tbody = document.getElementById('transactionsList');
+    console.log('tbody element:', tbody);
     if (!tbody) {
         console.error('transactionsList element not found!');
         return;
     }
     
     const transactionsToShow = filteredTransactions.length > 0 ? filteredTransactions : salesData.transactions;
+    console.log('transactionsToShow:', transactionsToShow);
+    console.log('filteredTransactions length:', filteredTransactions.length);
+    console.log('salesData.transactions length:', salesData.transactions ? salesData.transactions.length : 'undefined');
     
     console.log('Rendering transactions, count:', transactionsToShow.length);
     
@@ -2634,33 +2639,43 @@ function renderTransactions() {
 
 // Replace the old fetchTransactions with this simpler version
 async function fetchTransactions() {
+    console.log('fetchTransactions called during init');
     // This is now handled by fetchTransactionsData when needed
     // Keep this for backward compatibility but don't auto-render
     try {
         const response = await fetch(`${API_BASE}/api/transactions`, { credentials: 'include' });
+        console.log('fetchTransactions response status:', response.status);
         const data = await response.json();
+        console.log('fetchTransactions data:', data);
         if (data.success) {
             salesData.transactions = data.transactions;
             filteredTransactions = [];
+            console.log('salesData.transactions set with', data.transactions.length, 'transactions');
+        } else {
+            console.error('fetchTransactions failed:', data);
         }
     } catch (error) { 
-        console.error('Error fetching transactions:', error); 
+        console.error('Error in fetchTransactions:', error); 
     }
 }
 
 async function fetchTransactionsData() {
+    console.log('fetchTransactionsData called');
     showLoader('Loading transactions...');
     try {
+        console.log('Fetching transactions from:', `${API_BASE}/api/transactions?limit=2000`);
         const response = await fetch(`${API_BASE}/api/transactions?limit=2000`, { credentials: 'include' });
+        console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Response data:', data);
         
         if (data.success) {
             salesData.transactions = data.transactions;
             filteredTransactions = [];
-            renderFilteredTransactions();
             console.log('Transactions loaded:', data.transactions.length);
+            renderFilteredTransactions();
         } else {
-            console.error('Failed to load transactions');
+            console.error('Failed to load transactions:', data);
             showToast('Failed to load transactions', 'error');
         }
     } catch (error) {
@@ -3880,6 +3895,7 @@ function navigateTo(page) {
     
     // Hide all pages first
     document.querySelectorAll('[id$="Page"]').forEach(p => {
+        console.log('Hiding page:', p.id);
         p.style.display = 'none';
     });
     
@@ -3887,9 +3903,10 @@ function navigateTo(page) {
     const targetPage = document.getElementById(page + 'Page');
     if (targetPage) {
         targetPage.style.display = 'block';
-        console.log(`Showing page: ${page}`);
+        console.log(`Showing page: ${page}, element:`, targetPage);
     } else {
-        console.error(`Page element '${page}Page' not found!`);
+        console.error(`Page element '${page}Page' not found! Available pages:`, 
+            Array.from(document.querySelectorAll('[id$="Page"]')).map(p => p.id));
     }
     
     console.log(`Navigating to page: ${page}`);
@@ -3902,7 +3919,9 @@ function navigateTo(page) {
     }
     if (page === 'transactions') {
         console.log('Calling fetchTransactionsData for transactions page');
-        // Call the new function to fetch and render transactions
+        // Show existing data immediately
+        renderFilteredTransactions();
+        // Then fetch fresh data
         fetchTransactionsData();
     }
     if (page === 'analytics') {
