@@ -1345,9 +1345,10 @@
                                     <th>Gross Profit</th>
                                     <th>Margin %</th>
                                     <th>Contribution</th>
-                                </thead>
+                                </tr>
+                            </thead>
                             <tbody id="categoryBreakdownList"></tbody>
-                        </div>
+                        </table>
                     </div>
                 </div>
                 
@@ -1380,9 +1381,10 @@
                                     <th>Cost</th>
                                     <th>Funding Source</th>
                                     <th>User</th>
-                                </thead>
+                                </tr>
+                            </thead>
                             <tbody id="reinvestmentHistoryList"></tbody>
-                        </div>
+                        </table>
                     </div>
                 </div>
                 
@@ -1398,6 +1400,8 @@
                     </ul>
                 </div>
             </div>
+
+        
 
             <!-- Transactions Page -->
             <div id="transactionsPage" style="display: none;">
@@ -3995,6 +3999,24 @@ function navigateTo(page) {
                 if (page) navigateTo(page); 
             }); 
         });
+
+        // Accessibility fix: ensure receipt modal does not hide focused element
+        const receiptModalEl = document.getElementById('receiptModal');
+        if (receiptModalEl) {
+            receiptModalEl.addEventListener('hide.bs.modal', () => {
+                const focused = document.activeElement;
+                if (receiptModalEl.contains(focused)) {
+                    focused.blur();
+                }
+            });
+
+            receiptModalEl.addEventListener('hidden.bs.modal', () => {
+                const fallback = document.querySelector('.menu-item.active');
+                if (fallback && typeof fallback.focus === 'function') {
+                    fallback.focus();
+                }
+            });
+        }
     }
     
     // ==================== SIDEBAR TOGGLE ====================
