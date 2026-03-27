@@ -1285,16 +1285,14 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="section-card">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-bold mb-0"><i class="fas fa-chart-line me-1"></i>Sales & Profit Trend</h6>
-                            </div>
-                            <canvas id="salesTrendChart" style="max-height: 280px;"></canvas>
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Revenue by Category</h6>
+                            <canvas id="categorySalesChart" style="max-height: 280px;"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Revenue by Category</h6>
-                            <canvas id="categorySalesChart" style="max-height: 280px;"></canvas>
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i>Top 10 Products by Revenue</h6>
+                            <canvas id="topProductsChart" style="max-height: 280px;"></canvas>
                         </div>
                     </div>
                 </div>
@@ -1303,30 +1301,14 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i>Top 10 Products by Revenue</h6>
-                            <canvas id="topProductsChart" style="max-height: 280px;"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="section-card">
                             <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Profit Margin by Category</h6>
                             <canvas id="categoryMarginChart" style="max-height: 280px;"></canvas>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Charts Row 3 - Hourly & Profit Reinvestment -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Hourly Sales Distribution</h6>
-                            <canvas id="hourlySalesChart" style="max-height: 250px;"></canvas>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="section-card">
                             <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Profit Utilization</h6>
-                            <canvas id="profitUtilizationChart" style="max-height: 250px;"></canvas>
+                            <canvas id="profitUtilizationChart" style="max-height: 280px;"></canvas>
                         </div>
                     </div>
                 </div>
@@ -1478,7 +1460,7 @@
 
             <!-- Analytics Page -->
             <div id="analyticsPage" style="display: none;">
-                <div class="row g-3">
+                <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="section-card">
                             <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Category Distribution</h6>
@@ -1489,6 +1471,56 @@
                         <div class="section-card">
                             <h6 class="fw-bold mb-2"><i class="fas fa-trophy me-1"></i>Top Selling Products</h6>
                             <div id="topProductsList"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Advanced Analytics Row 1 - Trends -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Sales & Profit Trend</h6>
+                            <canvas id="salesTrendChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Hourly Sales Distribution</h6>
+                            <canvas id="hourlySalesChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Advanced Analytics Row 2 - Inventory & Customer Insights -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-boxes me-1"></i>Inventory Turnover Analysis</h6>
+                            <canvas id="inventoryTurnoverChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-users me-1"></i>Customer Segmentation</h6>
+                            <canvas id="customerSegmentationChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Advanced Analytics Row 3 - Forecasting & Performance -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-area me-1"></i>Sales Forecasting</h6>
+                            <canvas id="salesForecastChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-gauge me-1"></i>Performance Metrics Dashboard</h6>
+                            <div id="performanceMetrics" style="max-height: 280px; overflow-y: auto;">
+                                <div class="alert alert-info">Advanced metrics loading...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1935,27 +1967,6 @@ function renderSalesReport(transactions) {
         });
     }
     
-    // Sales trend chart with safe check
-    const salesTrendCtx = document.getElementById('salesTrendChart');
-    if (salesTrendCtx) {
-        const sortedDates = Object.keys(dailyData).sort();
-        const ctx = salesTrendCtx.getContext('2d');
-        if (salesTrendChart && typeof salesTrendChart.destroy === 'function') {
-            salesTrendChart.destroy();
-        }
-        salesTrendChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: sortedDates,
-                datasets: [
-                    { label: 'Revenue ($)', data: sortedDates.map(d => dailyData[d].sales), borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)', tension: 0.3, fill: true },
-                    { label: 'Profit ($)', data: sortedDates.map(d => dailyData[d].profit), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.3, fill: true }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: true }
-        });
-    }
-    
     // Category sales chart with safe check
     const categorySalesCtx = document.getElementById('categorySalesChart');
     if (categorySalesCtx) {
@@ -2011,23 +2022,6 @@ function renderSalesReport(transactions) {
                 datasets: [{ label: 'Margin %', data: categoryMargins, backgroundColor: '#10b981', borderRadius: 4 }] 
             },
             options: { responsive: true, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } } } }
-        });
-    }
-    
-    // Hourly sales chart with safe check
-    const hourlySalesCtx = document.getElementById('hourlySalesChart');
-    if (hourlySalesCtx) {
-        const ctx = hourlySalesCtx.getContext('2d');
-        if (hourlySalesChart && typeof hourlySalesChart.destroy === 'function') {
-            hourlySalesChart.destroy();
-        }
-        hourlySalesChart = new Chart(ctx, {
-            type: 'bar',
-            data: { 
-                labels: Array.from({ length: 24 }, (_, i) => `${i}:00`), 
-                datasets: [{ label: 'Sales ($)', data: hourlyData, backgroundColor: '#0a2b3e', borderRadius: 4 }] 
-            },
-            options: { responsive: true }
         });
     }
     
@@ -3946,7 +3940,7 @@ function navigateTo(page) {
         fetchTransactionsData();
     }
     if (page === 'analytics') {
-        renderAnalytics();
+        loadSalesReport();
     }
 }
     
