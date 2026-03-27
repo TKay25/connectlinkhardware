@@ -1419,16 +1419,16 @@
                     </div>
                     
                     <!-- Filters -->
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-2">
+                    <div class="row g-2 mb-3 align-items-end">
+                        <div class="col-auto" style="min-width: 160px;">
                             <label class="small fw-bold" for="filterStartDate">Start Date</label>
                             <input type="date" class="form-control form-control-sm" id="filterStartDate" placeholder="dd/mm/yyyy">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-auto" style="min-width: 160px;">
                             <label class="small fw-bold" for="filterEndDate">End Date</label>
                             <input type="date" class="form-control form-control-sm" id="filterEndDate" placeholder="dd/mm/yyyy">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-auto" style="min-width: 145px;">
                             <label class="small fw-bold" for="filterPaymentMethod">Payment Method</label>
                             <select class="form-select form-select-sm" id="filterPaymentMethod">
                                 <option value="all">All</option>
@@ -1437,23 +1437,20 @@
                                 <option value="transfer">Bank Transfer</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-auto" style="min-width: 160px;">
                             <label class="small fw-bold" for="filterCashier">Cashier</label>
                             <input type="text" class="form-control form-control-sm" id="filterCashier" placeholder="Search cashier...">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-auto" style="min-width: 170px;">
                             <label class="small fw-bold" for="filterProductName">Search by Product</label>
                             <input type="text" class="form-control form-control-sm" id="filterProductName" placeholder="Search product name...">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-auto" style="min-width: 170px;">
                             <label class="small fw-bold" for="filterReceiptNumber">Search by Receipt #</label>
                             <input type="text" class="form-control form-control-sm" id="filterReceiptNumber" placeholder="Search receipt number...">
                         </div>
-                        <div class="col-md-3 d-flex align-items-end gap-2">
-                            <button class="btn btn-primary-dark btn-sm flex-grow-1" onclick="applyTransactionFilters()">
-                                <i class="fas fa-filter me-1"></i>Apply Filters
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="resetTransactionFilters()">
+                        <div class="col-auto" style="min-width: 130px;">
+                            <button class="btn btn-secondary btn-sm w-100" onclick="resetTransactionFilters()">
                                 <i class="fas fa-undo me-1"></i>Reset
                             </button>
                         </div>
