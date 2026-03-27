@@ -1048,9 +1048,15 @@
                 <div class="section-card">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h5 class="fw-bold mb-0"><i class="fas fa-boxes me-1"></i>Inventory Management</h5>
-                        <button class="btn btn-primary-dark" onclick="showAddInventoryModal()">
-                            <i class="fas fa-plus me-1"></i>Add Product
-                        </button>
+                        <div class="d-flex gap-2">
+                            <div class="position-relative" style="width: 250px;">
+                                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted" style="font-size: 0.7rem;"></i>
+                                <input type="text" class="form-control ps-5" id="inventorySearch" placeholder="Search by name, category, or details..." style="border-radius: 30px; font-size: 0.7rem; padding: 5px 10px;" autocomplete="off">
+                            </div>
+                            <button class="btn btn-primary-dark" onclick="showAddInventoryModal()">
+                                <i class="fas fa-plus me-1"></i>Add Product
+                            </button>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -1867,7 +1873,8 @@
     // API Base URL
     const API_BASE = window.location.origin;
 
-
+// Global variables - add this line with the others
+let inventorySearchTerm = "";
 // Store current editing addition data
 let currentEditingAddition = null;
 let editFundingSource = "profit";
@@ -3805,37 +3812,6 @@ function selectCategory(category) {
         renderProducts();
     }
 
-    function renderInventory() {
-        const tbody = document.getElementById('inventoryList');
-        if (!tbody) return;
-        
-        if (!products.length) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center">No products found</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = products.map(p => `
-            <tr>
-                <td>${p.id}</td>
-                <td><i class="fas ${getCategoryIcon(p.category)} me-1"></i>${escapeHtml(p.name)}</td>
-                <td>${p.category}</td>
-                <td><span class="unit-badge">${p.unit_type}</span></td>
-                <td><small>${p.unit_details || 'N/A'}</small></td>
-                <td class="text-danger">$${(p.buy_price || 0).toFixed(2)}</td>
-                <td class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)}</td>
-                <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
-                <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-success me-1" onclick="showEditStockModal(${p.id})" title="Add Stock">
-                        <i class="fas fa-plus-circle"></i>Add Stock
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
     
     // ==================== EDIT STOCK FUNCTIONS ====================
     
@@ -5125,6 +5101,55 @@ function renderAnalytics() {
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 2500);
     }
+
+// Filter inventory based on search term
+function filterInventory() {
+    if (!inventorySearchTerm) return products;
+    
+    const term = inventorySearchTerm.toLowerCase();
+    return products.filter(p => 
+        p.name.toLowerCase().includes(term) ||
+        (p.category && p.category.toLowerCase().includes(term)) ||
+        (p.unit_details && p.unit_details.toLowerCase().includes(term)) ||
+        (p.description && p.description.toLowerCase().includes(term)) ||
+        (p.id && p.id.toString().includes(term))
+    );
+}
+
+// Update renderInventory to use the filter
+function renderInventory() {
+    const tbody = document.getElementById('inventoryList');
+    if (!tbody) return;
+    
+    const filteredProducts = filterInventory();
+    
+    if (!filteredProducts.length) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center">No products found matching your search</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = filteredProducts.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td><i class="fas ${getCategoryIcon(p.category)} me-1"></i>${escapeHtml(p.name)}</td>
+            <td>${p.category}</td>
+            <td><span class="unit-badge">${p.unit_type}</span></td>
+            <td><small>${p.unit_details || 'N/A'}</small></td>
+            <td class="text-danger">$${(p.buy_price || 0).toFixed(2)}</td>
+            <td class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)}</td>
+            <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
+            <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-success me-1" onclick="showEditStockModal(${p.id})" title="Add Stock">
+                    <i class="fas fa-plus-circle"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
     
     // ==================== PAGE NAVIGATION ====================
     
@@ -5168,102 +5193,114 @@ function navigateTo(page) {
 }
     
     // ==================== EVENT LISTENERS ====================
+
+function setupEventListeners() {
+    // POS Page - Product search
+    const searchInput = document.getElementById('searchProduct');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => { 
+            searchTerm = e.target.value.toLowerCase(); 
+            renderProducts(); 
+        });
+    }
     
-    function setupEventListeners() {
-        const searchInput = document.getElementById('searchProduct');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => { 
-                searchTerm = e.target.value.toLowerCase(); 
-                renderProducts(); 
-            });
-        }
-        
-
-        const cashAmount = document.getElementById('cashAmount');
-        if (cashAmount) {
-            cashAmount.addEventListener('input', () => { 
-                const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); 
-                const cash = parseFloat(cashAmount.value); 
-                const changeDue = document.getElementById('changeDue'); 
-                if (!isNaN(cash) && cash >= total) { 
-                    if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; 
-                    
-                    // Also update the confirmation modal if it's open
-                    const confirmationModal = document.getElementById('confirmationModal');
-                    if (confirmationModal && confirmationModal.classList.contains('show')) {
-                        // Refresh the confirmation modal content
-                        const modal = bootstrap.Modal.getInstance(confirmationModal);
-                        if (modal) {
-                            // Temporarily hide and show to refresh content
-                            modal.hide();
-                            showPaymentConfirmation();
-                            modal.show();
-                        }
+    // Inventory Page - Search input
+    const inventorySearch = document.getElementById('inventorySearch');
+    if (inventorySearch) {
+        inventorySearch.addEventListener('input', (e) => {
+            inventorySearchTerm = e.target.value.toLowerCase();
+            renderInventory();
+        });
+    }
+    
+    // Cash amount input for change calculation
+    const cashAmount = document.getElementById('cashAmount');
+    if (cashAmount) {
+        cashAmount.addEventListener('input', () => { 
+            const total = parseFloat(document.getElementById('total').innerText.replace('$', '')); 
+            const cash = parseFloat(cashAmount.value); 
+            const changeDue = document.getElementById('changeDue'); 
+            if (!isNaN(cash) && cash >= total) { 
+                if (changeDue) changeDue.innerHTML = `Change: $${(cash - total).toFixed(2)}`; 
+                
+                // Also update the confirmation modal if it's open
+                const confirmationModal = document.getElementById('confirmationModal');
+                if (confirmationModal && confirmationModal.classList.contains('show')) {
+                    // Refresh the confirmation modal content
+                    const modal = bootstrap.Modal.getInstance(confirmationModal);
+                    if (modal) {
+                        // Temporarily hide and show to refresh content
+                        modal.hide();
+                        showPaymentConfirmation();
+                        modal.show();
                     }
-                } else if (!isNaN(cash)) { 
-                    if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; 
-                } else { 
-                    if (changeDue) changeDue.innerHTML = ''; 
-                } 
-            });
-        }
-
-        document.querySelectorAll('.payment-method').forEach(el => {
-            el.addEventListener('click', function() {
-                document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
-                this.classList.add('active');
-                selectedPaymentMethod = this.dataset.method;
-                const cashDiv = document.getElementById('cashInputDiv');
-                if (cashDiv) {
-                    cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
                 }
-            });
+            } else if (!isNaN(cash)) { 
+                if (changeDue) changeDue.innerHTML = '<span class="text-danger">Insufficient</span>'; 
+            } else { 
+                if (changeDue) changeDue.innerHTML = ''; 
+            } 
         });
-        
-        document.querySelectorAll('.menu-item').forEach(item => { 
-            item.addEventListener('click', () => { 
-                const page = item.dataset.page; 
-                if (page) navigateTo(page); 
-            }); 
-        });
+    }
 
-        // Auto-apply transaction filters on field change
-        const quickFilterIds = ['filterStartDate','filterEndDate','filterPaymentMethod','filterCashier','filterProductName','filterReceiptNumber'];
-        quickFilterIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', () => {
-                    if (currentPage === 'transactions') applyTransactionFilters();
-                });
+    // Payment method selection
+    document.querySelectorAll('.payment-method').forEach(el => {
+        el.addEventListener('click', function() {
+            document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+            this.classList.add('active');
+            selectedPaymentMethod = this.dataset.method;
+            const cashDiv = document.getElementById('cashInputDiv');
+            if (cashDiv) {
+                cashDiv.style.display = selectedPaymentMethod === 'cash' ? 'block' : 'none';
             }
         });
+    });
+    
+    // Menu item navigation
+    document.querySelectorAll('.menu-item').forEach(item => { 
+        item.addEventListener('click', () => { 
+            const page = item.dataset.page; 
+            if (page) navigateTo(page); 
+        }); 
+    });
 
-        const paymentMethodSelect = document.getElementById('filterPaymentMethod');
-        if (paymentMethodSelect) {
-            paymentMethodSelect.addEventListener('change', () => {
+    // Auto-apply transaction filters on field change
+    const quickFilterIds = ['filterStartDate','filterEndDate','filterPaymentMethod','filterCashier','filterProductName','filterReceiptNumber'];
+    quickFilterIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => {
                 if (currentPage === 'transactions') applyTransactionFilters();
             });
         }
+    });
 
-        // Accessibility fix: ensure receipt modal does not hide focused element
-        const receiptModalEl = document.getElementById('receiptModal');
-        if (receiptModalEl) {
-            receiptModalEl.addEventListener('hide.bs.modal', () => {
-                const focused = document.activeElement;
-                if (receiptModalEl.contains(focused)) {
-                    focused.blur();
-                }
-            });
-
-            receiptModalEl.addEventListener('hidden.bs.modal', () => {
-                const fallback = document.querySelector('.menu-item.active');
-                if (fallback && typeof fallback.focus === 'function') {
-                    fallback.focus();
-                }
-            });
-        }
+    const paymentMethodSelect = document.getElementById('filterPaymentMethod');
+    if (paymentMethodSelect) {
+        paymentMethodSelect.addEventListener('change', () => {
+            if (currentPage === 'transactions') applyTransactionFilters();
+        });
     }
-    
+
+    // Accessibility fix: ensure receipt modal does not hide focused element
+    const receiptModalEl = document.getElementById('receiptModal');
+    if (receiptModalEl) {
+        receiptModalEl.addEventListener('hide.bs.modal', () => {
+            const focused = document.activeElement;
+            if (receiptModalEl.contains(focused)) {
+                focused.blur();
+            }
+        });
+
+        receiptModalEl.addEventListener('hidden.bs.modal', () => {
+            const fallback = document.querySelector('.menu-item.active');
+            if (fallback && typeof fallback.focus === 'function') {
+                fallback.focus();
+            }
+        });
+    }
+}
+
     // ==================== SIDEBAR TOGGLE ====================
     
     function setupSidebar() {
