@@ -2470,7 +2470,6 @@ function renderSalesReport(transactions, reinvestmentHistory = []) {
     if (reinvestmentHistoryList) {
         if (reinvestmentHistory && reinvestmentHistory.length > 0) {
             reinvestmentHistoryList.innerHTML = reinvestmentHistory.map(h => {
-                // Format date properly
                 let dateStr = '';
                 if (h.date) {
                     const date = new Date(h.date);
@@ -2479,11 +2478,34 @@ function renderSalesReport(transactions, reinvestmentHistory = []) {
                 return `
                     <tr>
                         <td>${dateStr}</td>
-                        <td>${escapeHtml(h.product_name)}</td>
-                        <td>${h.quantity}</td>
-                        <td>$${h.total_cost.toFixed(2)}</td>
-                        <td><span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}">${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}</span></td>
-                        <td>${escapeHtml(h.user)}</td>
+                        <td>${escapeHtml(h.product_name)} <small class="text-muted">(ID: ${h.product_id})</small></td>
+                        <td>
+                            <strong id="qty-${h.id}">${h.quantity}</strong>
+                            <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit Quantity">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <strong id="cost-${h.id}">$${h.total_cost.toFixed(2)}</strong>
+                            <small class="text-muted">($${(h.total_cost / h.quantity).toFixed(2)}/unit)</small>
+                            <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit Cost">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <span class="badge ${h.funding_source === 'profit' ? 'bg-warning' : 'bg-info'}" id="funding-${h.id}">
+                                ${h.funding_source === 'profit' ? 'From Profits' : 'New Capital'}
+                            </span>
+                            <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit Funding">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                        <td>
+                            ${escapeHtml(h.user)}
+                            <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStockAddition(${h.id})" title="Edit All">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
                     </tr>
                 `;
             }).join('');

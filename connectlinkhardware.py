@@ -289,6 +289,7 @@ def run1():
 
 
 # Get specific stock addition
+# Get specific stock addition
 @app.route('/api/stock-additions/<int:addition_id>', methods=['GET'])
 @login_required
 def get_stock_addition(addition_id):
@@ -326,12 +327,22 @@ def get_stock_addition(addition_id):
 def update_stock_addition(addition_id):
     data = request.json
     
-    # Calculate stock difference
-    old_stock = execute_query("SELECT quantity FROM stock_additions WHERE id = %s", (addition_id,), fetch_one=True)
-    if not old_stock:
+    # Get old stock addition data
+    old_data = execute_query(
+        "SELECT quantity, buy_price, total_cost, funding_source FROM stock_additions WHERE id = %s",
+        (addition_id,), fetch_one=True
+    )
+    
+    if not old_data:
         return jsonify({'error': 'Stock addition not found'}), 404
     
-    stock_difference = data['quantity'] - old_stock[0]
+    old_quantity = old_data[0]
+    old_cost_per_unit = old_data[1]
+    old_total_cost = old_data[2]
+    old_funding_source = old_data[3]
+    
+    # Calculate stock difference
+    stock_difference = data['quantity'] - old_quantity
     
     # Update stock addition record
     update_query = """
@@ -364,7 +375,11 @@ def delete_stock_addition(addition_id):
     data = request.json
     
     # Get the addition details
-    addition = execute_query("SELECT product_id, quantity FROM stock_additions WHERE id = %s", (addition_id,), fetch_one=True)
+    addition = execute_query(
+        "SELECT product_id, quantity FROM stock_additions WHERE id = %s",
+        (addition_id,), fetch_one=True
+    )
+    
     if not addition:
         return jsonify({'error': 'Stock addition not found'}), 404
     
@@ -389,8 +404,9 @@ def delete_stock_addition(addition_id):
 def get_stock_additions():
     """Get stock addition history for reinvestment tracking"""
     query = """
-        SELECT sa.added_at as date, p.name as product_name, sa.quantity, 
-               sa.total_cost, sa.funding_source, u.full_name as user
+        SELECT sa.id, sa.added_at as date, p.id as product_id, p.name as product_name, 
+               sa.quantity, sa.total_cost, sa.funding_source, u.full_name as user,
+               sa.buy_price as cost_per_unit
         FROM stock_additions sa
         LEFT JOIN products p ON sa.product_id = p.id
         LEFT JOIN users u ON sa.user_id = u.id
@@ -403,12 +419,15 @@ def get_stock_additions():
     if result:
         for row in result:
             additions.append({
-                'date': row[0].isoformat() if row[0] else '',
-                'product_name': row[1],
-                'quantity': row[2],
-                'total_cost': float(row[3]),
-                'funding_source': row[4],
-                'user': row[5] or 'System'
+                'id': row[0],
+                'date': row[1].isoformat() if row[1] else '',
+                'product_id': row[2],
+                'product_name': row[3],
+                'quantity': row[4],
+                'total_cost': float(row[5]),
+                'funding_source': row[6],
+                'user': row[7] or 'System',
+                'cost_per_unit': float(row[8]) if row[8] else 0
             })
     
     return jsonify({
