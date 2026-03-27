@@ -3368,8 +3368,76 @@ function setupFundingSelection() {
         document.getElementById('productDescription').value = '';
         document.getElementById('productNameSuggestions').innerHTML = '';
         document.getElementById('profitPreview').innerHTML = '$0.00';
+        
+        // Reset funding selection - NO DEFAULT, both inactive
+        selectedProductFundingSource = null;  // Set to null instead of "profit"
+        const profitOption = document.getElementById('addProductFundingProfit');
+        const capitalOption = document.getElementById('addProductFundingCapital');
+        
+        if (profitOption && capitalOption) {
+            profitOption.classList.remove('active');
+            capitalOption.classList.remove('active');
+        }
+        
+        // Hide profit warning
+        const profitWarning = document.getElementById('addProductProfitWarning');
+        if (profitWarning) profitWarning.style.display = 'none';
+        
+        // Setup funding selection for add product modal
+        setupAddProductFundingSelection();
+        
         new bootstrap.Modal(document.getElementById('addInventoryModal')).show();
     }
+
+function setupAddProductFundingSelection() {
+    const profitOption = document.getElementById('addProductFundingProfit');
+    const capitalOption = document.getElementById('addProductFundingCapital');
+    
+    if (!profitOption || !capitalOption) return;
+    
+    // Remove existing listeners by cloning and replacing
+    const newProfit = profitOption.cloneNode(true);
+    const newCapital = capitalOption.cloneNode(true);
+    profitOption.parentNode.replaceChild(newProfit, profitOption);
+    capitalOption.parentNode.replaceChild(newCapital, capitalOption);
+    
+    newProfit.addEventListener('click', () => {
+        // Toggle off if already selected
+        if (selectedProductFundingSource === "profit") {
+            selectedProductFundingSource = null;
+            newProfit.classList.remove('active');
+            // Hide warning
+            const profitWarning = document.getElementById('addProductProfitWarning');
+            if (profitWarning) profitWarning.style.display = 'none';
+        } else {
+            // Select profit, deselect capital
+            document.querySelectorAll('#addProductFundingProfit, #addProductFundingCapital').forEach(el => {
+                if (el) el.classList.remove('active');
+            });
+            newProfit.classList.add('active');
+            selectedProductFundingSource = "profit";
+            // Update cost preview and warning
+            updateAddProductCostPreview();
+        }
+    });
+    
+    newCapital.addEventListener('click', () => {
+        // Toggle off if already selected
+        if (selectedProductFundingSource === "capital") {
+            selectedProductFundingSource = null;
+            newCapital.classList.remove('active');
+        } else {
+            // Select capital, deselect profit
+            document.querySelectorAll('#addProductFundingProfit, #addProductFundingCapital').forEach(el => {
+                if (el) el.classList.remove('active');
+            });
+            newCapital.classList.add('active');
+            selectedProductFundingSource = "capital";
+            const profitWarning = document.getElementById('addProductProfitWarning');
+            if (profitWarning) profitWarning.style.display = 'none';
+        }
+    });
+}
     
     async function addNewProduct() {
         const name = document.getElementById('productName').value;
@@ -3381,6 +3449,12 @@ function setupFundingSelection() {
         const stock = parseInt(document.getElementById('productStock').value);
         const description = document.getElementById('productDescription').value;
         
+        // Validate funding source is selected
+        if (!selectedProductFundingSource) {
+            showToast('Please select a funding source (Profits or New Capital)', 'error');
+            return;
+        }
+        
         if (!name || isNaN(buyPrice) || isNaN(sellPrice) || isNaN(stock)) {
             showToast('Please fill all required fields (Name, Buy Price, Sell Price, Stock)', 'error');
             return;
@@ -3388,6 +3462,14 @@ function setupFundingSelection() {
         
         if (sellPrice < buyPrice) {
             showToast('Warning: Selling price is less than buying price!', 'error');
+            return;
+        }
+        
+        const totalCost = stock * buyPrice;
+        
+        // Check if using profit and have sufficient profit
+        if (selectedProductFundingSource === "profit" && totalCost > currentTotalProfit) {
+            showToast(`Insufficient profit! Available: $${currentTotalProfit.toFixed(2)}, Required: $${totalCost.toFixed(2)}`, 'error');
             return;
         }
         
