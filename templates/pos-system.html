@@ -2430,13 +2430,13 @@ function renderSalesReport(transactions, reinvestmentHistory = []) {
             return `
                 <tr>
                     <td><strong>${escapeHtml(cat)}</strong></td>
-                    <td>${data.quantity}）,
-                    <td>$${data.sales.toFixed(2)}）,
-                    <td>$${data.cogs.toFixed(2)}）,
-                    <td class="text-success">$${data.profit.toFixed(2)}）,
-                    <td><span class="badge ${margin >= 30 ? 'bg-success' : margin >= 15 ? 'bg-warning' : 'bg-secondary'}">${margin}%</span>）,
-                    <td><div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${contribution}%"></div></div><small>${contribution}%</small>）,
-                 </div>
+                    <td>${data.quantity}</td>
+                    <td>$${data.sales.toFixed(2)}</td>
+                    <td>$${data.cogs.toFixed(2)}</td>
+                    <td class="text-success">$${data.profit.toFixed(2)}</td>
+                    <td><span class="badge ${margin >= 30 ? 'bg-success' : margin >= 15 ? 'bg-warning' : 'bg-secondary'}">${margin}%</span></td>
+                    <td><div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" style="width: ${contribution}%"></div></div><small>${contribution}%</small></td>
+                </tr>
             `;
         }).join('');
     }
@@ -2514,7 +2514,6 @@ function renderSalesReport(transactions, reinvestmentHistory = []) {
         }
     }
 }
-
 
     function getZimbabweTime() {
         // Zimbabwe is UTC+2 (no daylight savings)
