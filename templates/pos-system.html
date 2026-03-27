@@ -2355,6 +2355,14 @@ function toggleItemsDetail(elementId) {
 
 function renderFilteredTransactions() {
     console.log('renderFilteredTransactions called');
+    
+    // Check if transactions page is currently visible
+    const transactionsPage = document.getElementById('transactionsPage');
+    if (!transactionsPage || transactionsPage.style.display !== 'block') {
+        console.log('Transactions page is not visible, skipping render');
+        return;
+    }
+    
     const tbody = document.getElementById('transactionsList');
     console.log('tbody element:', tbody);
     if (!tbody) {
