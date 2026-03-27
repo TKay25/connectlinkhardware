@@ -11,3 +11,9 @@ openpyxl
 requests
 bleach
 pytz
+Flask-SocketIO
+Flask-Caching
+scikit-learn
+statsmodels
+numpy
+python-socketio

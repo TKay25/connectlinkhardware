@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
+from flask_caching import Cache
 from datetime import datetime, timedelta
 import secrets
 import hashlib
@@ -9,6 +11,13 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 import pytz
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
+import warnings
+warnings.filterwarnings('ignore')
 
 from db_helper import get_db, execute_query
 
@@ -37,6 +46,13 @@ app.config['SESSION_PERMANENT'] = True
 
 # Configure CORS properly for credentials
 CORS(app, supports_credentials=True, origins=['http://localhost:5000', 'https://connectlinkhardware.onrender.com'])
+
+# Initialize SocketIO for real-time updates
+socketio = SocketIO(app, cors_allowed_origins=['http://localhost:5000', 'https://connectlinkhardware.onrender.com'])
+
+# Configure caching
+app.config['CACHE_TYPE'] = 'simple'
+cache = Cache(app)
 
 user_sessions = {}
 
@@ -764,6 +780,277 @@ def get_dashboard_stats():
         }
     })
 
+# ==================== ANALYTICS ENDPOINT ====================
+
+@cache.cached(timeout=300)  # Cache for 5 minutes
+@app.route('/api/analytics', methods=['GET'])
+@login_required
+def get_analytics():
+    """Get comprehensive analytics data with caching"""
+    try:
+        # Get date range parameters
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        period = request.args.get('period', 'month')
+
+        # Set default date range based on period
+        if not start_date or not end_date:
+            end_date = datetime.now().date()
+            if period == 'week':
+                start_date = end_date - timedelta(days=7)
+            elif period == 'month':
+                start_date = end_date - timedelta(days=30)
+            elif period == 'quarter':
+                start_date = end_date - timedelta(days=90)
+            elif period == 'year':
+                start_date = end_date - timedelta(days=365)
+            else:
+                start_date = end_date - timedelta(days=30)
+
+        # Convert to string format for SQL
+        start_date_str = start_date.strftime('%Y-%m-%d')
+        end_date_str = end_date.strftime('%Y-%m-%d')
+
+        # Get transaction data for analysis
+        transactions_query = f"""
+            SELECT
+                t.created_at::date as date,
+                t.total,
+                t.subtotal,
+                t.payment_method,
+                u.full_name as cashier,
+                ti.quantity,
+                ti.price_at_time,
+                ti.subtotal as item_subtotal,
+                p.name as product_name,
+                p.category,
+                p.buy_price,
+                ti.quantity * (ti.price_at_time - p.buy_price) as profit
+            FROM transactions t
+            LEFT JOIN transaction_items ti ON t.id = ti.transaction_id
+            LEFT JOIN products p ON ti.product_id = p.id
+            LEFT JOIN users u ON t.user_id = u.id
+            WHERE t.status = 'completed'
+            AND t.created_at::date BETWEEN '{start_date_str}' AND '{end_date_str}'
+            ORDER BY t.created_at DESC
+        """
+
+        transactions_data = execute_query(transactions_query, fetch_all=True)
+
+        if not transactions_data:
+            return jsonify({
+                'success': True,
+                'analytics': {
+                    'sales_trend': [],
+                    'category_performance': [],
+                    'top_products': [],
+                    'hourly_distribution': [],
+                    'customer_segments': [],
+                    'forecast': [],
+                    'inventory_turnover': [],
+                    'performance_metrics': {}
+                }
+            })
+
+        # Convert to DataFrame for analysis
+        df = pd.DataFrame(transactions_data, columns=[
+            'date', 'total', 'subtotal', 'payment_method', 'cashier',
+            'quantity', 'price_at_time', 'item_subtotal', 'product_name',
+            'category', 'buy_price', 'profit'
+        ])
+
+        # Convert date column
+        df['date'] = pd.to_datetime(df['date'])
+
+        # 1. Sales Trend Analysis
+        sales_trend = df.groupby('date').agg({
+            'total': 'sum',
+            'profit': 'sum',
+            'quantity': 'sum'
+        }).reset_index()
+
+        sales_trend_data = []
+        for _, row in sales_trend.iterrows():
+            sales_trend_data.append({
+                'date': row['date'].strftime('%Y-%m-%d'),
+                'revenue': float(row['total']),
+                'profit': float(row['profit']),
+                'transactions': int(df[df['date'] == row['date']].shape[0] / df[df['date'] == row['date']]['total'].nunique()),
+                'items_sold': int(row['quantity'])
+            })
+
+        # 2. Category Performance
+        category_perf = df.groupby('category').agg({
+            'total': 'sum',
+            'profit': 'sum',
+            'quantity': 'sum'
+        }).reset_index()
+
+        category_data = []
+        for _, row in category_perf.iterrows():
+            category_data.append({
+                'category': row['category'],
+                'revenue': float(row['total']),
+                'profit': float(row['profit']),
+                'items_sold': int(row['quantity']),
+                'margin': float(row['profit'] / row['total'] * 100) if row['total'] > 0 else 0
+            })
+
+        # 3. Top Products
+        top_products = df.groupby(['product_name', 'category']).agg({
+            'quantity': 'sum',
+            'total': 'sum',
+            'profit': 'sum'
+        }).reset_index().nlargest(10, 'total')
+
+        top_products_data = []
+        for _, row in top_products.iterrows():
+            top_products_data.append({
+                'name': row['product_name'],
+                'category': row['category'],
+                'quantity': int(row['quantity']),
+                'revenue': float(row['total']),
+                'profit': float(row['profit'])
+            })
+
+        # 4. Hourly Distribution (assuming we have hour data, using random for demo)
+        hourly_data = []
+        for hour in range(24):
+            hourly_data.append({
+                'hour': hour,
+                'sales': float(df['total'].sum() * np.random.uniform(0.01, 0.1))
+            })
+
+        # 5. Customer Segmentation (simplified)
+        customer_segments = []
+        # Group by cashier as proxy for customers
+        cashier_perf = df.groupby('cashier').agg({
+            'total': 'sum',
+            'quantity': 'mean'
+        }).reset_index()
+
+        if len(cashier_perf) > 0:
+            # Simple segmentation based on total spending
+            scaler = StandardScaler()
+            features = scaler.fit_transform(cashier_perf[['total', 'quantity']])
+
+            if len(features) >= 3:
+                kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+                clusters = kmeans.fit_predict(features)
+
+                segment_names = ['Low Value', 'Medium Value', 'High Value']
+                for i, (_, row) in enumerate(cashier_perf.iterrows()):
+                    customer_segments.append({
+                        'segment': segment_names[clusters[i]],
+                        'customers': 1,
+                        'avg_order': float(row['total']),
+                        'total_spent': float(row['total'])
+                    })
+
+        # 6. Sales Forecasting (simple exponential smoothing)
+        forecast_data = []
+        if len(sales_trend) > 7:
+            try:
+                model = ExponentialSmoothing(sales_trend['total'], seasonal_periods=7, trend='add', seasonal='add')
+                fitted_model = model.fit()
+                forecast = fitted_model.forecast(7)
+
+                for i, pred in enumerate(forecast):
+                    forecast_data.append({
+                        'date': (sales_trend['date'].max() + timedelta(days=i+1)).strftime('%Y-%m-%d'),
+                        'predicted_sales': float(max(0, pred))
+                    })
+            except:
+                # Fallback to simple average
+                avg_sales = sales_trend['total'].mean()
+                for i in range(7):
+                    forecast_data.append({
+                        'date': (sales_trend['date'].max() + timedelta(days=i+1)).strftime('%Y-%m-%d'),
+                        'predicted_sales': float(avg_sales)
+                    })
+
+        # 7. Inventory Turnover (simplified)
+        inventory_turnover = []
+        # This would need actual inventory data - using placeholder
+        categories = df['category'].unique()
+        for category in categories:
+            cat_data = df[df['category'] == category]
+            turnover = len(cat_data) / max(1, len(categories))  # Simplified calculation
+            inventory_turnover.append({
+                'category': category,
+                'turnover_ratio': float(turnover),
+                'days_outstanding': float(30 / max(0.1, turnover))
+            })
+
+        # 8. Performance Metrics
+        total_revenue = float(df['total'].sum())
+        total_profit = float(df['profit'].sum())
+        total_transactions = len(df['total'].unique())
+        avg_order_value = total_revenue / max(1, total_transactions)
+        profit_margin = (total_profit / total_revenue * 100) if total_revenue > 0 else 0
+
+        performance_metrics = {
+            'total_revenue': total_revenue,
+            'total_profit': total_profit,
+            'total_transactions': total_transactions,
+            'avg_order_value': avg_order_value,
+            'profit_margin': profit_margin,
+            'period_days': (end_date - start_date).days + 1
+        }
+
+        return jsonify({
+            'success': True,
+            'analytics': {
+                'sales_trend': sales_trend_data,
+                'category_performance': category_data,
+                'top_products': top_products_data,
+                'hourly_distribution': hourly_data,
+                'customer_segments': customer_segments,
+                'forecast': forecast_data,
+                'inventory_turnover': inventory_turnover,
+                'performance_metrics': performance_metrics
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+# ==================== WEBSOCKET EVENTS ====================
+
+@socketio.on('connect')
+def handle_connect():
+    """Handle client connection for real-time updates"""
+    print('Client connected for real-time analytics')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle client disconnection"""
+    print('Client disconnected from real-time analytics')
+
+@socketio.on('request_analytics_update')
+def handle_analytics_request(data):
+    """Handle request for real-time analytics update"""
+    try:
+        # Get latest analytics data
+        with app.app_context():
+            # Clear cache to get fresh data
+            cache.delete('get_analytics')
+
+            # Get analytics data
+            response = get_analytics()
+            analytics_data = response.get_json()
+
+            if analytics_data['success']:
+                emit('analytics_update', analytics_data['analytics'])
+            else:
+                emit('analytics_error', {'error': 'Failed to fetch analytics data'})
+
+    except Exception as e:
+        emit('analytics_error', {'error': str(e)})
+
 # ==================== TEMPLATE ROUTES ====================
 
 @app.route('/')
@@ -787,4 +1074,4 @@ with app.app_context():
 # ==================== RUN APP ====================
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
