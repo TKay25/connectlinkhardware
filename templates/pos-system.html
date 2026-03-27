@@ -1448,13 +1448,13 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-trophy me-1"></i>🏆 Top Selling Products</h6>
+                            <h6 class="fw-bold mb-2"><i class="fas fa-trophy me-1"></i> Top Selling Products</h6>
                             <div id="topProductsListReport" style="max-height: 300px; overflow-y: auto;"></div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i>💰 Most Profitable Products</h6>
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i> Most Profitable Products</h6>
                             <div id="topProfitProductsList" style="max-height: 300px; overflow-y: auto;"></div>
                         </div>
                     </div>
@@ -1463,7 +1463,7 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="section-card">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Category Distribution</h6>
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Revenue by Product Category</h6>
                             <canvas id="categoryChart" style="max-height: 280px;"></canvas>
                         </div>
                     </div>
@@ -4378,96 +4378,102 @@ function setupAddProductFundingSelection() {
     
 
 function renderAnalytics() {
-    // If we have sales report data, use it for charts
-    if (currentReportData && currentReportData.length > 0) {
-        // Calculate category sales from transaction data
-        const categorySales = {};
-        const hourlyData = Array(24).fill(0);
-        const dailySales = {};
-        let totalRevenue = 0;
+    // If we don't have data, load it first
+    if (!currentReportData || currentReportData.length === 0) {
+        console.log('No analytics data, loading...');
+        loadSalesReport('Loading analytics data...');
+        return;
+    }
+    
+    // Calculate category sales from transaction data
+    const categorySales = {};
+    const hourlyData = Array(24).fill(0);
+    const dailySales = {};
+    let totalRevenue = 0;
+    
+    currentReportData.forEach(transaction => {
+        totalRevenue += transaction.total || 0;
         
-        currentReportData.forEach(transaction => {
-            totalRevenue += transaction.total || 0;
-            
-            // Hourly distribution
-            if (transaction.created_at) {
-                const hour = new Date(transaction.created_at).getHours();
-                hourlyData[hour] += transaction.total || 0;
+        // Hourly distribution
+        if (transaction.created_at) {
+            const hour = new Date(transaction.created_at).getHours();
+            hourlyData[hour] += transaction.total || 0;
+        }
+        
+        // Daily sales for trend
+        if (transaction.created_at) {
+            const date = new Date(transaction.created_at).toISOString().split('T')[0];
+            if (!dailySales[date]) {
+                dailySales[date] = { sales: 0, profit: 0 };
             }
-            
-            // Daily sales for trend
-            if (transaction.created_at) {
-                const date = new Date(transaction.created_at).toISOString().split('T')[0];
-                if (!dailySales[date]) {
-                    dailySales[date] = { sales: 0, profit: 0 };
+            dailySales[date].sales += transaction.total || 0;
+            dailySales[date].profit += transaction.profit || 0;
+        }
+        
+        // Category sales
+        if (transaction.items) {
+            transaction.items.forEach(item => {
+                const category = item.category || 'Other';
+                const itemTotal = item.subtotal || (item.price * item.quantity);
+                if (!categorySales[category]) {
+                    categorySales[category] = 0;
                 }
-                dailySales[date].sales += transaction.total || 0;
-                dailySales[date].profit += transaction.profit || 0;
-            }
-            
-            // Category sales
-            if (transaction.items) {
-                transaction.items.forEach(item => {
-                    const category = item.category || 'Other';
-                    const itemTotal = item.subtotal || (item.price * item.quantity);
-                    if (!categorySales[category]) {
-                        categorySales[category] = 0;
-                    }
-                    categorySales[category] += itemTotal;
-                });
-            }
-        });
+                categorySales[category] += itemTotal;
+            });
+        }
+    });
+    
+    // Category Distribution Chart (Pie)
+    const categoryChartCanvas = document.getElementById('categoryChart');
+    if (categoryChartCanvas) {
+        const ctx = categoryChartCanvas.getContext('2d');
+        if (categoryChart) categoryChart.destroy();
         
-        // Category Distribution Chart (Pie)
-        const categoryChartCanvas = document.getElementById('categoryChart');
-        if (categoryChartCanvas) {
-            const ctx = categoryChartCanvas.getContext('2d');
-            if (categoryChart) categoryChart.destroy();
-            
-            const categoryLabels = Object.keys(categorySales);
-            const categoryData = Object.values(categorySales);
-            
-            if (categoryLabels.length > 0) {
-                categoryChart = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: categoryLabels,
-                        datasets: [{
-                            data: categoryData,
-                            backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff', '#cceeff', '#e5f3ff'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: { position: 'bottom' },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.raw || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        return `${label}: $${value.toFixed(2)} (${percentage}%)`;
-                                    }
+        const categoryLabels = Object.keys(categorySales);
+        const categoryData = Object.values(categorySales);
+        
+        if (categoryLabels.length > 0) {
+            categoryChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        data: categoryData,
+                        backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff', '#cceeff', '#e5f3ff'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: $${value.toFixed(2)} (${percentage}%)`;
                                 }
                             }
                         }
                     }
-                });
-            } else {
-                // Fallback to inventory value if no sales data
-                const inventoryValue = {};
-                products.forEach(p => {
-                    if (!inventoryValue[p.category]) inventoryValue[p.category] = 0;
-                    inventoryValue[p.category] += p.stock * p.sell_price;
-                });
-                
-                const invLabels = Object.keys(inventoryValue);
-                const invData = Object.values(inventoryValue);
-                
+                }
+            });
+        } else {
+            // Fallback to inventory value if no sales data
+            const inventoryValue = {};
+            products.forEach(p => {
+                if (!inventoryValue[p.category]) inventoryValue[p.category] = 0;
+                inventoryValue[p.category] += p.stock * p.sell_price;
+            });
+            
+            const invLabels = Object.keys(inventoryValue);
+            const invData = Object.values(inventoryValue);
+            
+            if (invLabels.length > 0) {
                 categoryChart = new Chart(ctx, {
                     type: 'pie',
                     data: {
@@ -4495,19 +4501,33 @@ function renderAnalytics() {
                         }
                     }
                 });
+            } else {
+                categoryChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['No Data'],
+                        datasets: [{ data: [1], backgroundColor: ['#e5e7eb'] }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { tooltip: { callbacks: { label: () => 'No data available' } } }
+                    }
+                });
             }
         }
+    }
+    
+    // Sales & Profit Trend Chart
+    const salesTrendCanvas = document.getElementById('salesTrendChart');
+    if (salesTrendCanvas) {
+        const ctx = salesTrendCanvas.getContext('2d');
+        if (salesTrendChart) salesTrendChart.destroy();
         
-        // Sales & Profit Trend Chart
-        const salesTrendCanvas = document.getElementById('salesTrendChart');
-        if (salesTrendCanvas) {
-            const ctx = salesTrendCanvas.getContext('2d');
-            if (salesTrendChart) salesTrendChart.destroy();
-            
-            const sortedDates = Object.keys(dailySales).sort();
-            const revenueData = sortedDates.map(d => dailySales[d].sales);
-            const profitData = sortedDates.map(d => dailySales[d].profit);
-            
+        const sortedDates = Object.keys(dailySales).sort();
+        const revenueData = sortedDates.map(d => dailySales[d].sales);
+        const profitData = sortedDates.map(d => dailySales[d].profit);
+        
+        if (sortedDates.length > 0) {
             salesTrendChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -4545,201 +4565,181 @@ function renderAnalytics() {
                     }
                 }
             });
-        }
-        
-        // Hourly Sales Distribution Chart
-        const hourlyCanvas = document.getElementById('hourlySalesChart');
-        if (hourlyCanvas) {
-            const ctx = hourlyCanvas.getContext('2d');
-            if (hourlySalesChart) hourlySalesChart.destroy();
-            
-            hourlySalesChart = new Chart(ctx, {
-                type: 'bar',
+        } else {
+            salesTrendChart = new Chart(ctx, {
+                type: 'line',
                 data: {
-                    labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+                    labels: ['No Data'],
+                    datasets: [
+                        { label: 'Revenue ($)', data: [0], borderColor: '#0a2b3e', backgroundColor: 'rgba(10,43,62,0.1)' },
+                        { label: 'Profit ($)', data: [0], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)' }
+                    ]
+                },
+                options: { responsive: true, plugins: { tooltip: { callbacks: { label: () => 'No data available' } } } }
+            });
+        }
+    }
+    
+    // Hourly Sales Distribution Chart
+    const hourlyCanvas = document.getElementById('hourlySalesChart');
+    if (hourlyCanvas) {
+        const ctx = hourlyCanvas.getContext('2d');
+        if (hourlySalesChart) hourlySalesChart.destroy();
+        
+        hourlySalesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+                datasets: [{
+                    label: 'Sales ($)',
+                    data: hourlyData,
+                    backgroundColor: '#0a2b3e',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Sales: $${context.raw.toFixed(2)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Revenue by Category Chart
+    const categorySalesCanvas = document.getElementById('categorySalesChart');
+    if (categorySalesCanvas) {
+        const ctx = categorySalesCanvas.getContext('2d');
+        if (categorySalesChart) categorySalesChart.destroy();
+        
+        const catLabels = Object.keys(categorySales);
+        const catData = Object.values(categorySales);
+        
+        if (catLabels.length > 0) {
+            categorySalesChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: catLabels,
                     datasets: [{
-                        label: 'Sales ($)',
-                        data: hourlyData,
-                        backgroundColor: '#0a2b3e',
-                        borderRadius: 4
+                        data: catData,
+                        backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'],
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value;
-                                }
-                            }
-                        }
-                    },
                     plugins: {
+                        legend: { position: 'bottom' },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return `Sales: $${context.raw.toFixed(2)}`;
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: $${value.toFixed(2)} (${percentage}%)`;
                                 }
                             }
                         }
                     }
                 }
             });
-        }
-        
-        // Revenue by Category Chart (Duplicate of categoryChart? Keep both or remove one)
-        const categorySalesCanvas = document.getElementById('categorySalesChart');
-        if (categorySalesCanvas) {
-            const ctx = categorySalesCanvas.getContext('2d');
-            if (categorySalesChart) categorySalesChart.destroy();
-            
-            const catLabels = Object.keys(categorySales);
-            const catData = Object.values(categorySales);
-            
-            if (catLabels.length > 0) {
-                categorySalesChart = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: catLabels,
-                        datasets: [{
-                            data: catData,
-                            backgroundColor: ['#0a2b3e', '#1e4a6e', '#2c6e9e', '#3c8ebe', '#4caede', '#6cbeef', '#8cceff', '#acdeff'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: { position: 'bottom' },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.raw || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        return `${label}: $${value.toFixed(2)} (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-        
-        // Top Selling Products
-        const topSellingProducts = document.getElementById('topProductsListReport');
-        if (topSellingProducts) {
-            const productSales = {};
-            currentReportData.forEach(transaction => {
-                if (transaction.items) {
-                    transaction.items.forEach(item => {
-                        const productName = item.product_name || item.name;
-                        if (!productSales[productName]) {
-                            productSales[productName] = { sales: 0, quantity: 0 };
-                        }
-                        productSales[productName].sales += item.subtotal || (item.price * item.quantity);
-                        productSales[productName].quantity += item.quantity;
-                    });
-                }
-            });
-            
-            const topSelling = Object.entries(productSales).sort((a, b) => b[1].sales - a[1].sales).slice(0, 10);
-            if (topSelling.length > 0) {
-                topSellingProducts.innerHTML = topSelling.map((p, idx) => 
-                    `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                        <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div>
-                        <div class="text-end"><div class="fw-bold">$${p[1].sales.toFixed(2)}</div><small class="text-muted">revenue</small></div>
-                    </div>`
-                ).join('');
-            } else {
-                topSellingProducts.innerHTML = '<div class="text-center text-muted py-3">No sales data available</div>';
-            }
-        }
-        
-        // Most Profitable Products
-        const topProfitProducts = document.getElementById('topProfitProductsList');
-        if (topProfitProducts) {
-            const productProfits = {};
-            currentReportData.forEach(transaction => {
-                if (transaction.items) {
-                    transaction.items.forEach(item => {
-                        const productName = item.product_name || item.name;
-                        const buyPrice = item.buy_price || 0;
-                        const sellPrice = item.price || item.price_at_time || 0;
-                        const profit = (sellPrice - buyPrice) * item.quantity;
-                        if (!productProfits[productName]) {
-                            productProfits[productName] = { profit: 0, quantity: 0, revenue: 0 };
-                        }
-                        productProfits[productName].profit += profit;
-                        productProfits[productName].quantity += item.quantity;
-                        productProfits[productName].revenue += item.subtotal || (sellPrice * item.quantity);
-                    });
-                }
-            });
-            
-            const topProfitable = Object.entries(productProfits).sort((a, b) => b[1].profit - a[1].profit).slice(0, 10);
-            if (topProfitable.length > 0) {
-                topProfitProducts.innerHTML = topProfitable.map((p, idx) => {
-                    const margin = (p[1].profit / p[1].revenue * 100).toFixed(0);
-                    return `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                                <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div>
-                                <div class="text-end"><div class="fw-bold text-success">$${p[1].profit.toFixed(2)}</div><small class="text-muted">${margin}% margin</small></div>
-                            </div>`;
-                }).join('');
-            } else {
-                topProfitProducts.innerHTML = '<div class="text-center text-muted py-3">No profit data available</div>';
-            }
-        }
-        
-    } else {
-        // Fallback: Show message that no data is available
-        const categoryChartCanvas = document.getElementById('categoryChart');
-        if (categoryChartCanvas && (!categoryChart || !categoryChart.data)) {
-            const ctx = categoryChartCanvas.getContext('2d');
-            if (categoryChart) categoryChart.destroy();
-            categoryChart = new Chart(ctx, {
+        } else {
+            categorySalesChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
-                    labels: ['No Data Available'],
+                    labels: ['No Data'],
                     datasets: [{ data: [1], backgroundColor: ['#e5e7eb'] }]
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        tooltip: { callbacks: { label: () => 'No sales data yet' } }
-                    }
-                }
-            });
-        }
-        
-        // Show empty messages for other sections
-        const topSellingProducts = document.getElementById('topProductsListReport');
-        if (topSellingProducts) topSellingProducts.innerHTML = '<div class="text-center text-muted py-3">No sales data available</div>';
-        
-        const topProfitProducts = document.getElementById('topProfitProductsList');
-        if (topProfitProducts) topProfitProducts.innerHTML = '<div class="text-center text-muted py-3">No profit data available</div>';
-        
-        const hourlyCanvas = document.getElementById('hourlySalesChart');
-        if (hourlyCanvas && (!hourlySalesChart || !hourlySalesChart.data)) {
-            const ctx = hourlyCanvas.getContext('2d');
-            if (hourlySalesChart) hourlySalesChart.destroy();
-            hourlySalesChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
-                    datasets: [{ label: 'Sales ($)', data: Array(24).fill(0), backgroundColor: '#e5e7eb' }]
-                },
-                options: { responsive: true, plugins: { tooltip: { callbacks: { label: () => 'No sales data' } } } }
+                options: { responsive: true, plugins: { tooltip: { callbacks: { label: () => 'No data available' } } } }
             });
         }
     }
+    
+    // Top Selling Products
+    const topSellingProducts = document.getElementById('topProductsListReport');
+    if (topSellingProducts) {
+        const productSales = {};
+        currentReportData.forEach(transaction => {
+            if (transaction.items) {
+                transaction.items.forEach(item => {
+                    const productName = item.product_name || item.name;
+                    if (!productSales[productName]) {
+                        productSales[productName] = { sales: 0, quantity: 0 };
+                    }
+                    productSales[productName].sales += item.subtotal || (item.price * item.quantity);
+                    productSales[productName].quantity += item.quantity;
+                });
+            }
+        });
+        
+        const topSelling = Object.entries(productSales).sort((a, b) => b[1].sales - a[1].sales).slice(0, 10);
+        if (topSelling.length > 0) {
+            topSellingProducts.innerHTML = topSelling.map((p, idx) => 
+                `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                    <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div>
+                    <div class="text-end"><div class="fw-bold">$${p[1].sales.toFixed(2)}</div><small class="text-muted">revenue</small></div>
+                </div>`
+            ).join('');
+        } else {
+            topSellingProducts.innerHTML = '<div class="text-center text-muted py-3">No sales data available</div>';
+        }
+    }
+    
+    // Most Profitable Products
+    const topProfitProducts = document.getElementById('topProfitProductsList');
+    if (topProfitProducts) {
+        const productProfits = {};
+        currentReportData.forEach(transaction => {
+            if (transaction.items) {
+                transaction.items.forEach(item => {
+                    const productName = item.product_name || item.name;
+                    const buyPrice = item.buy_price || 0;
+                    const sellPrice = item.price || item.price_at_time || 0;
+                    const profit = (sellPrice - buyPrice) * item.quantity;
+                    if (!productProfits[productName]) {
+                        productProfits[productName] = { profit: 0, quantity: 0, revenue: 0 };
+                    }
+                    productProfits[productName].profit += profit;
+                    productProfits[productName].quantity += item.quantity;
+                    productProfits[productName].revenue += item.subtotal || (sellPrice * item.quantity);
+                });
+            }
+        });
+        
+        const topProfitable = Object.entries(productProfits).sort((a, b) => b[1].profit - a[1].profit).slice(0, 10);
+        if (topProfitable.length > 0) {
+            topProfitProducts.innerHTML = topProfitable.map((p, idx) => {
+                const margin = (p[1].profit / p[1].revenue * 100).toFixed(0);
+                return `<div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                            <div><span class="fw-bold">${idx + 1}.</span> ${escapeHtml(p[0])}<small class="text-muted ms-2">(${p[1].quantity} units)</small></div>
+                            <div class="text-end"><div class="fw-bold text-success">$${p[1].profit.toFixed(2)}</div><small class="text-muted">${margin}% margin</small></div>
+                        </div>`;
+            }).join('');
+        } else {
+            topProfitProducts.innerHTML = '<div class="text-center text-muted py-3">No profit data available</div>';
+        }
+    }
 }
+
 
     function updateStats() {
         const todaySalesEl = document.getElementById('todaySales');
