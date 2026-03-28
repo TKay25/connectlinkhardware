@@ -5377,7 +5377,6 @@ function filterInventory() {
     );
 }
 
-// Update renderInventory to use the filter
 function renderInventory() {
     const tbody = document.getElementById('inventoryList');
     if (!tbody) return;
@@ -5391,23 +5390,23 @@ function renderInventory() {
     
     tbody.innerHTML = filteredProducts.map(p => `
         <tr>
-            <td><small>${p.id}</small>）,
+            <td><small>${p.id}</small></td>
             <td>
                 <strong>${escapeHtml(p.name)}</strong>
                 <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditProductModal(${p.id})" title="Edit Product">
                     <i class="fas fa-edit"></i>
                 </button>
-             </div>
+            </td>
             <td>
                 <span class="badge bg-secondary">${escapeHtml(p.category)}</span>
                 <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditProductModal(${p.id})" title="Edit Category">
                     <i class="fas fa-edit"></i>
                 </button>
-             </div>
-            <td class="text-muted">${p.unit_type}: ${p.unit_details || 'N/A'}）,
-            <td class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)}）,
-            <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}）,
-            <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}）,
+            </td>
+            <td class="text-muted">${p.unit_type}: ${p.unit_details || 'N/A'}</td>
+            <td class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)}</td>
+            <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
+            <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
             <td>
                 <button class="btn btn-sm btn-outline-success me-1" onclick="showEditStockModal(${p.id})" title="Add Stock">
                     <i class="fas fa-plus-circle"></i>
@@ -5415,8 +5414,8 @@ function renderInventory() {
                 <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})" title="Delete Product">
                     <i class="fas fa-trash"></i>
                 </button>
-             </div>
-         </div>
+            </td>
+        </tr>
     `).join('');
 }
     
