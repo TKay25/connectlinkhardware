@@ -5384,30 +5384,30 @@ function renderInventory() {
     const filteredProducts = filterInventory();
     
     if (!filteredProducts.length) {
-        tbody.innerHTML = '=<td colspan="10" class="text-center">No products found matching your search<\/td>=';
+        tbody.innerHTML = '<td colspan="10" class="text-center">No products found matching your search<\/td>';
         return;
     }
     
     tbody.innerHTML = filteredProducts.map(p => `
         <tr>
-            <td><small>${p.id}</small> </div>
+            <td><small>${p.id}</small> </td>
             <td>
                 <strong>${escapeHtml(p.name)}</strong>
                 <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditProductModal(${p.id})" title="Edit Product">
                     <i class="fas fa-edit"></i>
                 </button>
-             </div>
+            </td>
             <td>
                 <span class="badge bg-secondary">${escapeHtml(p.category)}</span>
                 <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditProductModal(${p.id})" title="Edit Category">
                     <i class="fas fa-edit"></i>
                 </button>
-             </div>
-            <td class="text-muted">${p.unit_type || 'N/A'} </div>
-            <td class="text-muted">${p.unit_details || 'N/A'} </div>
-            <td class="text-danger">$${(p.buy_price || 0).toFixed(2)} </div>
-            <td class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)} </div>
-            <td class="${p.stock < 5 ? 'text-danger fw-bold' : ''}">${p.stock} </div>
+             </td>
+            <td class="text-muted">${p.unit_type || 'N/A'} </td>
+            <td class="text-muted">${p.unit_details || 'N/A'} </td>
+            <td class="text-danger">$${(p.buy_price || 0).toFixed(2)} </td>
+            <td class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)} </td>
+            <td class="${p.stock < 5 ? 'text-danger fw-bold' : ''}">${p.stock} </td>
             <td>${p.stock < 5 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'} </div>
             <td>
                 <button class="btn btn-sm btn-outline-success me-1" onclick="showEditStockModal(${p.id})" title="Add Stock">
@@ -5416,8 +5416,8 @@ function renderInventory() {
                 <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})" title="Delete Product">
                     <i class="fas fa-trash"></i>
                 </button>
-             </div>
-         </div>
+             </td>
+         </tr>
     `).join('');
 }
     
