@@ -1024,7 +1024,7 @@
                                     <div class="row g-1">
                                         <div class="col-4"><div class="payment-method" data-method="cash"><i class="fas fa-money-bill-wave"></i><div class="small">Cash</div></div></div>
                                         <div class="col-4"><div class="payment-method" data-method="card"><i class="fas fa-credit-card"></i><div class="small">Card</div></div></div>
-                                        <div class="col-4"><div class="payment-method" data-method="transfer"><i class="fas fa-university"></i><div class="small">Transfer</div></div></div>
+                                        <div class="col-4"><div class="payment-method" data-method="transfer"><i class="fas fa-university"></i><div class="small">Bank/Mobile Money Transfer</div></div></div>
                                     </div>
                                 </div>
 
@@ -1406,7 +1406,7 @@
                                 <option value="all">All</option>
                                 <option value="cash">Cash</option>
                                 <option value="card">Card</option>
-                                <option value="transfer">Bank Transfer</option>
+                                <option value="transfer">Bank/Mobile Money Transfer</option>
                             </select>
                         </div>
                         <div class="col-auto" style="min-width: 160px;">
@@ -4611,7 +4611,7 @@ function setupAddProductFundingSelection() {
         }
         
         const paymentMethodDisplay = selectedPaymentMethod === 'cash' ? 'Cash' : 
-                                    selectedPaymentMethod === 'card' ? 'Card' : 'Bank Transfer';
+                                    selectedPaymentMethod === 'card' ? 'Card' : 'Bank/Mobile Money Transfer';
         
         let confirmationHTML = `
             <div>
@@ -5394,13 +5394,13 @@ function renderInventory() {
             <td>
                 <strong>${escapeHtml(p.name)}</strong>
                 <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditProductModal(${p.id})" title="Edit Product">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-edit" style="margin-right: 5px;"></i> Edit
                 </button>
             </td>
             <td>
                 <span class="badge bg-secondary">${escapeHtml(p.category)}</span>
                 <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditProductModal(${p.id})" title="Edit Category">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-edit" style="margin-right: 5px;"></i> Edit
                 </button>
              </td>
             <td class="text-muted">${p.unit_type || 'N/A'} </td>
@@ -5414,7 +5414,7 @@ function renderInventory() {
                     <i class="fas fa-plus-circle" style="margin-right: 5px;"></i> Add Stock
                 </button>
                 <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})" title="Delete Product">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash" style="margin-right: 5px;"></i> Remove
                 </button>
              </td>
          </tr>
