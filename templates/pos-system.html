@@ -1564,6 +1564,185 @@
     </div>
 </div>
 
+<!-- Edit Product Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#0a2b3e;color:white;">
+                <h5 class="modal-title"><i class="fas fa-edit me-1"></i>Edit Product</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editProductId">
+                
+                <div class="mb-3">
+                    <label class="form-label">Product Name *</label>
+                    <input type="text" class="form-control" id="editProductName" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Category *</label>
+                    <select class="form-select" id="editProductCategory">
+                        <optgroup label="Gas Products">
+                            <option value="Gas Tanks">Gas Tanks</option>
+                            <option value="Gas Regulators">Gas Regulators</option>
+                        </optgroup>
+                        <optgroup label="Building Materials">
+                            <option value="Brickforce">Brickforce</option>
+                            <option value="DPC">DPC</option>
+                            <option value="Plastic">Plastic</option>
+                            <option value="Wire Mesh">Wire Mesh</option>
+                            <option value="Edge Strips">Edge Strips</option>
+                            <option value="Barbed Wire">Barbed Wire</option>
+                            <option value="Rope">Rope</option>
+                            <option value="Sand Paper">Sand Paper</option>
+                        </optgroup>
+                        <optgroup label="Electrical">
+                            <option value="Cables">Cables</option>
+                            <option value="Conduit">Conduit</option>
+                            <option value="Switches">Switches</option>
+                            <option value="Sockets">Sockets</option>
+                            <option value="Breakers">Breakers</option>
+                            <option value="Magnetic Breakers">Magnetic Breakers</option>
+                            <option value="Meter Boxes">Meter Boxes</option>
+                            <option value="Insulation Tape">Insulation Tape</option>
+                            <option value="Lampholders">Lampholders</option>
+                            <option value="LED Lights">LED Lights</option>
+                            <option value="Earth Rods">Earth Rods</option>
+                            <option value="Cable Terminals">Cable Terminals</option>
+                            <option value="Gang Switches">Gang Switches</option>
+                            <option value="Cooker Units">Cooker Units</option>
+                        </optgroup>
+                        <optgroup label="Measuring Tools">
+                            <option value="Measuring Tools">Measuring Tools</option>
+                            <option value="Tape Measures">Tape Measures</option>
+                            <option value="Spirit Level">Spirit Level</option>
+                            <option value="Straight Edge">Straight Edge</option>
+                        </optgroup>
+                        <optgroup label="Plumbing">
+                            <option value="Pipes">Pipes</option>
+                            <option value="Pipe Fittings">Pipe Fittings</option>
+                            <option value="Bends">Bends</option>
+                            <option value="Tees">Tees</option>
+                            <option value="Traps">Traps</option>
+                            <option value="Flexi Pipes">Flexi Pipes</option>
+                            <option value="Silicone">Silicone</option>
+                            <option value="Hose Pipe">Hose Pipe</option>
+                            <option value="Angle Valves">Angle Valves</option>
+                            <option value="Saddles">Saddles</option>
+                            <option value="Glass Pipes">Glass Pipes</option>
+                        </optgroup>
+                        <optgroup label="Tools">
+                            <option value="Hammers">Hammers</option>
+                            <option value="Claw Hammer">Claw Hammer</option>
+                            <option value="Chasing Hammer">Chasing Hammer</option>
+                            <option value="Hammer Heads">Hammer Heads</option>
+                            <option value="Shovel">Shovel</option>
+                            <option value="Spade">Spade</option>
+                            <option value="Screwdrivers">Screwdrivers</option>
+                            <option value="Allen Keys">Allen Keys</option>
+                            <option value="Spanners">Spanners</option>
+                            <option value="Shifting Spanner">Shifting Spanner</option>
+                            <option value="Pliers">Pliers</option>
+                            <option value="Side Cutters">Side Cutters</option>
+                            <option value="Cutters">Cutters</option>
+                            <option value="Saws">Saws</option>
+                            <option value="Hack Saws">Hack Saws</option>
+                            <option value="Drill Bits">Drill Bits</option>
+                            <option value="Concrete Drill Bits">Concrete Drill Bits</option>
+                            <option value="Trowels">Trowels</option>
+                            <option value="Floats">Floats</option>
+                            <option value="Jointers">Jointers</option>
+                            <option value="Paint Brushes">Paint Brushes</option>
+                            <option value="Rolling Brush">Rolling Brush</option>
+                            <option value="Flicker Machine">Flicker Machine</option>
+                            <option value="Torque Wrench">Torque Wrench</option>
+                            <option value="Wheel Barrows">Wheel Barrows</option>
+                            <option value="Wooden Float">Wooden Float</option>
+                        </optgroup>
+                        <optgroup label="Hardware">
+                            <option value="Door Locks">Door Locks</option>
+                            <option value="Lock Sets">Lock Sets</option>
+                            <option value="Flash Doors">Flash Doors</option>
+                            <option value="White Button Doors">White Button Doors</option>
+                            <option value="Boxes">Boxes</option>
+                            <option value="Flush Boxes">Flush Boxes</option>
+                            <option value="Hinges">Hinges</option>
+                            <option value="Handles">Handles</option>
+                            <option value="Metal Clamps">Metal Clamps</option>
+                            <option value="Fischer Plugs">Fischer Plugs</option>
+                            <option value="Security Sticks">Security Sticks</option>
+                        </optgroup>
+                        <optgroup label="Fasteners">
+                            <option value="Screws">Screws</option>
+                            <option value="Nails">Nails</option>
+                            <option value="Wire Nails">Wire Nails</option>
+                            <option value="Bolts">Bolts</option>
+                            <option value="Basin Bolts">Basin Bolts</option>
+                            <option value="Washers">Washers</option>
+                            <option value="Nuts">Nuts</option>
+                            <option value="Anchors">Anchors</option>
+                            <option value="Epoxy Steel">Epoxy Steel</option>
+                        </optgroup>
+                        <optgroup label="Bathroom & Kitchen">
+                            <option value="Shower Mixers">Shower Mixers</option>
+                            <option value="Basin">Basin</option>
+                            <option value="Pan Connectors">Pan Connectors</option>
+                            <option value="S-Trap">S-Trap</option>
+                            <option value="P-Trap">P-Trap</option>
+                            <option value="Stove">Stove</option>
+                            <option value="Oven">Oven</option>
+                        </optgroup>
+                        <optgroup label="Garden & Pots">
+                            <option value="Garden Pots">Garden Pots</option>
+                            <option value="Gainstar Pots">Gainstar Pots</option>
+                            <option value="Maifam Pots">Maifam Pots</option>
+                            <option value="Cast Iron Pots">Cast Iron Pots</option>
+                        </optgroup>
+                        <optgroup label="Paint">
+                            <option value="Paint">Paint</option>
+                            <option value="Spray Paint">Spray Paint</option>
+                            <option value="Lime Green">Lime Green</option>
+                        </optgroup>
+                        <optgroup label="Safety">
+                            <option value="Gloves">Gloves</option>
+                            <option value="Glass Gloves">Glass Gloves</option>
+                            <option value="PVC Gloves">PVC Gloves</option>
+                            <option value="Goggles">Goggles</option>
+                            <option value="Masks">Masks</option>
+                            <option value="Hard Hats">Hard Hats</option>
+                        </optgroup>
+                        <optgroup label="Cleaning">
+                            <option value="Brooms">Brooms</option>
+                            <option value="Square Brooms">Square Brooms</option>
+                            <option value="Flat Brooms">Flat Brooms</option>
+                            <option value="Mops">Mops</option>
+                            <option value="Rakes">Rakes</option>
+                        </optgroup>
+                        <optgroup label="Pest Control">
+                            <option value="Termite Poison">Termite Poison</option>
+                        </optgroup>
+                        <optgroup label="Belts & Straps">
+                            <option value="Truck Belts">Truck Belts</option>
+                        </optgroup>
+                        <optgroup label="Aluminium">
+                            <option value="Aluminium">Aluminium</option>
+                            <option value="Aluminium Saws">Aluminium Saws</option>
+                        </optgroup>
+                        <optgroup label="Other">
+                            <option value="Other">Other</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary-dark btn-sm" onclick="updateProduct()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Modals -->
     <div class="modal fade" id="confirmationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-md"><div class="modal-content"><div class="modal-header" style="background:#0a2b3e;color:white;"><h5 class="modal-title"><i class="fas fa-receipt me-1"></i>Order Confirmation</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="confirmationContent"></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary-dark" onclick="processPayment()">Confirm & Pay</button></div></div></div></div>
 
@@ -1886,6 +2065,66 @@
 
 // Global variables - add this line with the others
 let inventorySearchTerm = "";
+let currentEditProduct = null;
+
+function openEditProductModal(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    currentEditProduct = product;
+    
+    // Populate form
+    document.getElementById('editProductId').value = product.id;
+    document.getElementById('editProductName').value = product.name;
+    document.getElementById('editProductCategory').value = product.category;
+    
+    new bootstrap.Modal(document.getElementById('editProductModal')).show();
+}
+
+// Update product
+async function updateProduct() {
+    const productId = parseInt(document.getElementById('editProductId').value);
+    const name = document.getElementById('editProductName').value;
+    const category = document.getElementById('editProductCategory').value;
+    
+    if (!name || !category) {
+        showToast('Please fill all fields', 'error');
+        return;
+    }
+    
+    showLoader('Updating product...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/products/${productId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                name: name,
+                category: category
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Product updated successfully!', 'success');
+            
+            // Refresh products
+            await fetchProductsFromAPI();
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
+        } else {
+            showToast(data.error || 'Failed to update product', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating product:', error);
+        showToast('Connection error', 'error');
+    } finally {
+        hideLoader();
+    }
+}
 // Store current editing addition data
 let currentEditingAddition = null;
 let editFundingSource = "profit";
@@ -5146,30 +5385,38 @@ function renderInventory() {
     const filteredProducts = filterInventory();
     
     if (!filteredProducts.length) {
-        tbody.innerHTML = '<tr><td colspan="10" class="text-center">No products found matching your search</td></tr>';
+        tbody.innerHTML = '=<td colspan="8" class="text-center">No products found matching your search<\/td>=';
         return;
     }
     
     tbody.innerHTML = filteredProducts.map(p => `
         <tr>
-            <td>${p.id}</td>
-            <td><i class="fas ${getCategoryIcon(p.category)} me-1"></i>${escapeHtml(p.name)}</td>
-            <td>${p.category}</td>
-            <td><span class="unit-badge">${p.unit_type}</span></td>
-            <td><small>${p.unit_details || 'N/A'}</small></td>
-            <td class="text-danger">$${(p.buy_price || 0).toFixed(2)}</td>
-            <td class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)}</td>
-            <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}</td>
-            <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
+            <td><small>${p.id}</small>）,
+            <td>
+                <strong>${escapeHtml(p.name)}</strong>
+                <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditProductModal(${p.id})" title="Edit Product">
+                    <i class="fas fa-edit"></i>
+                </button>
+             </div>
+            <td>
+                <span class="badge bg-secondary">${escapeHtml(p.category)}</span>
+                <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditProductModal(${p.id})" title="Edit Category">
+                    <i class="fas fa-edit"></i>
+                </button>
+             </div>
+            <td class="text-muted">${p.unit_type}: ${p.unit_details || 'N/A'}）,
+            <td class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)}）,
+            <td class="${p.stock < 10 ? 'text-danger fw-bold' : ''}">${p.stock}）,
+            <td>${p.stock < 10 ? '<span class="badge bg-danger">Low</span>' : '<span class="badge bg-success">OK</span>'}）,
             <td>
                 <button class="btn btn-sm btn-outline-success me-1" onclick="showEditStockModal(${p.id})" title="Add Stock">
                     <i class="fas fa-plus-circle"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})">
+                <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${p.id})" title="Delete Product">
                     <i class="fas fa-trash"></i>
                 </button>
-            </td>
-        </tr>
+             </div>
+         </div>
     `).join('');
 }
     
