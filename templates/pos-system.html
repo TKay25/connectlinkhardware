@@ -1673,6 +1673,12 @@
                             <option value="Fischer Plugs">Fischer Plugs</option>
                             <option value="Security Sticks">Security Sticks</option>
                         </optgroup>
+                        <optgroup label="Blankets & Comforters">
+                            <option value="Light Blanket">Light Blanket</option>
+                            <option value="Medium Blanket">Medium Blanket</option>
+                            <option value="Heavy Blanket">Heavy Blanket</option>
+                            <option value="Li View Comforters">Li View Comforters</option>
+                        </optgroup>
                         <optgroup label="Fasteners">
                             <option value="Screws">Screws</option>
                             <option value="Nails">Nails</option>
@@ -1865,7 +1871,14 @@
                                     <option value="Fischer Plugs">Fischer Plugs</option>
                                     <option value="Security Sticks">Security Sticks</option>
                                 </optgroup>
-                                
+
+                                <optgroup label="Blankets & Comforters">
+                                    <option value="Light Blanket">Light Blanket</option>
+                                    <option value="Medium Blanket">Medium Blanket</option>
+                                    <option value="Heavy Blanket">Heavy Blanket</option>
+                                    <option value="Li View Comforters">Li View Comforters</option>
+                                </optgroup>
+
                                 <optgroup label="Fasteners">
                                     <option value="Screws">Screws</option>
                                     <option value="Nails">Nails</option>
@@ -3784,6 +3797,13 @@ function getCategoryIcon(category) {
         // Gas Products
         'Gas Tanks': 'fa-fire',
         'Gas Regulators': 'fa-tachometer-alt',
+
+        // Blankets & Comforters
+        'Blankets': 'fa-bed',
+        'Light Blanket': 'fa-snowflake',
+        'Medium Blanket': 'fa-thermometer-half',
+        'Heavy Blanket': 'fa-fire',
+        'Li View Comforters': 'fa-bed',
         
         // Building Materials
         'Brickforce': 'fa-cubes',
@@ -3960,6 +3980,10 @@ function renderCategories() {
         { name: '⚡ Electrical', categories: ['Electrical', 'Cables', 'Switches', 'Sockets', 'Breakers', 'Insulation Tape', 'LED Lights','Conduit', 'Couplings', 'Round Boxes', 'Cover Boxes'] },
         { name: '💧 Plumbing', categories: ['Plumbing', 'Pipes', 'Pipe Fittings', 'Bends', 'Tees', 'Traps', 'Flexi Pipes', 'Silicone'] },
         { name: '🚪 Hardware', categories: ['Hardware', 'Door Locks', 'Lock Sets', 'Boxes', 'Hinges', 'Handles'] },
+        { 
+            name: '🛏️ Blankets & Comforters', 
+            categories: ['Blankets', 'Light Blanket', 'Medium Blanket', 'Heavy Blanket', 'Li View Comforters'] 
+        },
         { name: '🚽 Bathroom', categories: ['Shower Mixers', 'Basin', 'Pan Connectors', 'S-Trap', 'P-Trap'] },
         { name: '🎨 Paint', categories: ['Paint', 'Spray Paint', 'Lime Green'] },
         { name: '🛡️ Safety', categories: ['Safety', 'Gloves', 'Goggles', 'Masks', 'Hard Hats'] },

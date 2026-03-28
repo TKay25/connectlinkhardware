@@ -235,14 +235,15 @@ def init_database():
     
     # Create default categories
     default_categories = [
-        ('Hand Tools', 1),
-        ('Power Tools', 2),
+        ('Tools', 1),
+        ('Measuring Tools', 2),
         ('Fasteners', 3),
         ('Paint', 4),
         ('Lumber', 5),
         ('Electrical', 6),
         ('Plumbing', 7),
-        ('Safety', 8)
+        ('Safety', 8),
+        ('Blankets', 9)
     ]
     
     for cat_name, order in default_categories:
