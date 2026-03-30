@@ -838,14 +838,25 @@
 
 <!-- All Products Modal -->
 <div class="modal fade" id="allProductsModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header" style="background:#0a2b3e;color:white;">
                 <h5 class="modal-title"><i class="fas fa-boxes me-1"></i>All Products</h5>
+                <div class="d-flex gap-2 ms-auto me-2">
+                    <button class="btn btn-sm btn-success" onclick="exportModalData('all', 'excel')">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="exportModalData('all', 'pdf')">
+                        <i class="fas fa-file-pdf me-1"></i>Export PDF
+                    </button>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
-                <div id="allProductsList"></div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="allProductsSearch" placeholder="🔍 Search products..." style="font-size: 0.8rem;">
+                </div>
+                <div id="allProductsList" style="max-height: 55vh; overflow-y: auto;"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
@@ -856,14 +867,25 @@
 
 <!-- Low Stock Modal -->
 <div class="modal fade" id="lowStockModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header" style="background:#ff9800;color:white;">
                 <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-1"></i>Low Stock Products</h5>
+                <div class="d-flex gap-2 ms-auto me-2">
+                    <button class="btn btn-sm btn-success" onclick="exportModalData('low', 'excel')">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="exportModalData('low', 'pdf')">
+                        <i class="fas fa-file-pdf me-1"></i>Export PDF
+                    </button>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
-                <div id="lowStockProductsList"></div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="lowStockSearch" placeholder="🔍 Search low stock products..." style="font-size: 0.8rem;">
+                </div>
+                <div id="lowStockProductsList" style="max-height: 55vh; overflow-y: auto;"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
@@ -874,14 +896,25 @@
 
 <!-- Out of Stock Modal -->
 <div class="modal fade" id="outOfStockModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header" style="background:#dc2626;color:white;">
                 <h5 class="modal-title"><i class="fas fa-times-circle me-1"></i>Out of Stock Products</h5>
+                <div class="d-flex gap-2 ms-auto me-2">
+                    <button class="btn btn-sm btn-success" onclick="exportModalData('out', 'excel')">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="exportModalData('out', 'pdf')">
+                        <i class="fas fa-file-pdf me-1"></i>Export PDF
+                    </button>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
-                <div id="outOfStockProductsList"></div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="outOfStockSearch" placeholder="🔍 Search out of stock products..." style="font-size: 0.8rem;">
+                </div>
+                <div id="outOfStockProductsList" style="max-height: 55vh; overflow-y: auto;"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
@@ -2191,6 +2224,11 @@
     // API Base URL
     const API_BASE = window.location.origin;
 
+// Store filtered data for exports
+let currentAllProductsData = [];
+let currentLowStockData = [];
+let currentOutOfStockData = [];
+
 // Show All Products Modal
 function showAllProductsModal() {
     const container = document.getElementById('allProductsList');
@@ -2198,47 +2236,120 @@ function showAllProductsModal() {
     
     if (!products.length) {
         container.innerHTML = '<div class="text-center text-muted py-4">No products found</div>';
+        currentAllProductsData = [];
     } else {
-        container.innerHTML = products.map(p => `
-            <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                <div>
-                    <strong>${escapeHtml(p.name)}</strong>
-                    <small class="text-muted d-block">${p.category} | Stock: ${p.stock}</small>
-                </div>
-                <div class="text-end">
-                    <span class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)}</span>
-                </div>
-            </div>
-        `).join('');
+        currentAllProductsData = [...products];
+        renderAllProductsList(currentAllProductsData);
+        
+        // Setup search
+        const searchInput = document.getElementById('allProductsSearch');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = products.filter(p => 
+                    p.name.toLowerCase().includes(term) || 
+                    p.category.toLowerCase().includes(term)
+                );
+                renderAllProductsList(filtered);
+            };
+        }
     }
     
     new bootstrap.Modal(document.getElementById('allProductsModal')).show();
 }
 
-// Show Low Stock Modal
+function renderAllProductsList(data) {
+    const container = document.getElementById('allProductsList');
+    if (!data.length) {
+        container.innerHTML = '<div class="text-center text-muted py-4">No products found</div>';
+        return;
+    }
+    
+    container.innerHTML = data.map(p => `
+        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+            <div>
+                <strong>${escapeHtml(p.name)}</strong>
+                <small class="text-muted d-block">${p.category} | Stock: ${p.stock} | ${p.unit_type}: ${p.unit_details || 'N/A'}</small>
+            </div>
+            <div class="text-end">
+                <span class="fw-bold text-success">$${(p.sell_price || p.price || 0).toFixed(2)}</span>
+                <div><small class="text-muted">Buy: $${(p.buy_price || 0).toFixed(2)}</small></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Show Low Stock Modal (sorted by critical first)
 function showLowStockModal() {
     const container = document.getElementById('lowStockProductsList');
     if (!container) return;
     
     const lowStockProducts = products.filter(p => p.stock < 10 && p.stock > 0);
     
+    // Sort by stock level (critical first - lowest stock first)
+    lowStockProducts.sort((a, b) => a.stock - b.stock);
+    currentLowStockData = [...lowStockProducts];
+    
     if (!lowStockProducts.length) {
         container.innerHTML = '<div class="text-center text-muted py-4">No low stock products</div>';
     } else {
-        container.innerHTML = lowStockProducts.map(p => `
+        renderLowStockList(currentLowStockData);
+        
+        // Setup search
+        const searchInput = document.getElementById('lowStockSearch');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = lowStockProducts.filter(p => 
+                    p.name.toLowerCase().includes(term) || 
+                    p.category.toLowerCase().includes(term)
+                );
+                renderLowStockList(filtered);
+            };
+        }
+    }
+    
+    new bootstrap.Modal(document.getElementById('lowStockModal')).show();
+}
+
+function renderLowStockList(data) {
+    const container = document.getElementById('lowStockProductsList');
+    if (!data.length) {
+        container.innerHTML = '<div class="text-center text-muted py-4">No low stock products found</div>';
+        return;
+    }
+    
+    container.innerHTML = data.map(p => {
+        let urgencyClass = 'bg-danger';
+        let urgencyText = 'Critical';
+        if (p.stock >= 5) {
+            urgencyClass = 'bg-warning';
+            urgencyText = 'Low';
+        } else if (p.stock >= 3) {
+            urgencyClass = 'bg-warning text-dark';
+            urgencyText = 'Very Low';
+        } else {
+            urgencyClass = 'bg-danger';
+            urgencyText = 'Critical';
+        }
+        
+        return `
             <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
                 <div>
                     <strong>${escapeHtml(p.name)}</strong>
                     <small class="text-muted d-block">${p.category} | Stock: ${p.stock} left</small>
                 </div>
-                <div>
-                    <span class="badge ${p.stock < 5 ? 'bg-danger' : 'bg-warning'}">${p.stock < 5 ? 'Critical' : 'Low'}</span>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge ${urgencyClass} rounded-pill">${urgencyText}</span>
+                    <button class="btn btn-sm btn-outline-success" onclick="showEditStockModal(${p.id}); bootstrap.Modal.getInstance(document.getElementById('lowStockModal')).hide();">
+                        <i class="fas fa-plus-circle"></i> Add Stock
+                    </button>
                 </div>
             </div>
-        `).join('');
-    }
-    
-    new bootstrap.Modal(document.getElementById('lowStockModal')).show();
+        `;
+    }).join('');
 }
 
 // Show Out of Stock Modal
@@ -2247,46 +2358,149 @@ function showOutOfStockModal() {
     if (!container) return;
     
     const outOfStockProducts = products.filter(p => p.stock === 0);
+    currentOutOfStockData = [...outOfStockProducts];
     
     if (!outOfStockProducts.length) {
         container.innerHTML = '<div class="text-center text-muted py-4">No out of stock products</div>';
     } else {
-        container.innerHTML = outOfStockProducts.map(p => `
-            <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                <div>
-                    <strong>${escapeHtml(p.name)}</strong>
-                    <small class="text-muted d-block">${p.category}</small>
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-success" onclick="showEditStockModal(${p.id}); bootstrap.Modal.getInstance(document.getElementById('outOfStockModal')).hide();">
-                        <i class="fas fa-plus-circle"></i> Add Stock
-                    </button>
-                </div>
-            </div>
-        `).join('');
+        renderOutOfStockList(currentOutOfStockData);
+        
+        // Setup search
+        const searchInput = document.getElementById('outOfStockSearch');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = outOfStockProducts.filter(p => 
+                    p.name.toLowerCase().includes(term) || 
+                    p.category.toLowerCase().includes(term)
+                );
+                renderOutOfStockList(filtered);
+            };
+        }
     }
     
     new bootstrap.Modal(document.getElementById('outOfStockModal')).show();
 }
 
-// Track alert collapsed state
-let isLowStockAlertExpanded = false;
+function renderOutOfStockList(data) {
+    const container = document.getElementById('outOfStockProductsList');
+    if (!data.length) {
+        container.innerHTML = '<div class="text-center text-muted py-4">No out of stock products found</div>';
+        return;
+    }
+    
+    container.innerHTML = data.map(p => `
+        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+            <div>
+                <strong>${escapeHtml(p.name)}</strong>
+                <small class="text-muted d-block">${p.category}</small>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-success" onclick="showEditStockModal(${p.id}); bootstrap.Modal.getInstance(document.getElementById('outOfStockModal')).hide();">
+                    <i class="fas fa-plus-circle"></i> Add Stock
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
 
-// Toggle low stock alert visibility
-function toggleLowStockAlert() {
-    const content = document.getElementById('lowStockCollapsibleContent');
-    const icon = document.getElementById('lowStockToggleIcon');
+// Export Modal Data
+async function exportModalData(type, format) {
+    let data = [];
+    let filename = '';
+    let title = '';
     
-    if (!content || !icon) return;
+    if (type === 'all') {
+        data = currentAllProductsData;
+        filename = 'all_products';
+        title = 'All Products Report';
+    } else if (type === 'low') {
+        data = currentLowStockData;
+        filename = 'low_stock_products';
+        title = 'Low Stock Products Report';
+    } else if (type === 'out') {
+        data = currentOutOfStockData;
+        filename = 'out_of_stock_products';
+        title = 'Out of Stock Products Report';
+    }
     
-    if (isLowStockAlertExpanded) {
-        content.style.display = 'none';
-        icon.style.transform = 'rotate(0deg)';
-        isLowStockAlertExpanded = false;
-    } else {
-        content.style.display = 'block';
-        icon.style.transform = 'rotate(180deg)';
-        isLowStockAlertExpanded = true;
+    if (!data.length) {
+        showToast('No data to export', 'error');
+        return;
+    }
+    
+    const exportData = data.map(p => ({
+        'Product Name': p.name,
+        'Category': p.category,
+        'Stock': p.stock,
+        'Unit Type': p.unit_type,
+        'Unit Detail': p.unit_details || 'N/A',
+        'Buy Price': p.buy_price || 0,
+        'Sell Price': p.sell_price || p.price || 0,
+        'Profit Margin': ((p.sell_price || p.price || 0) - (p.buy_price || 0)).toFixed(2)
+    }));
+    
+    if (format === 'excel') {
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, title);
+        XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast('Excel export complete!', 'success');
+    } else if (format === 'pdf') {
+        const pdfContent = document.createElement('div');
+        pdfContent.style.padding = '20px';
+        pdfContent.style.fontFamily = 'Arial, sans-serif';
+        
+        pdfContent.innerHTML = `
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #0a2b3e;">ConnectLink Hardware</h2>
+                <p>${title}</p>
+                <p><small>Generated: ${new Date().toLocaleString()}</small></p>
+                <hr>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #0a2b3e; color: white;">
+                        <th style="padding: 8px; border: 1px solid #ddd;">Product Name</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Category</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Stock</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Sell Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${exportData.map(row => `
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd;">${escapeHtml(row['Product Name'])}</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">${row.Category}</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">${row.Stock}</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">$${row['Sell Price'].toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        
+        document.body.appendChild(pdfContent);
+        
+        const opt = {
+            margin: [0.5, 0.5, 0.5, 0.5],
+            filename: `${filename}_${new Date().toISOString().split('T')[0]}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+        
+        html2pdf().set(opt).from(pdfContent).save()
+            .then(() => {
+                document.body.removeChild(pdfContent);
+                showToast('PDF export complete!', 'success');
+            })
+            .catch(err => {
+                console.error('PDF generation error:', err);
+                document.body.removeChild(pdfContent);
+                showToast('Error generating PDF', 'error');
+            });
     }
 }
     // Function to update inventory metrics (add after fetchProductsFromAPI)
