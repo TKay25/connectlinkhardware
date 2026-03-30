@@ -974,77 +974,82 @@
 
             <!-- POS Page -->
 <!-- POS Page -->
+<!-- POS Page -->
 <div id="posPage">
-    <!-- NEW: Inventory Metrics Dashboard - Add this section -->
+    <!-- Metrics and Category Dropdown Row - Side by Side -->
     <div class="row g-2 mb-3">
-        <div class="col-md-4 col-sm-6">
-            <div class="stat-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted">Total Products</small>
-                        <h3 class="mb-0 fw-bold" id="totalProductsCount">0</h3>
-                        <small class="text-muted">In inventory</small>
+        <!-- Metrics Cards - 3 cards in one row -->
+        <div class="col-md-8">
+            <div class="row g-2">
+                <div class="col-md-4 col-sm-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">Total Products</small>
+                                <h4 class="mb-0 fw-bold" id="totalProductsCount">0</h4>
+                            </div>
+                            <i class="fas fa-boxes fa-1.5x text-muted opacity-50"></i>
+                        </div>
                     </div>
-                    <i class="fas fa-boxes fa-2x text-muted opacity-50"></i>
+                </div>
+                <div class="col-md-4 col-sm-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">Low Stock</small>
+                                <h4 class="mb-0 fw-bold text-warning" id="lowStockCountMetric">0</h4>
+                            </div>
+                            <i class="fas fa-exclamation-triangle fa-1.5x text-muted opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">Out of Stock</small>
+                                <h4 class="mb-0 fw-bold text-danger" id="outOfStockCount">0</h4>
+                            </div>
+                            <i class="fas fa-times-circle fa-1.5x text-muted opacity-50"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6">
-            <div class="stat-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted">Low Stock Items</small>
-                        <h3 class="mb-0 fw-bold text-warning" id="lowStockCountMetric">0</h3>
-                        <small class="text-muted">Below threshold</small>
-                    </div>
-                    <i class="fas fa-exclamation-triangle fa-2x text-muted opacity-50"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 col-sm-6">
-            <div class="stat-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted">Out of Stock</small>
-                        <h3 class="mb-0 fw-bold text-danger" id="outOfStockCount">0</h3>
-                        <small class="text-muted">Need restock</small>
-                    </div>
-                    <i class="fas fa-times-circle fa-2x text-muted opacity-50"></i>
+        
+        <!-- Category Dropdown - Beside Metrics -->
+        <div class="col-md-4">
+            <div class="section-card h-100 d-flex align-items-center">
+                <div class="w-100">
+                    <label class="small fw-bold mb-1"><i class="fas fa-tags me-1"></i>Filter by Category</label>
+                    <select class="form-select" id="categorySelect" style="font-size: 0.75rem;">
+                        <option value="all">📦 All Categories</option>
+                    </select>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- NEW: Low Stock Alert Banner -->
+    <!-- Low Stock Alert Banner (only shows when needed) -->
     <div class="row g-2 mb-3" id="lowStockAlertContainer" style="display: none;">
         <div class="col-12">
-            <div class="alert alert-warning">
+            <div class="alert alert-warning py-2">
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Low Stock Alert!</strong> The following products are running low:
-                <div id="lowStockList" class="mt-2 small"></div>
+                <strong>Low Stock Alert!</strong> 
+                <span id="lowStockList"></span>
             </div>
         </div>
     </div>
     
     <div class="row g-3">
         <div class="col-lg-9">
-            <div class="section-card mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                    <h6 class="fw-bold mb-0"><i class="fas fa-tags me-1"></i>Categories</h6>
-                    <!-- NEW: Replace the old categories with a dropdown (but keep both for compatibility) -->
-                    <select class="form-select" id="categorySelect" style="width: auto; min-width: 200px;">
-                        <option value="all">📦 All Categories</option>
-                    </select>
-                    <!-- Keep your existing categories container for compatibility -->
-                    <div class="d-flex gap-1 flex-wrap" id="categoriesContainer"></div>
-                </div>
-            </div>
+            <!-- Products Section -->
             <div class="section-card">
                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                     <h6 class="fw-bold mb-0"><i class="fas fa-box-open me-1"></i>Products</h6>
                     <div class="position-relative" style="width: 200px;">
                         <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted" style="font-size: 0.7rem;"></i>
-                        <input type="text" class="form-control ps-5" id="searchProduct" placeholder="Search name or details..." style="width: 60%;border-radius: 30px; border: 4px solid #0a2b3e; font-size: 0.7rem; padding: 5px 10px;" autocomplete="off">
+                        <input type="text" class="form-control ps-5" id="searchProduct" placeholder="Search name or details..." style="border-radius: 30px; font-size: 0.7rem; padding: 5px 10px;" autocomplete="off">
                     </div>
                 </div>
                 <div class="row g-2 products-scroll" id="productsContainer">
@@ -1059,7 +1064,7 @@
         </div>
 
         <div class="col-lg-3">
-            <!-- Your existing cart section stays exactly the same -->
+            <!-- Cart Section - Unchanged -->
             <div class="section-card sticky-top" style="top: 20px;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="fw-bold mb-0"><i class="fas fa-shopping-cart me-1"></i>Current Order</h6>
@@ -1081,7 +1086,7 @@
                         <div class="row g-1">
                             <div class="col-4"><div class="payment-method" data-method="cash"><i class="fas fa-money-bill-wave"></i><div class="small">Cash</div></div></div>
                             <div class="col-4"><div class="payment-method" data-method="card"><i class="fas fa-credit-card"></i><div class="small">Card</div></div></div>
-                            <div class="col-4"><div class="payment-method" data-method="transfer"><i class="fas fa-university"></i><div class="small">Bank/Mobile Money Transfer</div></div></div>
+                            <div class="col-4"><div class="payment-method" data-method="transfer"><i class="fas fa-university"></i><div class="small">Transfer</div></div></div>
                         </div>
                     </div>
 
@@ -2134,6 +2139,7 @@
     const API_BASE = window.location.origin;
 
     // Function to update inventory metrics (add after fetchProductsFromAPI)
+
 function updateInventoryMetrics() {
     if (!products.length) return;
     
@@ -2149,7 +2155,7 @@ function updateInventoryMetrics() {
     if (lowStockMetricEl) lowStockMetricEl.innerText = lowStockCount;
     if (outOfStockEl) outOfStockEl.innerText = outOfStockCount;
     
-    // Show low stock alert
+    // Low stock alert - compact version
     const lowStockProducts = products.filter(p => p.stock < 10 && p.stock > 0);
     const lowStockAlert = document.getElementById('lowStockAlertContainer');
     const lowStockList = document.getElementById('lowStockList');
@@ -2161,7 +2167,7 @@ function updateInventoryMetrics() {
                 `<span class="badge bg-danger me-1 mb-1">${escapeHtml(p.name)}: ${p.stock} left</span>`
             ).join('');
             if (lowStockProducts.length > 5) {
-                lowStockList.innerHTML += `<span class="badge bg-secondary">+${lowStockProducts.length - 5} more</span>`;
+                lowStockList.innerHTML += `<span class="badge bg-secondary ms-1">+${lowStockProducts.length - 5} more</span>`;
             }
         }
     } else if (lowStockAlert) {
@@ -2169,7 +2175,6 @@ function updateInventoryMetrics() {
     }
 }
 
-// Function to populate category dropdown
 function populateCategoryDropdown() {
     const categorySelect = document.getElementById('categorySelect');
     if (!categorySelect || !products.length) return;
@@ -2229,11 +2234,6 @@ function populateCategoryDropdown() {
     categorySelect.addEventListener('change', function() {
         selectedCategory = this.value;
         renderProducts();
-        // Update old category chips for compatibility
-        document.querySelectorAll('.category-chip').forEach(chip => {
-            if (chip.dataset.category === selectedCategory) chip.classList.add('active');
-            else chip.classList.remove('active');
-        });
     });
 }
 
@@ -4124,61 +4124,6 @@ function getCategoryIcon(category) {
         return div.innerHTML;
     }
     
-function renderCategories() {
-    const container = document.getElementById('categoriesContainer');
-    if (!container) return;
-    
-    // Define category groups with their icons
-    const categoryGroups = [
-        { name: '🔧 Hand Tools', categories: ['Hand Tools', 'Hammers', 'Claw Hammer', 'Chasing Hammer', 'Screwdrivers', 'Pliers', 'Side Cutters', 'Cutters', 'Saws', 'Hack Saws', 'Wrenches', 'Spanners', 'Allen Keys', 'Measuring Tools', 'Tape Measures', 'Spirit Level',  'Shovels', 'Spades'] },
-        { name: '⚡ Power Tools', categories: ['Power Tools', 'Drills', 'Saws (Power)', 'Grinders', 'Sanders'] },
-        { name: '🔩 Fasteners', categories: ['Fasteners', 'Screws', 'Nails', 'Wire Nails', 'Bolts', 'Basin Bolts', 'Washers', 'Nuts', 'Anchors'] },
-        { name: '🏗️ Building', categories: ['Building', 'Brickforce', 'DPC', 'Plastic', 'Wire Mesh', 'Edge Strips', 'Barbed Wire', 'Rope'] },
-        { name: '⚡ Electrical', categories: ['Electrical', 'Cables', 'Switches', 'Sockets', 'Breakers', 'Insulation Tape', 'LED Lights','Conduit', 'Couplings', 'Round Boxes', 'Cover Boxes'] },
-        { name: '💧 Plumbing', categories: ['Plumbing', 'Pipes', 'Pipe Fittings', 'Bends', 'Tees', 'Traps', 'Flexi Pipes', 'Silicone'] },
-        { name: '🚪 Hardware', categories: ['Hardware', 'Door Locks', 'Lock Sets', 'Boxes', 'Hinges', 'Handles'] },
-        { 
-            name: '🛏️ Blankets & Comforters', 
-            categories: ['Blankets', 'Light Blanket', 'Medium Blanket', 'Heavy Blanket', 'Li View Comforters'] 
-        },
-        { name: '🚽 Bathroom', categories: ['Shower Mixers', 'Basin', 'Pan Connectors', 'S-Trap', 'P-Trap'] },
-        { name: '🎨 Paint', categories: ['Paint', 'Spray Paint', 'Lime Green'] },
-        { name: '🛡️ Safety', categories: ['Safety', 'Gloves', 'Goggles', 'Masks', 'Hard Hats'] },
-        { name: '🧹 Cleaning', categories: ['Cleaning', 'Brooms', 'Mops', 'Rakes'] },
-        { name: '🌿 Garden', categories: ['Garden Pots', 'Gainstar Pots', 'Maifam Pots'] },
-        { name: '⛽ Gas', categories: ['Gas', 'Gas Tanks', 'Gas Regulators'] },
-        { name: '📏 Measuring Tools', categories: ['Measuring Tools', 'Tape Measures', 'Spirit Level', 'Straight Edge', 'Rulers']},
-        { name: '📦 Other', categories: ['Other', 'Aluminium', 'Truck Belts', 'Termite Poison'] }
-    ];
-    
-    // Start with All category
-    let html = `<div class="category-chip ${selectedCategory === 'all' ? 'active' : ''}" onclick="selectCategory('all')">📦 All Products</div>`;
-    
-    // Add each group as a parent category
-    categoryGroups.forEach(group => {
-        // Check if any product in this group exists
-        const hasProducts = group.categories.some(cat => 
-            products.some(p => p.category === cat)
-        );
-        
-        if (hasProducts) {
-            // Create a group chip that filters to show all products in this group
-            const groupFilter = group.categories;
-            const isActive = group.categories.includes(selectedCategory);
-            
-            html += `
-                <div class="category-chip ${isActive ? 'active' : ''}" 
-                     onclick="selectCategoryGroup('${group.name.replace(/'/g, "\\'")}', ${JSON.stringify(group.categories).replace(/"/g, '&quot;')})"
-                     style="background: ${isActive ? '#0a2b3e' : '#f8f9fc'};">
-                    ${group.name}
-                </div>
-            `;
-        }
-    });
-    
-    container.innerHTML = html;
-}
-
 // Function to handle group category selection
 function selectCategoryGroup(groupName, categories) {
     // Store the selected group for UI highlighting
