@@ -1531,6 +1531,44 @@
     // API Base URL
     const API_BASE = window.location.origin;
 
+// Function to update inventory metrics
+function updateInventoryMetrics() {
+    if (!products.length) return;
+    
+    // Calculate metrics
+    const totalProducts = products.length;
+    const lowStockCount = products.filter(p => p.stock < 10 && p.stock > 0).length;
+    const outOfStockCount = products.filter(p => p.stock === 0).length;
+    
+    // Update UI
+    const totalProductsEl = document.getElementById('totalProductsCount');
+    const lowStockMetricEl = document.getElementById('lowStockCountMetric');
+    const outOfStockEl = document.getElementById('outOfStockCount');
+    
+    if (totalProductsEl) totalProductsEl.innerText = totalProducts;
+    if (lowStockMetricEl) lowStockMetricEl.innerText = lowStockCount;
+    if (outOfStockEl) outOfStockEl.innerText = outOfStockCount;
+    
+    // Show low stock alert if any
+    const lowStockProducts = products.filter(p => p.stock < 10 && p.stock > 0);
+    const lowStockAlert = document.getElementById('lowStockAlertContainer');
+    const lowStockList = document.getElementById('lowStockList');
+    
+    if (lowStockProducts.length > 0 && lowStockAlert) {
+        lowStockAlert.style.display = 'block';
+        if (lowStockList) {
+            lowStockList.innerHTML = lowStockProducts.slice(0, 5).map(p => 
+                `<span class="badge bg-danger me-1 mb-1">${escapeHtml(p.name)}: ${p.stock} left</span>`
+            ).join('');
+            if (lowStockProducts.length > 5) {
+                lowStockList.innerHTML += `<span class="badge bg-secondary">+${lowStockProducts.length - 5} more</span>`;
+            }
+        }
+    } else if (lowStockAlert) {
+        lowStockAlert.style.display = 'none';
+    }
+}
+
 // Global variables - add this line with the others
 let inventorySearchTerm = "";
 let currentEditProduct = null;
