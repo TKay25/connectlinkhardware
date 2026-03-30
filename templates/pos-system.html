@@ -991,66 +991,70 @@
             <!-- POS Page -->
 <!-- POS Page -->
 <!-- POS Page -->
+<!-- POS Page -->
 <div id="posPage">
-    <!-- Metrics Cards Row - Horizontal Layout -->
+    <!-- Metrics Cards Row - Number and Icon on Same Row -->
     <div class="row g-2 mb-3">
         <div class="col-md-4 col-sm-4">
-            <div class="stat-card" style="padding: 8px 12px;">
+            <div class="stat-card" style="padding: 10px 12px;">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted d-block">Total Products</small>
-                        <h3 class="mb-0 fw-bold d-inline" style="font-size: 1.3rem;" id="totalProductsCount">0</h3>
-                    </div>
-                    <div class="bg-light rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-boxes text-primary" style="font-size: 1.2rem;"></i>
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fas fa-boxes text-primary" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <small class="text-muted d-block">Total Products</small>
+                            <h4 class="mb-0 fw-bold" style="font-size: 1.5rem; line-height: 1.2;" id="totalProductsCount">0</h4>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4 col-sm-4">
-            <div class="stat-card" style="padding: 8px 12px;">
+            <div class="stat-card" style="padding: 10px 12px;">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted d-block">Low Stock</small>
-                        <h3 class="mb-0 fw-bold d-inline" style="font-size: 1.3rem;" id="lowStockCountMetric">0</h3>
-                    </div>
-                    <div class="bg-warning bg-opacity-10 rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 1.2rem;"></i>
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <small class="text-muted d-block">Low Stock</small>
+                            <h4 class="mb-0 fw-bold" style="font-size: 1.5rem; line-height: 1.2;" id="lowStockCountMetric">0</h4>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4 col-sm-4">
-            <div class="stat-card" style="padding: 8px 12px;">
+            <div class="stat-card" style="padding: 10px 12px;">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted d-block">Out of Stock</small>
-                        <h3 class="mb-0 fw-bold d-inline" style="font-size: 1.3rem;" id="outOfStockCount">0</h3>
-                    </div>
-                    <div class="bg-danger bg-opacity-10 rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-times-circle text-danger" style="font-size: 1.2rem;"></i>
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fas fa-times-circle text-danger" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <small class="text-muted d-block">Out of Stock</small>
+                            <h4 class="mb-0 fw-bold" style="font-size: 1.5rem; line-height: 1.2;" id="outOfStockCount">0</h4>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Fancy Low Stock Alert - Toast-style notification -->
-    <div id="lowStockAlertContainer" style="display: none; position: relative; margin-bottom: 12px;">
-        <div class="alert alert-warning border-0 shadow-sm" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe6cc 100%); border-left: 4px solid #ff9800; border-radius: 12px; padding: 12px 16px;">
-            <div class="d-flex align-items-start">
-                <div class="flex-shrink-0">
-                    <div class="bg-warning rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; animation: pulse 1.5s infinite;">
-                        <i class="fas fa-bell text-white" style="font-size: 1.1rem;"></i>
+    <!-- Collapsible Low Stock Alert -->
+    <div class="row g-2 mb-3" id="lowStockAlertContainer" style="display: none;">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-warning bg-opacity-25 p-2" style="cursor: pointer;" onclick="toggleLowStockAlert()">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-bell text-warning" style="font-size: 1rem;"></i>
+                            <strong class="small">⚠️ Low Stock Alert</strong>
+                            <span class="badge bg-danger rounded-pill" id="lowStockBadgeCount">0</span>
+                        </div>
+                        <i class="fas fa-chevron-down" id="lowStockToggleIcon" style="font-size: 0.8rem; transition: transform 0.3s;"></i>
                     </div>
                 </div>
-                <div class="flex-grow-1 ms-3">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap">
-                        <h6 class="mb-1 fw-bold text-dark">⚠️ Low Stock Alert</h6>
-                        <button type="button" class="btn-close btn-sm" onclick="document.getElementById('lowStockAlertContainer').style.display='none'" aria-label="Close"></button>
+                <div id="lowStockCollapsibleContent" style="display: none;">
+                    <div class="card-body p-3">
+                        <p class="small text-muted mb-2">The following products need to be restocked:</p>
+                        <div id="lowStockList" class="d-flex flex-wrap gap-2"></div>
                     </div>
-                    <p class="mb-1 small text-dark">The following products are running low and need to be restocked soon:</p>
-                    <div id="lowStockList" class="mt-2 d-flex flex-wrap gap-2"></div>
                 </div>
             </div>
         </div>
@@ -1062,7 +1066,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                     <h6 class="fw-bold mb-0"><i class="fas fa-box-open me-1"></i>Products</h6>
                     <div class="d-flex gap-2">
-                        <!-- Category Filter - Compact -->
+                        <!-- Category Filter -->
                         <div class="d-flex align-items-center gap-2">
                             <label class="small fw-bold mb-0" style="white-space: nowrap;"><i class="fas fa-filter me-1"></i>Category:</label>
                             <select class="form-select" id="categorySelect" style="width: 150px; font-size: 0.7rem; padding: 4px 8px;">
@@ -1128,7 +1132,6 @@
         </div>
     </div>
 </div>
-
             <!-- Inventory Page -->
             <div id="inventoryPage" style="display: none;">
                 <div class="section-card">
@@ -2162,7 +2165,28 @@
     // API Base URL
     const API_BASE = window.location.origin;
 
+// Track alert collapsed state
+let isLowStockAlertExpanded = false;
+
+// Toggle low stock alert visibility
+function toggleLowStockAlert() {
+    const content = document.getElementById('lowStockCollapsibleContent');
+    const icon = document.getElementById('lowStockToggleIcon');
+    
+    if (!content || !icon) return;
+    
+    if (isLowStockAlertExpanded) {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+        isLowStockAlertExpanded = false;
+    } else {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+        isLowStockAlertExpanded = true;
+    }
+}
     // Function to update inventory metrics (add after fetchProductsFromAPI)
+
 
 function updateInventoryMetrics() {
     if (!products.length) return;
@@ -2174,12 +2198,14 @@ function updateInventoryMetrics() {
     const totalProductsEl = document.getElementById('totalProductsCount');
     const lowStockMetricEl = document.getElementById('lowStockCountMetric');
     const outOfStockEl = document.getElementById('outOfStockCount');
+    const lowStockBadge = document.getElementById('lowStockBadgeCount');
     
     if (totalProductsEl) totalProductsEl.innerText = totalProducts;
     if (lowStockMetricEl) lowStockMetricEl.innerText = lowStockCount;
     if (outOfStockEl) outOfStockEl.innerText = outOfStockCount;
+    if (lowStockBadge) lowStockBadge.innerText = lowStockCount;
     
-    // Fancy low stock alert with close button and icons
+    // Collapsible low stock alert
     const lowStockProducts = products.filter(p => p.stock < 10 && p.stock > 0);
     const lowStockAlert = document.getElementById('lowStockAlertContainer');
     const lowStockList = document.getElementById('lowStockList');
@@ -2211,8 +2237,20 @@ function updateInventoryMetrics() {
                 `;
             }).join('');
         }
+        
+        // Auto-expand the first time there are low stock items
+        if (!isLowStockAlertExpanded && lowStockProducts.length > 0) {
+            const content = document.getElementById('lowStockCollapsibleContent');
+            const icon = document.getElementById('lowStockToggleIcon');
+            if (content && icon) {
+                content.style.display = 'block';
+                icon.style.transform = 'rotate(180deg)';
+                isLowStockAlertExpanded = true;
+            }
+        }
     } else if (lowStockAlert) {
         lowStockAlert.style.display = 'none';
+        isLowStockAlertExpanded = false;
     }
 }
 
