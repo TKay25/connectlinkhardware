@@ -837,7 +837,7 @@
     <!-- Main POS System -->
 <!-- POS Page -->
 <div id="posPage">
-    <!-- Inventory Metrics Dashboard -->
+    <!-- NEW: Inventory Metrics Dashboard - Add this section -->
     <div class="row g-2 mb-3">
         <div class="col-md-4 col-sm-6">
             <div class="stat-card">
@@ -877,7 +877,7 @@
         </div>
     </div>
     
-    <!-- Low Stock Alert List -->
+    <!-- NEW: Low Stock Alert Banner -->
     <div class="row g-2 mb-3" id="lowStockAlertContainer" style="display: none;">
         <div class="col-12">
             <div class="alert alert-warning">
@@ -893,10 +893,12 @@
             <div class="section-card mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                     <h6 class="fw-bold mb-0"><i class="fas fa-tags me-1"></i>Categories</h6>
-                    <!-- Category Dropdown -->
-                    <select class="form-select" id="categorySelect" style="width: auto; min-width: 180px;">
+                    <!-- NEW: Replace the old categories with a dropdown (but keep both for compatibility) -->
+                    <select class="form-select" id="categorySelect" style="width: auto; min-width: 200px;">
                         <option value="all">📦 All Categories</option>
                     </select>
+                    <!-- Keep your existing categories container for compatibility -->
+                    <div class="d-flex gap-1 flex-wrap" id="categoriesContainer"></div>
                 </div>
             </div>
             <div class="section-card">
@@ -919,6 +921,7 @@
         </div>
 
         <div class="col-lg-3">
+            <!-- Your existing cart section stays exactly the same -->
             <div class="section-card sticky-top" style="top: 20px;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="fw-bold mb-0"><i class="fas fa-shopping-cart me-1"></i>Current Order</h6>
@@ -940,7 +943,7 @@
                         <div class="row g-1">
                             <div class="col-4"><div class="payment-method" data-method="cash"><i class="fas fa-money-bill-wave"></i><div class="small">Cash</div></div></div>
                             <div class="col-4"><div class="payment-method" data-method="card"><i class="fas fa-credit-card"></i><div class="small">Card</div></div></div>
-                            <div class="col-4"><div class="payment-method" data-method="transfer"><i class="fas fa-university"></i><div class="small">Transfer</div></div></div>
+                            <div class="col-4"><div class="payment-method" data-method="transfer"><i class="fas fa-university"></i><div class="small">Bank/Mobile Money Transfer</div></div></div>
                         </div>
                     </div>
 
@@ -1531,16 +1534,14 @@
     // API Base URL
     const API_BASE = window.location.origin;
 
-// Function to update inventory metrics
+    // Function to update inventory metrics (add after fetchProductsFromAPI)
 function updateInventoryMetrics() {
     if (!products.length) return;
     
-    // Calculate metrics
     const totalProducts = products.length;
     const lowStockCount = products.filter(p => p.stock < 10 && p.stock > 0).length;
     const outOfStockCount = products.filter(p => p.stock === 0).length;
     
-    // Update UI
     const totalProductsEl = document.getElementById('totalProductsCount');
     const lowStockMetricEl = document.getElementById('lowStockCountMetric');
     const outOfStockEl = document.getElementById('outOfStockCount');
@@ -1549,7 +1550,7 @@ function updateInventoryMetrics() {
     if (lowStockMetricEl) lowStockMetricEl.innerText = lowStockCount;
     if (outOfStockEl) outOfStockEl.innerText = outOfStockCount;
     
-    // Show low stock alert if any
+    // Show low stock alert
     const lowStockProducts = products.filter(p => p.stock < 10 && p.stock > 0);
     const lowStockAlert = document.getElementById('lowStockAlertContainer');
     const lowStockList = document.getElementById('lowStockList');
@@ -1566,6 +1567,95 @@ function updateInventoryMetrics() {
         }
     } else if (lowStockAlert) {
         lowStockAlert.style.display = 'none';
+    }
+}
+
+// Function to populate category dropdown
+function populateCategoryDropdown() {
+    const categorySelect = document.getElementById('categorySelect');
+    if (!categorySelect || !products.length) return;
+    
+    const uniqueCategories = [...new Set(products.map(p => p.category))].sort();
+    
+    categorySelect.innerHTML = '<option value="all">📦 All Categories</option>';
+    
+    const categoryGroups = {
+        '🔧 Hand Tools': ['Hand Tools', 'Hammers', 'Claw Hammer', 'Chasing Hammer', 'Screwdrivers', 'Pliers', 'Side Cutters', 'Saws', 'Hack Saws', 'Wrenches', 'Spanners', 'Allen Keys', 'Measuring Tools', 'Tape Measures', 'Spirit Level', 'Shovels', 'Spades'],
+        '⚡ Power Tools': ['Power Tools', 'Drills', 'Saws (Power)', 'Grinders', 'Sanders'],
+        '🔩 Fasteners': ['Fasteners', 'Screws', 'Nails', 'Wire Nails', 'Bolts', 'Washers', 'Nuts', 'Anchors'],
+        '🏗️ Building': ['Building', 'Brickforce', 'DPC', 'Plastic', 'Wire Mesh', 'Edge Strips', 'Barbed Wire', 'Rope', 'Sand Paper'],
+        '⚡ Electrical': ['Electrical', 'Cables', 'Switches', 'Sockets', 'Breakers', 'Insulation Tape', 'LED Lights', 'Conduit', 'Couplings'],
+        '💧 Plumbing': ['Plumbing', 'Pipes', 'Pipe Fittings', 'Bends', 'Tees', 'Traps', 'Flexi Pipes', 'Silicone'],
+        '🚪 Hardware': ['Hardware', 'Door Locks', 'Lock Sets', 'Boxes', 'Hinges', 'Handles'],
+        '🛏️ Blankets': ['Blankets', 'Light Blanket', 'Medium Blanket', 'Heavy Blanket', 'Li View Comforters'],
+        '🚽 Bathroom': ['Shower Mixers', 'Basin', 'Pan Connectors', 'S-Trap', 'P-Trap'],
+        '🎨 Paint': ['Paint', 'Spray Paint', 'Lime Green'],
+        '🛡️ Safety': ['Safety', 'Gloves', 'Goggles', 'Masks', 'Hard Hats'],
+        '🧹 Cleaning': ['Cleaning', 'Brooms', 'Mops', 'Rakes'],
+        '🌿 Garden': ['Garden Pots', 'Gainstar Pots', 'Maifam Pots'],
+        '⛽ Gas': ['Gas', 'Gas Tanks', 'Gas Regulators'],
+        '📏 Measuring': ['Measuring Tools', 'Tape Measures', 'Spirit Level', 'Straight Edge'],
+        '📦 Other': ['Other', 'Aluminium', 'Truck Belts', 'Termite Poison']
+    };
+    
+    for (const [groupName, categories] of Object.entries(categoryGroups)) {
+        const matchingCategories = categories.filter(cat => uniqueCategories.includes(cat));
+        if (matchingCategories.length > 0) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = groupName;
+            matchingCategories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                optgroup.appendChild(option);
+            });
+            categorySelect.appendChild(optgroup);
+        }
+    }
+    
+    const allGrouped = Object.values(categoryGroups).flat();
+    const uncategorized = uniqueCategories.filter(cat => !allGrouped.includes(cat));
+    if (uncategorized.length > 0) {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = '📦 Other';
+        uncategorized.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            optgroup.appendChild(option);
+        });
+        categorySelect.appendChild(optgroup);
+    }
+    
+    categorySelect.addEventListener('change', function() {
+        selectedCategory = this.value;
+        renderProducts();
+        // Update old category chips for compatibility
+        document.querySelectorAll('.category-chip').forEach(chip => {
+            if (chip.dataset.category === selectedCategory) chip.classList.add('active');
+            else chip.classList.remove('active');
+        });
+    });
+}
+
+// Update fetchProductsFromAPI to include metrics update
+async function fetchProductsFromAPI() {
+    try {
+        let url = `${API_BASE}/api/products`;
+        const productsResponse = await fetch(url, { credentials: 'include' });
+        if (productsResponse.status === 401) { window.location.href = '/login'; return; }
+        const productsData = await productsResponse.json();
+        
+        if (productsData.success) {
+            products = productsData.products;
+            renderProducts();
+            renderInventory();
+            updateInventoryMetrics(); // Add this line
+            populateCategoryDropdown(); // Add this line
+        }
+    } catch (error) { 
+        console.error('Error fetching products:', error); 
+        showToast('Connection error', 'error'); 
     }
 }
 
@@ -3175,31 +3265,6 @@ async function fetchTransactionsData() {
     }
     
     // ==================== API FUNCTIONS ====================
-    
-    async function fetchProductsFromAPI() {
-        try {
-            let url = `${API_BASE}/api/products`;
-            const productsResponse = await fetch(url, { credentials: 'include' });
-            if (productsResponse.status === 401) { window.location.href = '/login'; return; }
-            const productsData = await productsResponse.json();
-            
-            // DEBUG: Log the first product to see what fields are available
-            if (productsData.products && productsData.products.length > 0) {
-                console.log('First product data:', productsData.products[0]);
-                console.log('sell_price exists?', productsData.products[0].hasOwnProperty('sell_price'));
-                console.log('price exists?', productsData.products[0].hasOwnProperty('price'));
-            }
-            
-            if (productsData.success) {
-                products = productsData.products;
-                renderProducts();
-                renderInventory();
-            }
-        } catch (error) { 
-            console.error('Error fetching products:', error); 
-            showToast('Connection error', 'error'); 
-        }
-    }
     
     async function fetchCategories() {
         try {
