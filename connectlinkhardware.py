@@ -256,7 +256,7 @@ def init_database():
 
 # ==================== PRODUCT FETCH FUNCTION ====================
 
-def run1():
+def run1hardware():
     """Fetch all active products from the Products table"""
     query = """
         SELECT id, name, category, unit_type, unit_details, buy_price, sell_price, stock, 
@@ -527,7 +527,7 @@ def get_products_api():
     search = request.args.get('search')
     
     # Get all products using run1
-    all_products = run1()
+    all_products = run1hardware()
     
     # Apply filters
     filtered_products = all_products
