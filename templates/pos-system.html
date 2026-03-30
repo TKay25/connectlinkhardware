@@ -835,6 +835,144 @@
     </div>
 
     <!-- Main POS System -->
+    <div id="posSystem">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="logo-text">
+                        <div class="eds-logo">
+                            <img style="width: 150px;" src="/static/images/web-logo-white.png" alt="ConnectLink Properties Logo">
+                        </div>
+                        <small class="opacity-75 d-block mt-1">Hardware</small>
+                    </div>
+                    <div class="logo-icon">
+                        <div class="eds-logo">
+                            <img style="width: 40px;" src="/static/images/web-logo-white.png" alt="Logo">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-page="pos">
+                    <i class="fas fa-cash-register"></i>
+                    <span class="menu-text">POS Terminal</span>
+                </div>
+                <div class="menu-item" data-page="inventory">
+                    <i class="fas fa-boxes"></i>
+                    <span class="menu-text">Inventory</span>
+                </div>
+                <div class="menu-item" data-page="sales">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="menu-text">Sales Report</span>
+                </div>
+                <div class="menu-item" data-page="transactions">
+                    <i class="fas fa-history"></i>
+                    <span class="menu-text">Transactions</span>
+                </div>
+                <div class="menu-item" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span class="menu-text">Analytics</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toggle Button -->
+        <button class="toggle-sidebar" id="toggleSidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Top Bar with Logout Button -->
+            <div class="top-bar">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <!-- Center - Logo and Company Name (using auto margins) -->
+                    <div class="d-flex align-items-center gap-2" style="margin: 0 auto;">
+                        <img src="/static/images/reqlogo.jpg" style="height: 28px; width: auto;" alt="ConnectLink Properties Logo">
+                        <span class="fw-semibold" style="color: #0a2b3e; font-size: 0.85rem;">ConnectLink Hardware</span>
+                    </div>
+                    
+                    <!-- Right side - Date/Time and User Info -->
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="text-end">
+                            <div class="small text-muted" id="currentDate">Loading...</div>
+                            <div class="small fw-bold" id="currentTime" style="color: #0a2b3e;">--:--:--</div>
+                        </div>
+                        <div class="vr"></div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="small"><i class="fas fa-user-circle me-1"></i> <span id="userName">Administrator</span></span>
+                            <button class="logout-top-btn" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Stock Modal -->
+            <div class="modal fade" id="editStockModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background:#0a2b3e;color:white;">
+                            <h5 class="modal-title"><i class="fas fa-plus-circle me-1"></i>Add Stock</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info mb-3" style="font-size: 0.75rem;">
+                                <i class="fas fa-info-circle me-1"></i> 
+                                <strong>Product:</strong> <span id="editStockProductName">Loading...</span><br>
+                                <strong>Current Stock:</strong> <span id="currentStockValue">0</span><br>
+                                <strong>Current Profit Available:</strong> <span id="currentAvailableProfit" class="text-success">$0.00</span>
+                            </div>
+                            
+                            <p class="mb-2">Enter admin passcode to add stock:</p>
+                            <input type="password" class="form-control mb-2" id="editStockPasscode" placeholder="Enter passcode">
+                            <div id="editPasscodeError" class="text-danger small mb-2"></div>
+                            
+                            <label class="form-label" for="newStockQuantity">Quantity to ADD *</label>
+                            <input type="number" class="form-control mb-2" id="newStockQuantity" placeholder="Enter quantity to add" min="1" value="">
+                            
+                            <label class="form-label" for="stockBuyPrice">Buying Price per Unit ($) *</label>
+                            <input type="number" step="0.01" class="form-control mb-2" id="stockBuyPrice" placeholder="Cost per unit" required>
+                            
+                            <div class="mb-2">
+                                <div class="form-label">Funding Source *</div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="payment-method" id="fundingProfit" data-funding="profit" style="text-align: center; padding: 10px;">
+                                            <i class="fas fa-chart-line text-success"></i>
+                                            <div class="small">From Profits</div>
+                                            <div class="small text-muted">Reinvest earnings</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="payment-method" id="fundingCapital" data-funding="capital" style="text-align: center; padding: 10px;">
+                                            <i class="fas fa-building text-primary"></i>
+                                            <div class="small">New Capital</div>
+                                            <div class="small text-muted">Owner investment</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="profitWarning" class="alert alert-warning small" style="display: none;">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <strong>Insufficient Profit!</strong> Current available profit: <span id="warningProfitAmount">$0.00</span><br>
+                                This purchase will use <span id="warningCostAmount">$0.00</span> from profit, but only <span id="warningAvailableAmount">$0.00</span> is available.
+                            </div>
+                            
+                            <small class="text-muted">Total cost: <span id="totalCostPreview">$0.00</span></small>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-primary-dark btn-sm" onclick="confirmAddStock()">Add Stock</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POS Page -->
 <!-- POS Page -->
 <div id="posPage">
     <!-- NEW: Inventory Metrics Dashboard - Add this section -->
@@ -961,6 +1099,467 @@
         </div>
     </div>
 </div>
+
+            <!-- Inventory Page -->
+            <div id="inventoryPage" style="display: none;">
+                <div class="section-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-boxes me-1"></i>Inventory Management</h5>
+                        <div class="d-flex gap-2">
+                            <div class="position-relative" style="width: 250px;">
+                                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted" style="font-size: 0.7rem;"></i>
+                                <input type="text" class="form-control ps-5" id="inventorySearch" placeholder="Search by name, category, or details..." style="border-radius: 30px; font-size: 0.7rem; padding: 5px 10px;" autocomplete="off">
+                            </div>
+                            <button class="btn btn-primary-dark" onclick="showAddInventoryModal()">
+                                <i class="fas fa-plus me-1"></i>Add Product
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                        <table class="table table-hover" style="min-width: 1000px;">
+                            <thead class="table-light sticky-top" style="position: sticky; top: 0; background: white; z-index: 1;">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Unit</th>
+                                    <th>Detail</th>
+                                    <th>Buy Price</th>
+                                    <th>Sell Price</th>
+                                    <th>Stock</th>
+                                    <th>Stock-Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryList">
+                                <td><td colspan="9" class="text-center">Loading products... 
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Report Page - Enhanced with Profit Tracking & Reinvestment -->
+            <div id="salesPage" style="display: none;">
+                <!-- Report Filters -->
+                <div class="section-card mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-chart-line me-1"></i>Sales & Profit Analytics</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-success" onclick="exportSalesReport('excel')">
+                                <i class="fas fa-file-excel me-1"></i>Export Excel
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="exportSalesReport('pdf')">
+                                <i class="fas fa-file-pdf me-1"></i>Export PDF
+                            </button>
+                            <button class="btn btn-sm btn-primary-dark" onclick="loadSalesReport()">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters Row -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3">
+                            <label class="small fw-bold" for="reportPeriod">Period</label>
+                            <select class="form-select form-select-sm" id="reportPeriod" onchange="updateReportDateRange()">
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3" id="dateRangeStartDiv" style="display: none;">
+                            <label class="small fw-bold" for="reportStartDate">Start Date</label>
+                            <input type="date" class="form-control form-control-sm" id="reportStartDate">
+                        </div>
+                        <div class="col-md-3" id="dateRangeEndDiv" style="display: none;">
+                            <label class="small fw-bold" for="reportEndDate">End Date</label>
+                            <input type="date" class="form-control form-control-sm" id="reportEndDate">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-primary-dark btn-sm w-100" onclick="loadSalesReport()">
+                                <i class="fas fa-chart-bar me-1"></i>Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KPI Cards Row 1 - Revenue & Profit -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Total Revenue</small>
+                                    <h3 class="mb-0 fw-bold" id="reportTotalSales">$0.00</h3>
+                                    <small class="text-muted" id="revenueTrend"></small>
+                                </div>
+                                <i class="fas fa-dollar-sign fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Gross Profit</small>
+                                    <h3 class="mb-0 fw-bold text-success" id="reportGrossProfit">$0.00</h3>
+                                    <small class="text-muted">Revenue - COGS</small>
+                                </div>
+                                <i class="fas fa-chart-line fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Gross Margin</small>
+                                    <h3 class="mb-0 fw-bold" id="reportGrossMargin">0%</h3>
+                                    <small class="text-muted">Profitability ratio</small>
+                                </div>
+                                <i class="fas fa-percent fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Average Order Value</small>
+                                    <h3 class="mb-0 fw-bold" id="reportAvgOrder">$0.00</h3>
+                                    <small class="text-muted">Per transaction</small>
+                                </div>
+                                <i class="fas fa-cart-shopping fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KPI Cards Row 2 - Profit Tracking & Reinvestment -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Total Profit Earned</small>
+                                    <h3 class="mb-0 fw-bold text-success" id="reportTotalProfitEarned">$0.00</h3>
+                                    <small class="text-muted">From all sales</small>
+                                </div>
+                                <i class="fas fa-chart-line fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Profit Reinvested</small>
+                                    <h3 class="mb-0 fw-bold text-warning" id="reportProfitReinvested">$0.00</h3>
+                                    <small class="text-muted">Used to buy stock</small>
+                                </div>
+                                <i class="fas fa-undo-alt fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Available Profit</small>
+                                    <h3 class="mb-0 fw-bold" id="reportAvailableProfit">$0.00</h3>
+                                    <small class="text-muted">For reinvestment</small>
+                                </div>
+                                <i class="fas fa-coins fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Reinvestment Rate</small>
+                                    <h3 class="mb-0 fw-bold" id="reportReinvestmentRate">0%</h3>
+                                    <small class="text-muted">Profit reinvested %</small>
+                                </div>
+                                <i class="fas fa-chart-pie fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KPI Cards Row 3 - Operational Metrics -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Transactions</small>
+                                    <h3 class="mb-0 fw-bold" id="reportTransactionCount">0</h3>
+                                    <small class="text-muted">Total orders</small>
+                                </div>
+                                <i class="fas fa-receipt fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Items Sold</small>
+                                    <h3 class="mb-0 fw-bold" id="reportItemsSold">0</h3>
+                                    <small class="text-muted">Total quantity</small>
+                                </div>
+                                <i class="fas fa-box-open fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Cost of Goods Sold</small>
+                                    <h3 class="mb-0 fw-bold" id="reportCOGS">$0.00</h3>
+                                    <small class="text-muted">Cost of items SOLD</small>
+                                </div>
+                                <i class="fas fa-boxes fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Return on Sales</small>
+                                    <h3 class="mb-0 fw-bold" id="reportROS">0%</h3>
+                                    <small class="text-muted">Profit per $1 sales</small>
+                                </div>
+                                <i class="fas fa-chart-simple fa-2x text-muted opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row 1 - Trends & Category -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Revenue by Category</h6>
+                            <canvas id="categorySalesChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i>Top 10 Products by Revenue</h6>
+                            <canvas id="topProductsChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row 2 - Top Products & Margin -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Profit Margin by Category</h6>
+                            <canvas id="categoryMarginChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Profit Utilization</h6>
+                            <canvas id="profitUtilizationChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Category Performance Table -->
+                <div class="section-card mb-3">
+                    <h6 class="fw-bold mb-2"><i class="fas fa-chart-simple me-1"></i>Category Performance Breakdown</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Units Sold</th>
+                                    <th>Revenue</th>
+                                    <th>COGS</th>
+                                    <th>Gross Profit</th>
+                                    <th>Margin %</th>
+                                    <th>Contribution</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryBreakdownList"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Profit Reinvestment History Table -->
+                <div class="section-card">
+                    <h6 class="fw-bold mb-2"><i class="fas fa-history me-1"></i>Profit Reinvestment History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Cost</th>
+                                    <th>Funding Source</th>
+                                    <th>User</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reinvestmentHistoryList"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Accounting Note -->
+                <div class="alert alert-info small mt-2">
+                    <i class="fas fa-info-circle me-1"></i> 
+                    <strong>Profit Calculation Note:</strong> 
+                    <ul class="mb-0 mt-1">
+                        <li><strong>Gross Profit</strong> = Revenue - COGS (Cost of Goods Sold of items SOLD during the period)</li>
+                        <li><strong>Profit Reinvested</strong> = Profits used to purchase new inventory</li>
+                        <li><strong>Available Profit</strong> = Total Profit Earned - Profit Reinvested</li>
+                        <li>Stock purchases funded by profits reduce available profit for future reinvestment</li>
+                    </ul>
+                </div>
+            </div>
+
+        
+
+            <!-- Transactions Page -->
+            <div id="transactionsPage" style="display: none;">
+                <div class="section-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-history me-1"></i>Transaction History</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-success" onclick="downloadTransactionsExcel()">
+                                <i class="fas fa-file-excel me-1"></i>Export Excel
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="downloadTransactionsPDF()">
+                                <i class="fas fa-file-pdf me-1"></i>Export PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="row g-2 mb-3 align-items-end">
+                        <div class="col-auto" style="min-width: 160px;">
+                            <label class="small fw-bold" for="filterStartDate">Start Date</label>
+                            <input type="date" class="form-control form-control-sm" id="filterStartDate" placeholder="dd/mm/yyyy">
+                        </div>
+                        <div class="col-auto" style="min-width: 160px;">
+                            <label class="small fw-bold" for="filterEndDate">End Date</label>
+                            <input type="date" class="form-control form-control-sm" id="filterEndDate" placeholder="dd/mm/yyyy">
+                        </div>
+                        <div class="col-auto" style="min-width: 145px;">
+                            <label class="small fw-bold" for="filterPaymentMethod">Payment Method</label>
+                            <select class="form-select form-select-sm" id="filterPaymentMethod">
+                                <option value="all">All</option>
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="transfer">Bank/Mobile Money Transfer</option>
+                            </select>
+                        </div>
+                        <div class="col-auto" style="min-width: 160px;">
+                            <label class="small fw-bold" for="filterCashier">Cashier</label>
+                            <input type="text" class="form-control form-control-sm" id="filterCashier" placeholder="Search cashier...">
+                        </div>
+                        <div class="col-auto" style="min-width: 170px;">
+                            <label class="small fw-bold" for="filterProductName">Search by Product</label>
+                            <input type="text" class="form-control form-control-sm" id="filterProductName" placeholder="Search product name...">
+                        </div>
+                        <div class="col-auto" style="min-width: 170px;">
+                            <label class="small fw-bold" for="filterReceiptNumber">Search by Receipt #</label>
+                            <input type="text" class="form-control form-control-sm" id="filterReceiptNumber" placeholder="Search receipt number...">
+                        </div>
+                        <div class="col-auto" style="min-width: 130px;">
+                            <button class="btn btn-secondary btn-sm w-100" onclick="resetTransactionFilters()">
+                                <i class="fas fa-undo me-1"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="transactionsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 10%">Date</th>
+                                    <th style="width: 18%">Transaction #</th>
+                                    <th style="width: 29%">Items</th>
+                                    <th style="width: 10%">Total</th>
+                                    <th style="width: 10%">Payment</th>
+                                    <th style="width: 13%">Cashier</th>
+                                    <th style="width: 10%">Actions</th>
+                                </thead>
+                            <tbody id="transactionsList">
+                                <tr><td colspan="7" class="text-center">No transactions yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analyticsPage" style="display: none;">
+                <!-- Top Products Lists - MOVED HERE -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-trophy me-1"></i> Top Selling Products</h6>
+                            <div id="topProductsListReport" style="max-height: 300px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-bar me-1"></i> Most Profitable Products</h6>
+                            <div id="topProfitProductsList" style="max-height: 300px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-pie me-1"></i>Revenue by Product Category</h6>
+                            <canvas id="categoryChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Sales & Profit Trend</h6>
+                            <canvas id="salesTrendChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-chart-line me-1"></i>Hourly Sales Distribution</h6>
+                            <canvas id="hourlySalesChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                
+                    <div class="col-md-6">
+                        <div class="section-card">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-boxes me-1"></i>Inventory Turnover Analysis</h6>
+                            <canvas id="inventoryTurnoverChart" style="max-height: 280px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            
+            
+            
+            
+            </div>
+        </div>
+    </div>
 
 <!-- Edit Stock Addition Modal -->
 <div class="modal fade" id="editStockAdditionModal" tabindex="-1">
