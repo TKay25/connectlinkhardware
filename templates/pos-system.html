@@ -974,63 +974,45 @@
 
             <!-- POS Page -->
 <!-- POS Page -->
-<!-- POS Page -->
 <div id="posPage">
-    <!-- Metrics and Category Dropdown Row - Side by Side -->
+    <!-- Metrics Cards Row - Smaller numbers -->
     <div class="row g-2 mb-3">
-        <!-- Metrics Cards - 3 cards in one row -->
-        <div class="col-md-8">
-            <div class="row g-2">
-                <div class="col-md-4 col-sm-4">
-                    <div class="stat-card">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <small class="text-muted">Total Products</small>
-                                <h4 class="mb-0 fw-bold" id="totalProductsCount">0</h4>
-                            </div>
-                            <i class="fas fa-boxes fa-1.5x text-muted opacity-50"></i>
-                        </div>
+        <div class="col-md-4 col-sm-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">Total Products</small>
+                        <h3 class="mb-0 fw-bold" style="font-size: 1.1rem;" id="totalProductsCount">0</h3>
                     </div>
-                </div>
-                <div class="col-md-4 col-sm-4">
-                    <div class="stat-card">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <small class="text-muted">Low Stock</small>
-                                <h4 class="mb-0 fw-bold text-warning" id="lowStockCountMetric">0</h4>
-                            </div>
-                            <i class="fas fa-exclamation-triangle fa-1.5x text-muted opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-4">
-                    <div class="stat-card">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <small class="text-muted">Out of Stock</small>
-                                <h4 class="mb-0 fw-bold text-danger" id="outOfStockCount">0</h4>
-                            </div>
-                            <i class="fas fa-times-circle fa-1.5x text-muted opacity-50"></i>
-                        </div>
-                    </div>
+                    <i class="fas fa-boxes text-muted opacity-50" style="font-size: 1.2rem;"></i>
                 </div>
             </div>
         </div>
-        
-        <!-- Category Dropdown - Beside Metrics -->
-        <div class="col-md-4">
-            <div class="section-card h-100 d-flex align-items-center">
-                <div class="w-100">
-                    <label class="small fw-bold mb-1"><i class="fas fa-tags me-1"></i>Filter by Category</label>
-                    <select class="form-select" id="categorySelect" style="font-size: 0.75rem;">
-                        <option value="all">📦 All Categories</option>
-                    </select>
+        <div class="col-md-4 col-sm-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">Low Stock</small>
+                        <h3 class="mb-0 fw-bold text-warning" style="font-size: 1.1rem;" id="lowStockCountMetric">0</h3>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-muted opacity-50" style="font-size: 1.2rem;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">Out of Stock</small>
+                        <h3 class="mb-0 fw-bold text-danger" style="font-size: 1.1rem;" id="outOfStockCount">0</h3>
+                    </div>
+                    <i class="fas fa-times-circle text-muted opacity-50" style="font-size: 1.2rem;"></i>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Low Stock Alert Banner (only shows when needed) -->
+    <!-- Low Stock Alert Banner -->
     <div class="row g-2 mb-3" id="lowStockAlertContainer" style="display: none;">
         <div class="col-12">
             <div class="alert alert-warning py-2">
@@ -1043,13 +1025,22 @@
     
     <div class="row g-3">
         <div class="col-lg-9">
-            <!-- Products Section -->
-            <div class="section-card">
+            <div class="section-card mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                     <h6 class="fw-bold mb-0"><i class="fas fa-box-open me-1"></i>Products</h6>
-                    <div class="position-relative" style="width: 200px;">
-                        <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted" style="font-size: 0.7rem;"></i>
-                        <input type="text" class="form-control ps-5" id="searchProduct" placeholder="Search name or details..." style="border-radius: 30px; font-size: 0.7rem; padding: 5px 10px;" autocomplete="off">
+                    <div class="d-flex gap-2">
+                        <!-- Category Filter - Compact -->
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="small fw-bold mb-0" style="white-space: nowrap;"><i class="fas fa-filter me-1"></i>Category:</label>
+                            <select class="form-select" id="categorySelect" style="width: 150px; font-size: 0.7rem; padding: 4px 8px;">
+                                <option value="all">📦 All Categories</option>
+                            </select>
+                        </div>
+                        <!-- Search Input -->
+                        <div class="position-relative" style="width: 200px;">
+                            <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted" style="font-size: 0.7rem;"></i>
+                            <input type="text" class="form-control ps-5" id="searchProduct" placeholder="Search name or details..." style="border-radius: 30px; font-size: 0.7rem; padding: 4px 10px;" autocomplete="off">
+                        </div>
                     </div>
                 </div>
                 <div class="row g-2 products-scroll" id="productsContainer">
@@ -1064,7 +1055,7 @@
         </div>
 
         <div class="col-lg-3">
-            <!-- Cart Section - Unchanged -->
+            <!-- Cart Section -->
             <div class="section-card sticky-top" style="top: 20px;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="fw-bold mb-0"><i class="fas fa-shopping-cart me-1"></i>Current Order</h6>
